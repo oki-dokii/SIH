@@ -1,0 +1,25 @@
+# --- Secrets (CRITICAL) ---
+.env
+.env.local
+
+# --- Python & ML Junk ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Virtual Environments (If you create them) ---
+venv/
+.venv/
+env/
+
+# --- Large Data ---
+# I am assuming 'data/' has large datasets. 
+# If 'data/' contains code, remove this line!
+data/
+
+# --- IDE & OS Settings ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
