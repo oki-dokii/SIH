@@ -68,9 +68,9 @@ uvicorn backend.app:app --reload --host $HOST --port $PORT
 ```
 
 ### Running the Application on WINDOWS
-
+```bash
 python -m uvicorn backend.app:app --reload --host 127.0.0.1 --port 8000
-
+```
 
 
 The application will be available at: http://localhost:8000
