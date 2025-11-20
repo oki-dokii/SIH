@@ -221,32 +221,16 @@ CREATE TABLE messages (
 
 ## 🚀 Future Enhancements
 
-1. **Async Processing Queue**
-   - Background job processing for uploads
-   - Webhook notifications when complete
-   - Support for very large PDFs
-
-2. **Multi-User Support**
-   - User authentication (JWT/OAuth)
-   - User-specific DPR isolation
-   - Shared DPRs with permissions
-
-3. **Advanced Analytics**
+1. **Advanced Analytics**
    - Comparison across multiple DPRs
    - Trend analysis over time
    - Export to Excel/PDF reports
 
-4. **Enhanced AI Features**
+2. **Enhanced AI Features**
    - Multi-document chat (compare DPRs)
    - Automatic anomaly detection
    - Suggestion engine for improvements
 
-5. **Production Readiness**
-   - PostgreSQL for production DB
-   - Redis for session caching
-   - Load balancing and scaling
-   - Monitoring and logging
-   - Rate limiting and quotas
 
 ## 📈 Scalability Considerations
 
@@ -255,13 +239,6 @@ CREATE TABLE messages (
 - No horizontal scaling
 - In-memory chat sessions lost on restart
 - SQLite limited to moderate load
-
-### Scaling Path
-1. **Phase 1** (Current): Single server, SQLite
-2. **Phase 2**: PostgreSQL + Redis for sessions
-3. **Phase 3**: Load balancer + multiple app servers
-4. **Phase 4**: Microservices + message queue
-5. **Phase 5**: Kubernetes + auto-scaling
 
 ## 🔧 Configuration Points
 
@@ -277,7 +254,7 @@ CREATE TABLE messages (
 - Rate limiting thresholds
 
 ### AI Model Settings
-- Model name (gemini-1.5-flash)
+- Model name (gemini-2.5-flash)
 - Temperature (creativity)
 - Max tokens (response length)
 - System instructions (behavior)

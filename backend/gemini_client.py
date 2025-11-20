@@ -277,3 +277,9 @@ def send_chat_message(dpr_id: int, message: str, file_ref: str) -> Dict:
 # - Generate: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
 # - Use Authorization: Bearer {GEMINI_API_KEY} header
 # - See: https://ai.google.dev/api/rest
+
+def clear_chat_session(dpr_id: int) -> None:
+    """Clear the in-memory chat session for a DPR."""
+    if dpr_id in _chat_sessions:
+        del _chat_sessions[dpr_id]
+        print(f"✓ Cleared chat session for DPR {dpr_id}")

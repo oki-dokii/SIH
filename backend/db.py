@@ -14,11 +14,18 @@ def init_db(db_path: str = "data/dpr.db"):
         CREATE TABLE IF NOT EXISTS dprs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             filename TEXT NOT NULL,
+            original_filename TEXT NOT NULL,
             filepath TEXT NOT NULL,
             uploaded_file_ref TEXT NOT NULL,
             upload_ts TEXT NOT NULL,
             summary_json TEXT NOT NULL
         )
+    """)
+    
+    # Create index on original_filename for faster lookups
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_original_filename 
+        ON dprs(original_filename)
     """)
     
     # Create messages table for chat history
@@ -38,8 +45,8 @@ def init_db(db_path: str = "data/dpr.db"):
     print(f"✓ Database initialized at {db_path}")
 
 
-def insert_dpr(filename: str, filepath: str, file_ref: str, summary_json: dict, 
-               db_path: str = "data/dpr.db") -> int:
+def insert_dpr(filename: str, original_filename: str, filepath: str, file_ref: str, 
+               summary_json: dict, db_path: str = "data/dpr.db") -> int:
     """Insert a new DPR record and return its ID."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -48,9 +55,9 @@ def insert_dpr(filename: str, filepath: str, file_ref: str, summary_json: dict,
     json_str = json.dumps(summary_json, indent=2)
     
     cursor.execute("""
-        INSERT INTO dprs (filename, filepath, uploaded_file_ref, upload_ts, summary_json)
-        VALUES (?, ?, ?, ?, ?)
-    """, (filename, filepath, file_ref, timestamp, json_str))
+        INSERT INTO dprs (filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (filename, original_filename, filepath, file_ref, timestamp, json_str))
     
     dpr_id = cursor.lastrowid
     conn.commit()
@@ -67,7 +74,7 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, filepath, uploaded_file_ref, upload_ts, summary_json
+        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json
         FROM dprs WHERE id = ?
     """, (dpr_id,))
     
@@ -78,12 +85,69 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
         return {
             "id": row["id"],
             "filename": row["filename"],
+            "original_filename": row["original_filename"],
             "filepath": row["filepath"],
             "uploaded_file_ref": row["uploaded_file_ref"],
             "upload_ts": row["upload_ts"],
             "summary_json": json.loads(row["summary_json"])
         }
     return None
+
+
+def get_dpr_by_filename(original_filename: str, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Retrieve a DPR by original filename."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json
+        FROM dprs WHERE original_filename = ?
+    """, (original_filename,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            "id": row["id"],
+            "filename": row["filename"],
+            "original_filename": row["original_filename"],
+            "filepath": row["filepath"],
+            "uploaded_file_ref": row["uploaded_file_ref"],
+            "upload_ts": row["upload_ts"],
+            "summary_json": json.loads(row["summary_json"])
+        }
+    return None
+
+
+def get_all_dprs(db_path: str = "data/dpr.db") -> List[Dict]:
+    """Retrieve all DPRs with metadata."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json
+        FROM dprs
+        ORDER BY upload_ts DESC
+    """)
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [
+        {
+            "id": row["id"],
+            "filename": row["filename"],
+            "original_filename": row["original_filename"],
+            "filepath": row["filepath"],
+            "uploaded_file_ref": row["uploaded_file_ref"],
+            "upload_ts": row["upload_ts"],
+            "summary_json": json.loads(row["summary_json"])
+        }
+        for row in rows
+    ]
 
 
 def insert_message(dpr_id: int, role: str, text: str, db_path: str = "data/dpr.db"):
@@ -128,3 +192,20 @@ def get_messages(dpr_id: int, db_path: str = "data/dpr.db") -> List[Dict]:
         }
         for row in rows
     ]
+
+
+def clear_chat_history(dpr_id: int, db_path: str = "data/dpr.db"):
+    """Delete all chat messages for a specific DPR."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        DELETE FROM messages WHERE dpr_id = ?
+    """, (dpr_id,))
+    
+    deleted_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    
+    print(f"✓ Cleared {deleted_count} messages for DPR {dpr_id}")
+    return deleted_count

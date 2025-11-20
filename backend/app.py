@@ -47,10 +47,33 @@ class ChatResponse(BaseModel):
     message_id: int
 
 
+# ===== PAGE ROUTES =====
+
 @app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    """Serve the main web interface."""
-    return templates.TemplateResponse("index.html", {"request": request})
+async def home_page(request: Request):
+    """Serve the landing/home page."""
+    return templates.TemplateResponse("home.html", {"request": request})
+
+
+@app.get("/dprs/list", response_class=HTMLResponse)
+async def dprs_list_page(request: Request):
+    """Serve the DPR list page."""
+    return templates.TemplateResponse("list.html", {"request": request})
+
+
+@app.get("/dpr/{dpr_id}/detail", response_class=HTMLResponse)
+async def dpr_detail_page(request: Request, dpr_id: int):
+    """Serve the DPR detail/analysis page."""
+    return templates.TemplateResponse("detail.html", {"request": request})
+
+
+# ===== API ROUTES =====
+
+@app.get("/dprs")
+async def list_all_dprs():
+    """Get a list of all DPRs with metadata."""
+    dprs = db.get_all_dprs()
+    return JSONResponse({"dprs": dprs, "count": len(dprs)})
 
 
 @app.post("/upload-dpr")
@@ -58,22 +81,29 @@ async def upload_dpr(file: UploadFile = File(...)):
     """
     Upload a DPR PDF, process it with Gemini, and return structured JSON.
     
-    Steps:
-    1. Save the uploaded PDF to data/ directory
-    2. Upload to Gemini Files API
-    3. Generate JSON using Gemini with strict schema adherence
-    4. Validate the JSON output
-    5. Store in SQLite
-    6. Return the parsed JSON
+    If a PDF with the same filename already exists, return the existing analysis.
+    Otherwise, process the new PDF and store it.
     """
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are accepted")
     
     try:
-        # Generate unique filename
+        original_filename = file.filename
+        
+        # Check if this PDF already exists
+        existing_dpr = db.get_dpr_by_filename(original_filename)
+        if existing_dpr:
+            print(f"✓ PDF already exists: {original_filename} (ID: {existing_dpr['id']})")
+            return JSONResponse({
+                "dpr_id": existing_dpr["id"],
+                "summary": existing_dpr["summary_json"],
+                "existing": True
+            })
+        
+        # Generate unique filename for storage
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         unique_id = str(uuid.uuid4())[:8]
-        filename = f"{timestamp}_{unique_id}_{file.filename}"
+        filename = f"{timestamp}_{unique_id}_{original_filename}"
         filepath = DATA_DIR / filename
         
         # Save the uploaded file
@@ -92,6 +122,7 @@ async def upload_dpr(file: UploadFile = File(...)):
         # Store in database
         dpr_id = db.insert_dpr(
             filename=filename,
+            original_filename=original_filename,
             filepath=str(filepath),
             file_ref=file_ref,
             summary_json=parsed_json
@@ -99,7 +130,8 @@ async def upload_dpr(file: UploadFile = File(...)):
         
         return JSONResponse({
             "dpr_id": dpr_id,
-            "summary": parsed_json
+            "summary": parsed_json,
+            "existing": False
         })
         
     except ValueError as e:
@@ -188,6 +220,33 @@ async def get_chat_history(dpr_id: int):
         "messages": messages,
         "count": len(messages)
     })
+
+
+@app.delete("/dpr/{dpr_id}/chat")
+async def clear_chat(dpr_id: int):
+    """
+    Clear all chat history for a DPR.
+    """
+    # Verify DPR exists
+    dpr = db.get_dpr(dpr_id)
+    if not dpr:
+        raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+    
+    try:
+        # Clear from database
+        deleted_count = db.clear_chat_history(dpr_id)
+        
+        # Clear from in-memory cache
+        gemini_client.clear_chat_session(dpr_id)
+        
+        return JSONResponse({
+            "success": True,
+            "deleted_count": deleted_count,
+            "message": f"Cleared {deleted_count} messages"
+        })
+    except Exception as e:
+        print(f"✗ Clear chat error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to clear chat: {str(e)}")
 
 
 @app.get("/health")
