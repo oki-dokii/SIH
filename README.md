@@ -69,6 +69,8 @@ uvicorn backend.app:app --reload --host $HOST --port $PORT
 
 ### Running the Application on WINDOWS
 ```bash
+python -m venv venv
+.\.venv\Scripts\Activate.ps1
 python -m uvicorn backend.app:app --reload --host 127.0.0.1 --port 8000
 ```
 
