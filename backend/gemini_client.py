@@ -84,26 +84,57 @@ def generate_json_from_file(file_ref: str, schema_path: str) -> Dict:
     file_obj = genai.get_file(file_ref)
     
     # Create a strict system prompt
-    system_instruction = """You are a document analyst specialized in analyzing Detailed Project Reports (DPRs). 
-Your task is to extract structured information from the provided PDF document and return ONLY valid JSON that exactly matches the provided schema , There might be some hand written pages and you might get garbage text if you perform ocr on it, dont be confused , just ignore them.
+    system_instruction = """You are an expert project analyst for Detailed Project Reports (DPRs). Read the attached PDF and produce EXACTLY one valid JSON object that exactly matches the schema supplied in the user prompt. RETURN ONLY the JSON object — no markdown, no commentary, no extra text. The JSON must parse cleanly.
 
-CRITICAL INSTRUCTIONS:
-1. RETURN ONLY VALID JSON - no markdown, no explanations, no additional text
-2. Match the schema structure EXACTLY
-3. Use null for missing values
-4. Return numbers as plain numbers (no commas, no currency symbols)
-5. Keep string values concise but informative
-6. For arrays, include all relevant items mentioned in the document
-7. Ensure all required top-level keys are present
+MANDATORY BEHAVIOR (follow exactly):
+1) OUTPUT: Return exactly one JSON object whose keys and nested structure match the supplied schema. Do NOT add or remove top-level keys or change nesting.
+2) ANALYZE & INFER: You must both extract explicit values from the PDF and also ANALYZE the information and INFER values where the document does not state them. In particular you MUST compute:
+   - overallScore: a numeric score 0-100 (see scoring rubric below). Do NOT return null for overallScore.
+   - recommendation: one of exactly ["Approved","Approved with Conditions","Rejected","Needs Review"]. Do NOT return null for recommendation.
+   - financialAnalysis: populate numeric fields (if missing, infer conservatively and explain).
+   - riskAssessment: identify top risks, severity and evidence (these are analytical outputs).
+3) REQUIRED NON-NULL FIELDS: The following fields MUST NOT be null (fill them or infer if missing): 
+   `"projectName"`, `"projectLocation.state"`, `"projectSector"`, `"executiveSummary"`, `"overallScore"`, `"recommendation"`, and the entire `"financialAnalysis"` object (its numeric fields should be present or conservatively inferred).
+   Note: `"projectLocation.districts"` is allowed to be an empty array or null if districts are absent.
+4) TRACEABILITY: If you infer or compute any field (overallScore, recommendation, any financial number, or risk severity), PREPEND a single concise explanation sentence (≤25 words) at the START of the `assumptions` array. That sentence MUST begin exactly with `INFERRED_REASON:` (example: `INFERRED_REASON: Converted 4.5/5 scale to 90/100 and used NPV>0 as supporting evidence`).
+5) PREFER TABULAR SOURCES: When numbers conflict, prefer table values (tables > paragraph text). If you choose one source over another, state that choice in an `INFERRED_REASON:` assumption.
+6) FORMATTING RULES: 
+   - Numbers must be plain JSON numbers (no commas, no currency symbols, no percent signs). If the source uses percent signs or another scale, convert to numeric form (explain conversion in `INFERRED_REASON:`).
+   - Arrays must be arrays. Strings should be concise.
+7) PAGE REFERENCES & EVIDENCE: For any numeric or tabular value you cite, include page references in the `assumptions` text or in the `riskAssessment[*].evidence` field (e.g., “table on page 12”). Prefer adding page numbers for `key_tables` if you identify them.
+8) RISK ANALYSIS: For `riskAssessment`, list the top 3-6 risks with a one-line mitigation each. For each risk include severity: HIGH / MEDIUM / LOW, and a brief evidence note (page/table).
+9) SCORING & RECOMMENDATION MAPPING: Compute `overallScore` using the rubric below; map recommendation by thresholds (but you may deviate only if you explain in `INFERRED_REASON:`).
+10) JSON ONLY: Your entire response must be parseable JSON ONLY. No extra lines or text.
 
-Do not add any commentary before or after the JSON. Your entire response must be parseable JSON."""
+Scoring rubric (apply to compute overallScore 0-100):
+- Weighted components (approx): Financial viability (NPV/IRR/Payback) 45%, Market & demand 15%, Technical readiness 15%, Team/governance 10%, Risks/residual 15%.
+- Translate financial signals into a subscore (0-100): strong positive NPV & IRR → high subscore (85–100); moderate → 60–84; marginal/negative → 0-59. If you convert scales state the conversion in `INFERRED_REASON:`.
+- Recommendation thresholds (default):
+  - overallScore ≥ 80 → "Approved"
+  - 60 ≤ overallScore < 80 → "Approved with Conditions"
+  - 40 ≤ overallScore < 60 → "Needs Review"
+  - overallScore < 40 → "Rejected"
+
+Follow the rubric and trace any deviations. Return only the JSON object.
+"""
+
     
     # Create the user prompt with schema
-    user_prompt = f"""Analyze the attached PDF document and extract information according to this schema:
+    user_prompt = f"""Analyze the attached PDF and return EXACTLY one JSON object that follows the schema below (types are illustrative). Fill all fields per the schema; the only permitted empty/nullable field is projectLocation.districts.
 
 {schema_content}
 
-REMEMBER: Return ONLY the JSON object. No markdown code blocks, no explanations. Just pure JSON that matches the schema exactly."""
+ADDITIONAL INSTRUCTIONS (repeat of key rules):
+- overallScore: compute a number 0-100 using document evidence and the rubric in the system instruction. If the DPR uses a different scale, convert to 0–100 and explain conversion with `INFERRED_REASON:` in assumptions.
+- recommendation: one of ["Approved","Approved with Conditions","Rejected","Needs Review"]. Derive from overallScore and risk analysis; if you deviate from the thresholds, explain using `INFERRED_REASON:`.
+- financialAnalysis: populate numeric fields. If a numeric value is missing, infer conservatively and explain with `INFERRED_REASON:` in assumptions.
+- riskAssessment: list top 3-6 risks; for each risk include a one-line mitigation and include page/table evidence in the evidence field.
+- projectLocation.districts may be [], null, or list; other required fields above must be non-null.
+- When you infer or use a conversion, prepend a single `INFERRED_REASON:` sentence at the START of the assumptions array.
+- Use tables over narrative when numbers conflict and indicate the chosen source in `INFERRED_REASON:`.
+- Always include page references for key numeric citations where possible.
+
+Now analyze the attached file and return EXACTLY the one JSON object described above. No extra text."""
     
     # Create the model with strict instructions
     model = genai.GenerativeModel(
@@ -117,6 +148,7 @@ REMEMBER: Return ONLY the JSON object. No markdown code blocks, no explanations.
     elapsed = time.time() - start_time
     print(f"✓ JSON generated in {elapsed:.2f}s (response length: {len(response.text)} chars)")
     
+    # print(response.text[:1500] + '...' if len(response.text) > 1500 else response.text)
     # Parse and validate the JSON
     try:
         # Clean up response text (remove markdown if present)
@@ -131,6 +163,13 @@ REMEMBER: Return ONLY the JSON object. No markdown code blocks, no explanations.
         
         parsed_json = json.loads(response_text)
         
+        # print("==== PARSED JSON FROM GEMINI ====")
+        # print(parsed_json)
+        # print("overallScore:", parsed_json.get("overallScore"))
+        # print("recommendation:", parsed_json.get("recommendation"))
+        # print("=================================")
+
+
         # Validate that it's a dict and has basic required keys
         if not isinstance(parsed_json, dict):
             raise ValueError("Response is not a JSON object")
