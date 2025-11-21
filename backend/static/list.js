@@ -5,6 +5,16 @@ const loadingSection = document.getElementById('loadingSection');
 const errorMessage = document.getElementById('errorMessage');
 const dprList = document.getElementById('dprList');
 const emptyState = document.getElementById('emptyState');
+const toggleCompareBtn = document.getElementById('toggleCompareBtn');
+const compareActions = document.getElementById('compareActions');
+const createComparisonBtn = document.getElementById('createComparisonBtn');
+const cancelCompareBtn = document.getElementById('cancelCompareBtn');
+const selectedCountSpan = document.getElementById('selectedCount');
+
+// State
+let compareMode = false;
+let selectedDPRs = new Set();
+let allDPRs = [];
 
 // Load DPRs on page load
 document.addEventListener('DOMContentLoaded', loadDPRs);
@@ -21,14 +31,27 @@ async function loadDPRs() {
         }
 
         const data = await response.json();
+        allDPRs = data.dprs;
+
+        console.log('DPRs loaded:', data.dprs.length);
+        console.log('Toggle button element:', toggleCompareBtn);
 
         if (data.dprs.length === 0) {
             emptyState.style.display = 'block';
             dprList.style.display = 'none';
+            if (toggleCompareBtn) toggleCompareBtn.style.display = 'none';
         } else {
             displayDPRs(data.dprs);
             emptyState.style.display = 'none';
             dprList.style.display = 'grid';
+            // Show compare button if 2+ DPRs
+            if (data.dprs.length >= 2 && toggleCompareBtn) {
+                console.log('Showing compare button!');
+                toggleCompareBtn.style.display = 'inline-block';
+            } else if (toggleCompareBtn) {
+                console.log('Only 1 DPR, hiding button');
+                toggleCompareBtn.style.display = 'none';
+            }
         }
 
     } catch (error) {
@@ -42,13 +65,23 @@ async function loadDPRs() {
 function displayDPRs(dprs) {
     dprList.innerHTML = dprs.map(dpr => createDPRCard(dpr)).join('');
 
-    // Add click handlers
-    document.querySelectorAll('.dpr-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const dprId = card.dataset.dprId;
-            window.location.href = `/dpr/${dprId}/detail`;
+    if (!compareMode) {
+        // Add click handlers for navigation
+        document.querySelectorAll('.dpr-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const dprId = card.dataset.dprId;
+                window.location.href = `/dpr/${dprId}/detail`;
+            });
         });
-    });
+    } else {
+        // Add checkbox handlers
+        document.querySelectorAll('.dpr-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation();
+                handleCheckboxChange(parseInt(e.target.dataset.dprId), e.target.checked);
+            });
+        });
+    }
 }
 
 function createDPRCard(dpr) {
@@ -63,8 +96,16 @@ function createDPRCard(dpr) {
         minute: '2-digit'
     });
 
+    const checkbox = compareMode ? `
+        <input type="checkbox" class="dpr-checkbox" 
+               data-dpr-id="${dpr.id}" 
+               ${selectedDPRs.has(dpr.id) ? 'checked' : ''}
+               style="position: absolute; top: 15px; right: 15px; width: 20px; height: 20px; cursor: pointer; z-index: 10;">
+    ` : '';
+
     return `
-        <div class="dpr-card" data-dpr-id="${dpr.id}">
+        <div class="dpr-card" data-dpr-id="${dpr.id}" style="position: relative; ${compareMode ? 'cursor: default;' : ''}">
+            ${checkbox}
             <div class="dpr-card-header">
                 <div>
                     <div class="dpr-filename">${escapeHtml(dpr.original_filename)}</div>
@@ -91,6 +132,19 @@ function createDPRCard(dpr) {
             </div>
         </div>
     `;
+}
+
+function toggleCompareMode() {
+    // Navigate to comparisons page
+    window.location.href = '/comparisons';
+}
+
+// Event listeners
+if (toggleCompareBtn) {
+    console.log('Adding click listener to compare button');
+    toggleCompareBtn.addEventListener('click', toggleCompareMode);
+} else {
+    console.error('Compare button not found!');
 }
 
 function escapeHtml(text) {

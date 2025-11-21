@@ -301,6 +301,17 @@ async function sendChatMessage() {
     addMessageToChat('user', message);
     chatInput.value = '';
 
+    // Add waiting message
+    const waitingMsg = document.createElement('div');
+    waitingMsg.className = 'message assistant waiting';
+    waitingMsg.innerHTML = `
+        <div class="message-role">🤖 AI Assistant</div>
+        <div class="message-text">⏳ The assistant is responding...</div>
+    `;
+    waitingMsg.id = 'waitingMessage';
+    chatMessages.appendChild(waitingMsg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
     try {
         const response = await fetch(`/dpr/${dprId}/chat`, {
             method: 'POST',
@@ -315,10 +326,17 @@ async function sendChatMessage() {
         }
 
         const data = await response.json();
+        // Remove waiting message
+        const waiting = document.getElementById('waitingMessage');
+        if (waiting) waiting.remove();
+        // Add actual response
         addMessageToChat('assistant', data.reply);
 
     } catch (error) {
         console.error('Chat error:', error);
+        // Remove waiting message
+        const waiting = document.getElementById('waitingMessage');
+        if (waiting) waiting.remove();
         addMessageToChat('assistant', '⚠️ Sorry, there was an error processing your message.');
     } finally {
         chatInput.disabled = false;
