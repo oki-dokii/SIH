@@ -33,6 +33,7 @@ db.init_db(str(DATA_DIR / "dpr.db"))
 
 # Mount static files and templates
 app.mount("/static", StaticFiles(directory="backend/static"), name="static")
+app.mount("/data", StaticFiles(directory="data"), name="data")
 templates = Jinja2Templates(directory="backend/templates")
 
 
