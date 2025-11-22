@@ -49,6 +49,15 @@ export function Header() {
           >
             Documents
           </Link>
+          <Link
+            to="/comparisons"
+            className={cn(
+              'text-sm font-medium transition-colors hover:text-primary',
+              isActive('/comparisons') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
+            )}
+          >
+            Comparisons
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
