@@ -5,10 +5,12 @@ import { api, Comparison, ComparisonMessage } from '../lib/api'
 import { Header } from '../components/Header'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
+import { useLanguage } from '../contexts/LanguageContext'
 
 export default function ComparisonDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [comparison, setComparison] = useState<Comparison | null>(null)
   const [messages, setMessages] = useState<ComparisonMessage[]>([])
   const [inputMessage, setInputMessage] = useState('')
@@ -125,7 +127,7 @@ export default function ComparisonDetailPage() {
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Comparisons
+            {t('comparisons.backToComparisons')}
           </Button>
           
           <div className="flex items-center justify-between">
@@ -148,7 +150,7 @@ export default function ComparisonDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Documents in Comparison</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('comparisons.documentsInComparison')}</h3>
               <div className="space-y-3">
                 {comparison.dprs?.map((dpr) => (
                   <div
@@ -177,8 +179,8 @@ export default function ComparisonDetailPage() {
           <div className="lg:col-span-2">
             <Card className="flex flex-col h-[calc(100vh-280px)]">
               <div className="p-4 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">AI Chat</h3>
-                <p className="text-sm text-gray-600">Ask questions about these documents</p>
+                <h3 className="text-lg font-semibold text-gray-900">{t('comparisons.aiChat')}</h3>
+                <p className="text-sm text-gray-600">{t('comparisons.askAboutDocuments')}</p>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -227,7 +229,7 @@ export default function ComparisonDetailPage() {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Ask a question about these documents..."
+                    placeholder={t('documentDetail.askQuestion')}
                     disabled={sending}
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-gray-100"
                   />

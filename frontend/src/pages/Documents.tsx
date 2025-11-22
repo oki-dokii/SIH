@@ -15,9 +15,11 @@ import {
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, type DPR } from '@/lib/api'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function DocumentsPage() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [searchQuery, setSearchQuery] = useState('')
   const [documents, setDocuments] = useState<DPR[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,12 +86,12 @@ export default function DocumentsPage() {
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">My Documents</h1>
-            <p className="text-muted-foreground">Manage and analyze your DPR documents</p>
+            <h1 className="text-4xl font-bold mb-2">{t('documents.title')}</h1>
+            <p className="text-muted-foreground">{t('documents.subtitle')}</p>
           </div>
           <Button size="lg" onClick={() => navigate('/')}>
             <Upload className="h-4 w-4" />
-            Upload New Document
+            {t('common.upload')}
           </Button>
         </div>
 
@@ -98,7 +100,7 @@ export default function DocumentsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search documents..."
+              placeholder={t('documents.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"

@@ -5,9 +5,11 @@ import { api, Comparison, DPR } from '../lib/api'
 import { Header } from '../components/Header'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
+import { useLanguage } from '../contexts/LanguageContext'
 
 export default function ComparisonsPage() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [comparisons, setComparisons] = useState<Comparison[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -45,15 +47,15 @@ export default function ComparisonsPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Comparisons</h1>
-            <p className="text-gray-600 mt-2">Compare multiple DPRs side-by-side with AI-powered analysis</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('comparisons.title')}</h1>
+            <p className="text-gray-600 mt-2">{t('comparisons.subtitle')}</p>
           </div>
           <Button
             onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
-            New Comparison
+            {t('comparisons.newComparison')}
           </Button>
         </div>
 
