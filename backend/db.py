@@ -56,9 +56,32 @@ def init_db(db_path: str = "data/dpr.db"):
             comparison_chat_id INTEGER NOT NULL,
             dpr_id INTEGER NOT NULL,
             FOREIGN KEY (comparison_chat_id) REFERENCES comparison_chats (id),
-            FOREIGN KEY (dpr_id) REFERENCES dprs (id)
+            FOREIGN KEY (dpr_id) REFERENCES dprs (id),
+            UNIQUE (comparison_chat_id, dpr_id)
         )
     """)
+    
+    # Create unique index for comparison_chat_pdfs (idempotent for existing DBs)
+    try:
+        cursor.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_comparison_chat_pdfs_unique 
+            ON comparison_chat_pdfs(comparison_chat_id, dpr_id)
+        """)
+    except sqlite3.IntegrityError:
+        print("⚠ Warning: Duplicate comparison_chat_pdfs entries detected. Cleaning up...")
+        cursor.execute("""
+            DELETE FROM comparison_chat_pdfs
+            WHERE rowid NOT IN (
+                SELECT MIN(rowid)
+                FROM comparison_chat_pdfs
+                GROUP BY comparison_chat_id, dpr_id
+            )
+        """)
+        cursor.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_comparison_chat_pdfs_unique 
+            ON comparison_chat_pdfs(comparison_chat_id, dpr_id)
+        """)
+        print("✓ Duplicates removed and unique index created")
     
     # Create comparison_messages table
     cursor.execute("""
