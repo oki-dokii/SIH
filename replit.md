@@ -145,11 +145,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**November 22, 2025**: Complete frontend redesign
-- Migrated from vanilla JavaScript + Jinja2 templates to React + TypeScript + Tailwind CSS
-- Implemented modern, light-themed UI matching user design specifications
-- Created API service layer for backend integration with full type safety
-- Added upload progress tracking, loading states, and error handling
-- Implemented real-time chat interface with Gemini AI integration
-- Set up dual-server development environment (Vite on 5000, FastAPI on 8000)
-- All frontend functionality now fully integrated with existing FastAPI backend
+**November 22, 2025**: Complete frontend migration and API integration
+- **Frontend Redesign**: Migrated from vanilla JavaScript + Jinja2 templates to React + TypeScript + Tailwind CSS
+- **Modern UI**: Implemented professional light-themed design with responsive layout and smooth animations
+- **API Integration**: Created comprehensive API service layer with proper endpoint mapping:
+  - Documents: `/dprs` → `{dprs: [...]}`
+  - Document Detail: `/dpr/{id}` → Returns DPR with `summary_json` as parsed object
+  - Chat History: `/dpr/{id}/chat/history` → `{messages: [...]}`
+  - Send Message: `/dpr/{id}/chat` → `{reply, sources, message_id}`
+  - Upload: `/upload-dpr` with multipart form data
+- **Type Safety**: Full TypeScript interfaces for all API responses with proper data type handling
+- **Vite Proxy**: Configured `/api` prefix proxy to avoid CORS issues in development
+- **User Experience**: Added upload progress tracking, loading states, error handling, and optimistic UI updates
+- **Dual-Server Architecture**: Vite dev server (port 5000) proxies API calls to FastAPI backend (port 8000)
+- **Quality Assurance**: All three main pages (Landing, Documents, Document Detail) tested and working with real backend data
