@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>DPR Analysis Report - {{ dpr.projectName }}</title>
+    <title>DPR Analysis Report - {{ dpr.get('projectName', 'DPR Report') }}</title>
     <style>
         @page {
             size: A4;
@@ -199,7 +199,7 @@
 <body>
     <div class="header">
         <h1>DPR Analysis Report</h1>
-        <div class="subtitle">{{ dpr.projectName or 'Detailed Project Report' }}</div>
+        <div class="subtitle">{{ dpr.get('projectName') or 'Detailed Project Report' }}</div>
         <div class="subtitle">Generated on {{ generated_date }}</div>
     </div>
 
@@ -208,14 +208,14 @@
         <div class="section-title">📊 Project Overview</div>
         
         <div class="info-grid">
-            {% if dpr.projectName %}
+            {% if dpr.get('projectName') %}
             <div class="info-card">
                 <div class="label">Project Name</div>
-                <div class="value" style="font-size: 12pt;">{{ dpr.projectName }}</div>
+                <div class="value" style="font-size: 12pt;">{{ dpr.get('projectName') }}</div>
             </div>
             {% endif %}
             
-            {% if dpr.projectLocation and dpr.projectLocation.state %}
+            {% if dpr.get('projectLocation', {}).get('state') %}
             <div class="info-card">
                 <div class="label">Location</div>
                 <div class="value" style="font-size: 12pt;">{{ dpr.projectLocation.state }}</div>

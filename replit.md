@@ -145,7 +145,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-**November 22, 2025 (Update 4)**: Added comprehensive PDF report generation with charts
+**November 22, 2025 (Update 4)**: Added comprehensive PDF report generation with robust error handling
 - **PDF Report Generation**: Implemented server-side PDF generation using WeasyPrint + Plotly/Kaleido
 - **Professional Report Template**: Created Jinja2 HTML template with all sections:
   - Overview (project details, vision, mission, objectives, scores)
@@ -154,8 +154,16 @@ Preferred communication style: Simple, everyday language.
   - Risk Assessment (severity-coded risk table)
   - Compliance Check (statutory, environmental requirements)
 - **Chart Integration**: Embedded pie charts and bar charts as PNG images in the PDF
+- **Robust Error Handling**: Comprehensive validation and defensive coding:
+  - Validates summary_json exists before processing (HTTP 422 if missing)
+  - Safe JSON parsing with try-catch (HTTP 422 on malformed data)
+  - Type checking ensures dict structures throughout
+  - All chart generation functions wrapped in try-except with logging
+  - Graceful degradation when charts fail (logs warning, continues PDF generation)
+  - Template uses conditional rendering to handle missing data sections
 - **Download Functionality**: Updated download button to generate comprehensive analysis report instead of original PDF
 - **System Dependencies**: Added Chromium for Kaleido chart rendering
+- **Testing**: Verified with 84KB valid PDF generation, HTTP 200 responses
 
 **November 22, 2025 (Update 3)**: Fixed "View Analysis" button navigation and enhanced chart colors
 - **Navigation Fix**: Fixed "View Analysis" button on Documents page to navigate to correct route (`/documents/:id` instead of `/document/:id`)
