@@ -145,6 +145,26 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 22, 2025 (Update 5)**: Implemented complete Comparison Chat functionality
+- **Comparisons Page** (`/comparisons`): Lists all saved comparison sessions with document counts and creation dates
+- **New Comparison Modal**: Interactive modal to select 2+ DPRs, name the comparison, and create it
+  - Search functionality to filter documents by name or filename
+  - Multi-select checkboxes with visual feedback
+  - Validation to ensure at least 2 documents are selected
+- **Comparison Detail Page** (`/comparison/:id`): Full-featured comparison analysis interface
+  - Side panel showing all documents in the comparison (clickable to view individual DPRs)
+  - AI chat interface for asking comparative questions across multiple documents
+  - Chat history persistence with real-time messaging
+  - Helpful tips panel with usage examples
+- **Navigation Updates**: Added "Comparisons" link to header navigation
+- **API Integration**: Complete TypeScript API layer for all comparison endpoints
+  - `GET /comparison-chats` - List all comparisons
+  - `POST /comparison-chats` - Create new comparison
+  - `GET /comparison-chat/{id}` - Get comparison details with DPRs
+  - `POST /comparison-chat/{id}/chat` - Send comparison chat messages
+  - `GET /comparison-chat/{id}/chat/history` - Retrieve chat history
+- **User Experience**: Professional UI with empty states, loading states, and smooth navigation flows
+
 **November 22, 2025 (Update 4)**: Added comprehensive PDF report generation with robust error handling
 - **PDF Report Generation**: Implemented server-side PDF generation using WeasyPrint + Plotly/Kaleido
 - **Professional Report Template**: Created Jinja2 HTML template with all sections:

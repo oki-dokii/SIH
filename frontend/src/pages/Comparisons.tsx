@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Plus, Calendar, ArrowRight, Loader2, Search } from 'lucide-react'
 import { api, Comparison, DPR } from '../lib/api'
-import Header from '../components/Header'
+import { Header } from '../components/Header'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 

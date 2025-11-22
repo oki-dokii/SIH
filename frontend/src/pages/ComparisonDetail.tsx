@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { FileText, Send, Loader2, ArrowLeft, Calendar } from 'lucide-react'
 import { api, Comparison, ComparisonMessage } from '../lib/api'
-import Header from '../components/Header'
+import { Header } from '../components/Header'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 
