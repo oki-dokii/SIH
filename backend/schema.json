@@ -63,5 +63,22 @@
     "EHS": ["array of strings"],
     "labour": "string",
     "gapsOrUnknowns": ["array of strings"]
+  },
+  "environmentalImpact": {
+    "overallRiskLevel": "string (High/Medium/Low)",
+    "sensitiveAreaFlags": {
+      "isInProtectedForest": "boolean",
+      "isNearWaterBody": "boolean",
+      "isInTribalLand": "boolean",
+      "isInWildlifeCorridor": "boolean",
+      "isInEcologicallySensitiveZone": "boolean"
+    },
+    "clearancesRequired": ["array of strings, e.g., 'Forest Clearance', 'Environmental Clearance', 'Wildlife Clearance'"],
+    "environmentalConcerns": ["array of strings describing specific environmental issues"],
+    "mitigationMeasures": ["array of strings describing planned mitigation"],
+    "impactOnBiodiversity": "string or null",
+    "waterResourceImpact": "string or null",
+    "soilAndLandImpact": "string or null",
+    "airQualityImpact": "string or null"
   }
 }
