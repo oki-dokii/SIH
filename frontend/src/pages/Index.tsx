@@ -11,7 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function IndexPage() {
   const navigate = useNavigate()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +22,7 @@ export default function IndexPage() {
     setUploadProgress(0)
 
     try {
-      const result = await api.uploadDPR(file, (progress) => {
+      const result = await api.uploadDPR(file, language, (progress) => {
         setUploadProgress(progress)
       })
       
@@ -50,19 +50,20 @@ export default function IndexPage() {
               </div>
               
               <h1 className="text-5xl md:text-6xl font-bold leading-tight">
-                {t('landing.description')}
+                {t('landing.heroTitle')}{' '}
+                <span className="text-primary">{t('landing.heroHighlight')}</span> {t('landing.heroSuffix')}
               </h1>
               
               <p className="text-xl text-muted-foreground">
-                {t('landing.uploadPrompt')}
+                {t('landing.description')}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" onClick={() => navigate('/documents')}>
-                  {t('landing.feature1Title')} <ArrowRight className="h-4 w-4" />
+                  {t('landing.getStarted')} <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button size="lg" variant="outline">
-                  {t('landing.uploadHint')}
+                  {t('landing.learnMore')}
                 </Button>
               </div>
             </div>

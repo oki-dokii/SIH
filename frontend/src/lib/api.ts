@@ -53,9 +53,10 @@ export const api = {
     return response.json()
   },
 
-  async uploadDPR(file: File, onProgress?: (progress: number) => void): Promise<UploadResponse> {
+  async uploadDPR(file: File, language: string = 'en', onProgress?: (progress: number) => void): Promise<UploadResponse> {
     const formData = new FormData()
     formData.append('file', file)
+    formData.append('language', language)
 
     const xhr = new XMLHttpRequest()
 

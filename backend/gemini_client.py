@@ -62,18 +62,19 @@ def upload_file(file_path: str) -> str:
     return uploaded_file.name
 
 
-def generate_json_from_file(file_ref: str, schema_path: str) -> Dict:
+def generate_json_from_file(file_ref: str, schema_path: str, language: str = "en") -> Dict:
     """
     Generate structured JSON from an uploaded file using Gemini.
     
     Args:
         file_ref: The file reference returned by upload_file()
         schema_path: Path to schema.json file
+        language: "en" for English, "hi" for Hindi (default: "en")
     
     Returns:
         Parsed JSON dict matching the schema
     """
-    print(f"⏳ Generating JSON from file: {file_ref}")
+    print(f"⏳ Generating JSON from file: {file_ref} (language: {language})")
     start_time = time.time()
     
     # Read the schema
@@ -83,8 +84,13 @@ def generate_json_from_file(file_ref: str, schema_path: str) -> Dict:
     # Get the file object
     file_obj = genai.get_file(file_ref)
     
+    # Language instruction
+    lang_instruction = ""
+    if language == "hi":
+        lang_instruction = "\n\nLANGUAGE REQUIREMENT: All textual analysis, summaries, descriptions, recommendations, assessments, and narrative content MUST be provided in HINDI (हिंदी). Keep technical terms, field names, numbers, proper nouns, and JSON structure in English. Only translate the values of text fields."
+    
     # Create a strict system prompt
-    system_instruction = """You are an expert project analyst for Detailed Project Reports (DPRs). Read the attached PDF and produce EXACTLY one valid JSON object that exactly matches the schema supplied in the user prompt. RETURN ONLY the JSON object — no markdown, no commentary, no extra text. The JSON must parse cleanly.
+    system_instruction = f"""You are an expert project analyst for Detailed Project Reports (DPRs). Read the attached PDF and produce EXACTLY one valid JSON object that exactly matches the schema supplied in the user prompt. RETURN ONLY the JSON object — no markdown, no commentary, no extra text. The JSON must parse cleanly.{lang_instruction}
 
 MANDATORY BEHAVIOR (follow exactly):
 1) OUTPUT: Return exactly one JSON object whose keys and nested structure match the supplied schema. Do NOT add or remove top-level keys or change nesting.

@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -97,12 +97,16 @@ async def list_all_dprs():
 
 
 @app.post("/upload-dpr")
-async def upload_dpr(file: UploadFile = File(...)):
+async def upload_dpr(file: UploadFile = File(...), language: str = Form("en")):
     """
     Upload a DPR PDF, process it with Gemini, and return structured JSON.
     
     If a PDF with the same filename already exists, return the existing analysis.
     Otherwise, process the new PDF and store it.
+    
+    Args:
+        file: PDF file to upload
+        language: "en" for English, "hi" for Hindi (default: "en")
     """
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are accepted")
@@ -136,8 +140,8 @@ async def upload_dpr(file: UploadFile = File(...)):
         # Upload to Gemini Files API
         file_ref = gemini_client.upload_file(str(filepath))
         
-        # Generate JSON from the file
-        parsed_json = gemini_client.generate_json_from_file(file_ref, str(SCHEMA_PATH))
+        # Generate JSON from the file (with language parameter)
+        parsed_json = gemini_client.generate_json_from_file(file_ref, str(SCHEMA_PATH), language=language)
         
         # Store in database
         dpr_id = db.insert_dpr(
