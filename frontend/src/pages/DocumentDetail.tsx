@@ -28,7 +28,18 @@ import { cn } from '@/lib/utils'
 import { api, type DPR, type Message } from '@/lib/api'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
-const COLORS = ['#0ea5e9', '#06b6d4', '#0891b2', '#0e7490', '#155e75', '#164e63']
+const COLORS = [
+  '#0ea5e9', // Sky blue
+  '#10b981', // Emerald green
+  '#f59e0b', // Amber orange
+  '#ef4444', // Red
+  '#8b5cf6', // Violet
+  '#ec4899', // Pink
+  '#06b6d4', // Cyan
+  '#f97316', // Orange
+  '#14b8a6', // Teal
+  '#6366f1', // Indigo
+]
 
 export default function DocumentDetailPage() {
   const navigate = useNavigate()
@@ -601,7 +612,11 @@ function AnalysisTab({ data }: { data: any }) {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip formatter={(value) => `₹${value} Lakhs`} />
-              <Bar dataKey="value" fill="#0ea5e9" />
+              <Bar dataKey="value">
+                {projectCostData.map((_entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -616,7 +631,11 @@ function AnalysisTab({ data }: { data: any }) {
               <XAxis type="number" />
               <YAxis dataKey="name" type="category" width={150} />
               <Tooltip formatter={(value) => `₹${value} Lakhs`} />
-              <Bar dataKey="value" fill="#06b6d4" />
+              <Bar dataKey="value">
+                {costBreakdownData.map((_entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

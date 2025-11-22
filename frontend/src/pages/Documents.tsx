@@ -177,7 +177,7 @@ export default function DocumentsPage() {
                 <div className="flex gap-2">
                   <Button
                     className="flex-1"
-                    onClick={() => navigate(`/document/${doc.id}`)}
+                    onClick={() => navigate(`/documents/${doc.id}`)}
                     disabled={!doc.summary_json}
                   >
                     <Eye className="h-4 w-4" />
