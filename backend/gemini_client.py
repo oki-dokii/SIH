@@ -110,7 +110,38 @@ MANDATORY BEHAVIOR (follow exactly):
 7) PAGE REFERENCES & EVIDENCE: For any numeric or tabular value you cite, include page references in the `assumptions` text or in the `riskAssessment[*].evidence` field (e.g., “table on page 12”). Prefer adding page numbers for `key_tables` if you identify them.
 8) RISK ANALYSIS: For `riskAssessment`, list the top 3-6 risks with a one-line mitigation each. For each risk include severity: HIGH / MEDIUM / LOW, and a brief evidence note (page/table).
 9) SCORING & RECOMMENDATION MAPPING: Compute `overallScore` using the rubric below; map recommendation by thresholds (but you may deviate only if you explain in `INFERRED_REASON:`).
-10) JSON ONLY: Your entire response must be parseable JSON ONLY. No extra lines or text.
+
+10) **INCONSISTENCY DETECTION** (CRITICAL - Phase 3):
+   Thoroughly analyze the DPR for inconsistencies and populate the `inconsistencyDetection` object:
+   - Check if financial components add up correctly (e.g., total investment = sum of components?)
+   - Verify beneficiary counts are consistent across sections
+   - Identify timeline conflicts (duration vs milestones, unrealistic deadlines)
+   - Detect calculation errors (ROI, IRR, payback periods)
+   - Find conflicting data between sections
+   - For EACH issue: provide category, severity (Critical/High/Medium/Low), description, location, detected values, impact
+   - Set `hasInconsistencies` to true if ANY issues found
+   - Count total inconsistencies accurately
+
+11) **MDONER COMPLIANCE SCORING** (CRITICAL - Phase 3):
+   Calculate weighted compliance score in `mdonerComplianceScoring`:
+   - **North Eastern Focus (25%)**: NE states location? NE-specific challenges addressed? Score 0-100
+   - **Beneficiary Alignment (20%)**: Tribal/marginalized communities targeted? Realistic counts? Score 0-100
+   - **Environmental Compliance (20%)**: Clearances identified? Impacts assessed? Sensitive zones flagged? Score 0-100
+   - **Land Acquisition (15%)**: Ownership clear? Tribal rights addressed? Consent documented? Score 0-100
+   - **Documentation Quality (10%)**: DPR complete? Data consistent? Evidence provided? Score 0-100
+   - **Financial Viability (10%)**: Budget realistic? IRR/DSCR acceptable? Projections sound? Score 0-100
+   - Calculate `overallComplianceScore` = (northEasternFocus*0.25 + beneficiaryAlignment*0.20 + environmentalCompliance*0.20 + landAcquisition*0.15 + documentationQuality*0.10 + financialViability*0.10)
+   - List specific compliance gaps and strengths
+
+12) **SMART RECOMMENDATIONS** (CRITICAL - Phase 3):
+   Generate actionable recommendations in `smartRecommendations`:
+   - **Critical Actions**: Must-fix items before approval (address Critical inconsistencies, mandatory gaps)
+   - **Improvement Suggestions**: Enhancements to strengthen project (Medium/High inconsistencies, weak compliance areas)
+   - **Best Practices**: MDoNER and industry best practices to adopt
+   - **Next Steps**: Prioritized actionable steps (1st, 2nd priority, etc.)
+   - Be specific, actionable, reference sections/pages
+
+13) JSON ONLY: Your entire response must be parseable JSON ONLY. No extra lines or text.
 
 Scoring rubric (apply to compute overallScore 0-100):
 - Weighted components (approx): Financial viability (NPV/IRR/Payback) 45%, Market & demand 15%, Technical readiness 15%, Team/governance 10%, Risks/residual 15%.
@@ -184,7 +215,8 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
             "projectName", "projectLocation", "projectSector", 
             "executiveSummary", "overallScore", "recommendation",
             "financialAnalysis", "timelineAnalysis", "scopeAndObjectives",
-            "riskAssessment", "complianceCheck"
+            "riskAssessment", "complianceCheck", "environmentalImpact",
+            "inconsistencyDetection", "mdonerComplianceScoring", "smartRecommendations"
         ]
         
         missing_keys = [key for key in required_keys if key not in parsed_json]
