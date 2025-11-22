@@ -1,0 +1,142 @@
+DPR Analyzer Frontend Design Prompt for Replit
+Project Overview
+Create a modern, professional web application called "DPR Analyzer" - an AI-powered Detailed Project Report analysis platform built with React, TypeScript, and Tailwind CSS.
+
+Design System & Colors
+Primary Color: Bright Blue (#200 85% 52%) - Used for main buttons, headlines, borders, and interactive elements
+Accent Color: Lighter Green (#150 55% 50%) - Used for secondary elements and accents
+Dark Background: Navy (#220 20% 10%)
+Light Background: Off-white (#0 0% 96%)
+Foreground Text: Dark gray (#220 15% 15%) in light mode, light gray (#0 0% 95%) in dark mode
+Black: Used sparingly for emphasis (#0 0% 15%)
+Borders: Subtle light borders with primary/accent colors at reduced opacity
+Light & Dark Mode
+Implement full dark mode toggle in header (Moon/Sun icon button)
+Light mode: Clean white backgrounds with subtle color accents
+Dark mode: Navy backgrounds with vibrant blue and green highlights
+All colors adapt automatically based on dark class on root element
+Layout & Pages
+1. Header/Navigation
+Fixed header with sticky positioning, white background in light mode, dark in dark mode
+Logo: "DPR Analyzer" with blue icon (file icon in a blue box)
+Navigation links: Home, Documents
+Dark mode toggle button (Moon/Sun icon) in top right
+"Upload PDF" primary button with blue background
+Responsive: Hamburger menu for mobile
+2. Landing Page (Home)
+Hero Section:
+
+Headline: "Analyze Your DPR Documents with AI"
+Subheadline: "Upload and get instant analysis of your Detailed Project Reports. Make better decisions faster."
+Badge: "Powered by Google Gemini AI" with sparkle icon
+Two CTA buttons: "Get Started" (blue) and "Learn More" (outlined blue)
+Upload zone on right side with drag-drop support
+Upload Zone Component:
+
+Card with dashed blue border
+Upload icon in a light blue background box
+Text: "Upload Your Document" + "Drag and drop your PDF here, or click to browse"
+Supporting text: "PDF up to 50MB"
+Responsive: Stacks vertically on mobile
+Statistics Cards:
+
+3-column grid (responsive)
+Cards showing: "10K+ Analyzed", "99.9% Accuracy", "24/7 Support"
+White background, subtle borders, hover effects with 3D lift
+Key Features Section:
+
+Heading: "Key Features"
+4-column grid of feature cards (responsive to 2 columns on tablet, 1 on mobile)
+Feature cards:
+"AI-Powered Analysis" - Advanced Gemini AI extracts and analyzes detailed project data
+"Instant Processing" - Upload PDFs and get comprehensive analysis in seconds
+"Secure & Private" - Your documents are encrypted and processed securely
+"Visual Insights" - Interactive dashboards and 3D visualizations
+Cards have light blue background, blue icons, hover effects
+CTA Section:
+
+Blue-to-green gradient background
+Heading: "Ready to Get Started?"
+Subtext: "Analyze your DPR documents with AI. Get insights in minutes."
+White "Start Analyzing" button with arrow icon
+Footer:
+
+Light gray text, copyright info, Privacy/Terms/Contact links
+Blue-colored "DPR Analyzer" brand name in footer
+Components & Styling
+Buttons:
+
+Primary: Blue background, white text, hover effect
+Secondary: Blue outline, transparent background
+All buttons have smooth hover transitions and proper padding
+Icon support (Lucide icons)
+Cards:
+
+White background with subtle shadow
+Rounded corners (12px)
+Blue/green borders at reduced opacity
+Hover state: slight shadow increase, border color brightens
+Typography:
+
+Headlines: Bold, dark gray/white (depending on mode)
+Body text: Regular weight, 16px default
+Accent text: Blue colored
+Animations:
+
+Fade-in on page load (smooth opacity transition)
+Slide-up for staggered element reveals
+Scale-in for upload zone
+Float animation for upload zone component
+Subtle hover effects on interactive elements
+Responsive Design:
+
+Mobile-first approach
+Breakpoints: sm (640px), md (768px), lg (1024px)
+Hero section: 2-column on desktop, stacks on mobile
+Features: 4-col → 2-col → 1-col responsive grid
+Touch-friendly buttons and spacing
+Tech Stack
+Framework: React 18+ with TypeScript
+Styling: Tailwind CSS with custom color variables
+Routing: React Router v6
+Icons: Lucide React
+UI Components: shadcn/ui (Button, Card, Sheet, Toast)
+Build Tool: Vite
+Package Manager: npm/pnpm
+Key Files Structure
+src/
+├── pages/
+│   ├── Index.tsx (landing page)
+│   ├── Documents.tsx (documents list)
+│   └── DocumentDetail.tsx (single document analysis)
+├── components/
+│   ├── Header.tsx (navigation & theme toggle)
+│   ├── UploadZone.tsx (drag-drop upload)
+│   ├── FeatureCard.tsx (feature blocks)
+│   ├── DocumentCard.tsx (document list items)
+│   ├── ChatInterface.tsx (AI chat)
+│   └── ui/ (shadcn components)
+├── index.css (global styles + color vars)
+└── App.tsx (routing setup)
+Color Variables in CSS
+:root {
+  --primary: 200 85% 52%; /* Bright Blue */
+  --accent: 150 55% 50%;  /* Lighter Green */
+  --secondary: 0 0% 15%;  /* Black */
+  --background: 0 0% 96%;
+  --foreground: 220 15% 15%;
+  /* ... and more */
+}
+
+.dark {
+  --background: 220 20% 10%;
+  --foreground: 0 0% 95%;
+  /* ... dark mode overrides */
+}
+Additional Notes
+No complex animations, keep it professional and clean
+Ensure proper contrast ratios for accessibility
+Support for PDF file uploads (UI only, no backend needed)
+All interactive elements should have hover states
+Mobile-first responsive design
+Maintain consistency in spacing (use Tailwind spacing scale
