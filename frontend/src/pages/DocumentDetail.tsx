@@ -138,6 +138,9 @@ export default function DocumentDetailPage() {
     { id: 'overview', label: t('documentDetail.overview') },
     { id: 'analysis', label: t('documentDetail.analysis') },
     { id: 'timeline', label: t('documentDetail.timeline') },
+    { id: 'inconsistencies', label: t('documentDetail.inconsistencies') },
+    { id: 'compliance', label: t('documentDetail.compliance') },
+    { id: 'recommendations', label: t('documentDetail.recommendations') },
   ]
 
   if (loading) {
@@ -296,6 +299,18 @@ export default function DocumentDetailPage() {
 
                 {activeTab === 'timeline' && (
                   <TimelineTab data={data} />
+                )}
+
+                {activeTab === 'inconsistencies' && (
+                  <InconsistenciesTab data={data} />
+                )}
+
+                {activeTab === 'compliance' && (
+                  <ComplianceTab data={data} />
+                )}
+
+                {activeTab === 'recommendations' && (
+                  <RecommendationsTab data={data} />
                 )}
               </div>
             </Card>
@@ -715,6 +730,264 @@ function AnalysisTab({ data }: { data: any }) {
 
       {data.environmentalImpact && (
         <EnvironmentalImpact data={data.environmentalImpact} />
+      )}
+    </div>
+  )
+}
+
+function InconsistenciesTab({ data }: { data: any }) {
+  const inconsistencies = data?.inconsistencyDetection
+
+  if (!inconsistencies || !inconsistencies.hasInconsistencies) {
+    return (
+      <div className="text-center py-12">
+        <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
+        <h3 className="text-lg font-semibold mb-2">No Inconsistencies Detected</h3>
+        <p className="text-muted-foreground">The DPR appears to be internally consistent</p>
+      </div>
+    )
+  }
+
+  const severityColors = {
+    Critical: 'bg-red-100 text-red-800 border-red-300',
+    High: 'bg-orange-100 text-orange-800 border-orange-300',
+    Medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+    Low: 'bg-blue-100 text-blue-800 border-blue-300',
+  }
+
+  const categoryIcons = {
+    'Budget Mismatch': DollarSign,
+    'Timeline Conflict': Clock,
+    'Beneficiary Discrepancy': Users,
+    'Data Inconsistency': AlertCircle,
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Inconsistencies Detected</h3>
+          <p className="text-sm text-muted-foreground">
+            Found {inconsistencies.totalInconsistenciesFound} issue(s) requiring attention
+          </p>
+        </div>
+        <XCircle className="h-8 w-8 text-red-500" />
+      </div>
+
+      <div className="space-y-3">
+        {inconsistencies.issues?.map((issue: any, idx: number) => {
+          const Icon = categoryIcons[issue.category as keyof typeof categoryIcons] || AlertCircle
+          return (
+            <Card key={idx} className={`p-4 border-2 ${severityColors[issue.severity as keyof typeof severityColors] || ''}`}>
+              <div className="flex items-start gap-3">
+                <Icon className="h-5 w-5 mt-1 flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold">{issue.category}</h4>
+                    <span className="text-xs px-2 py-1 rounded bg-white">{issue.severity}</span>
+                  </div>
+                  <p className="text-sm mb-2">{issue.description}</p>
+                  {issue.location && (
+                    <p className="text-xs text-muted-foreground mb-1">📍 Location: {issue.location}</p>
+                  )}
+                  {issue.detectedValues && (
+                    <p className="text-xs text-muted-foreground mb-1">🔍 Detected: {issue.detectedValues}</p>
+                  )}
+                  {issue.impact && (
+                    <p className="text-xs mt-2 p-2 bg-white rounded italic">Impact: {issue.impact}</p>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function ComplianceTab({ data }: { data: any }) {
+  const compliance = data?.mdonerComplianceScoring
+
+  if (!compliance) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+        <p className="text-muted-foreground">Compliance scoring data not available</p>
+      </div>
+    )
+  }
+
+  const scoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-600'
+    if (score >= 60) return 'text-yellow-600'
+    return 'text-red-600'
+  }
+
+  const criteria = [
+    { key: 'northEasternFocus', label: 'North Eastern Focus', weight: '25%' },
+    { key: 'beneficiaryAlignment', label: 'Beneficiary Alignment', weight: '20%' },
+    { key: 'environmentalCompliance', label: 'Environmental Compliance', weight: '20%' },
+    { key: 'landAcquisition', label: 'Land Acquisition', weight: '15%' },
+    { key: 'documentationQuality', label: 'Documentation Quality', weight: '10%' },
+    { key: 'financialViability', label: 'Financial Viability', weight: '10%' },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center p-6 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg">
+        <h3 className="text-sm font-medium text-muted-foreground mb-2">Overall MDoNER Compliance Score</h3>
+        <div className={`text-5xl font-bold ${scoreColor(compliance.overallComplianceScore || 0)}`}>
+          {compliance.overallComplianceScore || 0}/100
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h4 className="font-semibold">Scoring Breakdown</h4>
+        {criteria.map(({ key, label, weight }) => {
+          const item = compliance.scoringBreakdown?.[key]
+          if (!item) return null
+
+          return (
+            <div key={key} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{label} ({weight})</span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-semibold ${scoreColor(item.score || 0)}`}>
+                    {item.score || 0}/100
+                  </span>
+                  {item.met ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-500" />
+                  )}
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full ${item.score >= 80 ? 'bg-green-500' : item.score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                  style={{ width: `${item.score || 0}%` }}
+                />
+              </div>
+              {item.findings && (
+                <p className="text-xs text-muted-foreground pl-4">{item.findings}</p>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {compliance.complianceGaps && compliance.complianceGaps.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3 text-red-600">Compliance Gaps</h4>
+          <ul className="space-y-2">
+            {compliance.complianceGaps.map((gap: string, idx: number) => (
+              <li key={idx} className="flex items-start gap-2">
+                <XCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <span className="text-sm">{gap}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {compliance.complianceStrengths && compliance.complianceStrengths.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3 text-green-600">Compliance Strengths</h4>
+          <ul className="space-y-2">
+            {compliance.complianceStrengths.map((strength: string, idx: number) => (
+              <li key={idx} className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <span className="text-sm">{strength}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RecommendationsTab({ data }: { data: any }) {
+  const recommendations = data?.smartRecommendations
+
+  if (!recommendations) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+        <p className="text-muted-foreground">Recommendations not available</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {recommendations.criticalActions && recommendations.criticalActions.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <AlertCircle className="h-5 w-5 text-red-500" />
+            <h4 className="font-semibold text-red-600">Critical Actions Required</h4>
+          </div>
+          <div className="space-y-2">
+            {recommendations.criticalActions.map((action: string, idx: number) => (
+              <Card key={idx} className="p-3 border-l-4 border-red-500 bg-red-50">
+                <p className="text-sm">{action}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {recommendations.improvementSuggestions && recommendations.improvementSuggestions.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="h-5 w-5 text-yellow-500" />
+            <h4 className="font-semibold text-yellow-600">Improvement Suggestions</h4>
+          </div>
+          <div className="space-y-2">
+            {recommendations.improvementSuggestions.map((suggestion: string, idx: number) => (
+              <Card key={idx} className="p-3 border-l-4 border-yellow-500 bg-yellow-50">
+                <p className="text-sm">{suggestion}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {recommendations.bestPractices && recommendations.bestPractices.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="h-5 w-5 text-blue-500" />
+            <h4 className="font-semibold text-blue-600">MDoNER Best Practices</h4>
+          </div>
+          <ul className="space-y-2">
+            {recommendations.bestPractices.map((practice: string, idx: number) => (
+              <li key={idx} className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                <span className="text-sm">{practice}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {recommendations.nextSteps && recommendations.nextSteps.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Target className="h-5 w-5 text-green-500" />
+            <h4 className="font-semibold text-green-600">Next Steps (Priority Order)</h4>
+          </div>
+          <div className="space-y-2">
+            {recommendations.nextSteps.map((step: string, idx: number) => (
+              <div key={idx} className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold">
+                  {idx + 1}
+                </div>
+                <p className="text-sm flex-1 pt-0.5">{step}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )
