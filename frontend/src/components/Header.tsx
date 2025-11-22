@@ -1,12 +1,14 @@
-import { FileText, Moon, Sun } from 'lucide-react'
+import { FileText, Moon, Sun, Languages } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { Button } from './ui/Button'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '../contexts/LanguageContext'
 
 export function Header() {
   const [isDark, setIsDark] = useState(false)
   const location = useLocation()
+  const { language, setLanguage, t } = useLanguage()
 
   useEffect(() => {
     const isDarkMode = document.documentElement.classList.contains('dark')
@@ -20,6 +22,10 @@ export function Header() {
 
   const isActive = (path: string) => location.pathname === path
 
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'hi' : 'en')
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -27,7 +33,7 @@ export function Header() {
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
             <FileText className="h-6 w-6 text-white" />
           </div>
-          <span className="text-xl font-bold text-primary">DPR Analyzer</span>
+          <span className="text-xl font-bold text-primary">{t('landing.title')}</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
@@ -38,7 +44,7 @@ export function Header() {
               isActive('/') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
             )}
           >
-            Home
+            {t('common.home')}
           </Link>
           <Link
             to="/documents"
@@ -47,7 +53,7 @@ export function Header() {
               isActive('/documents') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
             )}
           >
-            Documents
+            {t('common.documents')}
           </Link>
           <Link
             to="/comparisons"
@@ -56,11 +62,19 @@ export function Header() {
               isActive('/comparisons') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
             )}
           >
-            Comparisons
+            {t('common.comparisons')}
           </Link>
         </nav>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={toggleLanguage}
+            className="p-2 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+            aria-label="Toggle language"
+          >
+            <Languages className="h-5 w-5" />
+            <span className="text-sm font-medium">{language === 'en' ? 'हिं' : 'EN'}</span>
+          </button>
           <button
             onClick={toggleDarkMode}
             className="p-2 rounded-lg hover:bg-muted transition-colors"
@@ -70,7 +84,7 @@ export function Header() {
           </button>
           <Button>
             <FileText className="h-4 w-4" />
-            Upload PDF
+            {t('common.upload')}
           </Button>
         </div>
       </div>
