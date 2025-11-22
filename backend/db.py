@@ -40,6 +40,38 @@ def init_db(db_path: str = "data/dpr.db"):
         )
     """)
     
+    # Create comparison_chats table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS comparison_chats (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            created_ts TEXT NOT NULL
+        )
+    """)
+    
+    # Create comparison_chat_pdfs table (junction table)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS comparison_chat_pdfs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            comparison_chat_id INTEGER NOT NULL,
+            dpr_id INTEGER NOT NULL,
+            FOREIGN KEY (comparison_chat_id) REFERENCES comparison_chats (id),
+            FOREIGN KEY (dpr_id) REFERENCES dprs (id)
+        )
+    """)
+    
+    # Create comparison_messages table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS comparison_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            comparison_chat_id INTEGER NOT NULL,
+            role TEXT NOT NULL,
+            text TEXT NOT NULL,
+            timestamp TEXT NOT NULL,
+            FOREIGN KEY (comparison_chat_id) REFERENCES comparison_chats (id)
+        )
+    """)
+    
     conn.commit()
     conn.close()
     print(f"✓ Database initialized at {db_path}")
