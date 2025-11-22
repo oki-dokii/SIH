@@ -1,12 +1,14 @@
 import { Upload, FileText } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface UploadZoneProps {
   onUpload?: (file: File) => void
 }
 
 export function UploadZone({ onUpload }: UploadZoneProps) {
+  const { t } = useLanguage()
   const [isDragging, setIsDragging] = useState(false)
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -69,13 +71,13 @@ export function UploadZone({ onUpload }: UploadZoneProps) {
           <Upload className="h-8 w-8 text-primary animate-float" />
         </div>
         <div>
-          <h3 className="text-xl font-semibold mb-2">Upload Your Document</h3>
+          <h3 className="text-xl font-semibold mb-2">{t('landing.uploadPrompt')}</h3>
           <p className="text-muted-foreground mb-4">
-            Drag and drop your PDF here, or click to browse
+            {t('documents.dragDrop')}
           </p>
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <FileText className="h-4 w-4" />
-            <span>PDF up to 50MB</span>
+            <span>{t('landing.uploadHint')}</span>
           </div>
         </div>
         <input

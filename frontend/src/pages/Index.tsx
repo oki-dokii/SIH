@@ -7,9 +7,11 @@ import { Sparkles, Zap, Lock, BarChart3, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { useState } from 'react'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function IndexPage() {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -44,25 +46,23 @@ export default function IndexPage() {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">
                 <Sparkles className="h-4 w-4" />
-                Powered by Google Gemini AI
+                {t('landing.subtitle')}
               </div>
               
               <h1 className="text-5xl md:text-6xl font-bold leading-tight">
-                Analyze Your{' '}
-                <span className="text-primary">DPR Documents</span> with AI
+                {t('landing.description')}
               </h1>
               
               <p className="text-xl text-muted-foreground">
-                Upload and get instant analysis of your Detailed Project Reports.
-                Make better decisions faster.
+                {t('landing.uploadPrompt')}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" onClick={() => navigate('/documents')}>
-                  Get Started <ArrowRight className="h-4 w-4" />
+                  {t('landing.feature1Title')} <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button size="lg" variant="outline">
-                  Learn More
+                  {t('landing.uploadHint')}
                 </Button>
               </div>
             </div>
@@ -74,9 +74,9 @@ export default function IndexPage() {
                     <div className="mb-4">
                       <div className="w-16 h-16 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">Uploading Document...</h3>
+                    <h3 className="text-lg font-semibold mb-2">{t('common.loading')}</h3>
                     <p className="text-muted-foreground mb-4">
-                      Processing your PDF with AI
+                      {t('landing.uploadPrompt')}
                     </p>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
@@ -105,63 +105,63 @@ export default function IndexPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="p-6 border-primary/20 hover:border-primary/40">
               <div className="text-3xl font-bold text-primary mb-2">10K+</div>
-              <div className="text-sm text-muted-foreground">Analyzed</div>
+              <div className="text-sm text-muted-foreground">{t('landing.stats1')}</div>
             </Card>
             <Card className="p-6 border-accent/20 hover:border-accent/40">
               <div className="text-3xl font-bold text-accent mb-2">99.9%</div>
-              <div className="text-sm text-muted-foreground">Accuracy</div>
+              <div className="text-sm text-muted-foreground">{t('landing.stats2')}</div>
             </Card>
             <Card className="p-6 border-primary/20 hover:border-primary/40">
               <div className="text-3xl font-bold text-primary mb-2">24/7</div>
-              <div className="text-sm text-muted-foreground">Support</div>
+              <div className="text-sm text-muted-foreground">{t('landing.stats3')}</div>
             </Card>
           </div>
         </section>
 
         <section className="container mx-auto px-4 py-16 md:py-24">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Key Features</h2>
+            <h2 className="text-4xl font-bold mb-4">{t('landing.keyFeatures')}</h2>
             <p className="text-xl text-muted-foreground">
-              Everything you need to analyze DPR documents
+              {t('landing.keyFeaturesDesc')}
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FeatureCard
               icon={Sparkles}
-              title="AI-Powered Analysis"
-              description="Advanced Gemini AI extracts and analyzes detailed project data from your DPR documents automatically."
+              title={t('landing.feature1Title')}
+              description={t('landing.feature1Desc')}
             />
             <FeatureCard
               icon={Zap}
-              title="Instant Processing"
-              description="Upload PDFs and get comprehensive analysis in seconds with our optimized extraction pipeline."
+              title={t('landing.feature2Title')}
+              description={t('landing.feature2Desc')}
             />
             <FeatureCard
               icon={Lock}
-              title="Secure & Private"
-              description="Your documents are encrypted and processed securely. We never share your data with third parties."
+              title={t('landing.feature3Title')}
+              description={t('landing.feature3Desc')}
             />
             <FeatureCard
               icon={BarChart3}
-              title="Visual Insights"
-              description="Interactive dashboards and 3D visualizations help you understand project metrics at a glance."
+              title={t('landing.feature4Title')}
+              description={t('landing.feature4Desc')}
             />
           </div>
         </section>
 
         <section className="container mx-auto px-4 py-16 mb-16">
           <div className="bg-gradient-to-r from-primary to-accent rounded-lg p-12 text-center text-white">
-            <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
+            <h2 className="text-4xl font-bold mb-4">{t('landing.ctaTitle')}</h2>
             <p className="text-xl mb-8 opacity-90">
-              Analyze your DPR documents with AI. Get insights in minutes.
+              {t('landing.ctaDesc')}
             </p>
             <Button
               size="lg"
               variant="secondary"
               onClick={() => navigate('/documents')}
             >
-              Start Analyzing <ArrowRight className="h-4 w-4" />
+              {t('landing.ctaButton')} <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </section>
@@ -172,18 +172,17 @@ export default function IndexPage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
               © 2025{' '}
-              <span className="text-primary font-semibold">DPR Analyzer</span> - AI for
-              North Eastern Development
+              <span className="text-primary font-semibold">{t('landing.title')}</span> - {t('landing.footer')}
             </p>
             <div className="flex gap-6 text-sm">
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                Privacy
+                {t('landing.privacy')}
               </a>
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                Terms
+                {t('landing.terms')}
               </a>
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                Contact
+                {t('landing.contact')}
               </a>
             </div>
           </div>
