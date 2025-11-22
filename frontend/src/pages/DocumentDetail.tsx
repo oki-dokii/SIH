@@ -1,6 +1,7 @@
 import { Header } from '@/components/Header'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { EnvironmentalImpact } from '@/components/EnvironmentalImpact'
 import {
   ArrowLeft,
   Download,
@@ -26,6 +27,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { api, type DPR, type Message } from '@/lib/api'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 const COLORS = [
@@ -44,6 +46,7 @@ const COLORS = [
 export default function DocumentDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
+  const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState('overview')
   const [chatMessage, setChatMessage] = useState('')
   const [chatHistory, setChatHistory] = useState<Message[]>([])
@@ -132,9 +135,9 @@ export default function DocumentDetailPage() {
   }
 
   const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'analysis', label: 'Analysis' },
-    { id: 'timeline', label: 'Timeline' },
+    { id: 'overview', label: t('documentDetail.overview') },
+    { id: 'analysis', label: t('documentDetail.analysis') },
+    { id: 'timeline', label: t('documentDetail.timeline') },
   ]
 
   if (loading) {
@@ -704,6 +707,10 @@ function AnalysisTab({ data }: { data: any }) {
             )}
           </div>
         </div>
+      )}
+
+      {data.environmentalImpact && (
+        <EnvironmentalImpact data={data.environmentalImpact} />
       )}
     </div>
   )
