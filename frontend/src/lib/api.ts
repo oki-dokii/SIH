@@ -23,6 +23,22 @@ export interface UploadResponse {
   message: string
 }
 
+export interface Comparison {
+  id: number
+  name: string
+  created_ts: string
+  dprs?: DPR[]
+  dpr_count?: number
+}
+
+export interface ComparisonMessage {
+  id: number
+  comparison_id: number
+  role: string
+  text: string
+  timestamp: string
+}
+
 export const api = {
   async getDPRs(): Promise<DPR[]> {
     const response = await fetch(`${API_BASE_URL}/dprs`)
@@ -96,5 +112,56 @@ export const api = {
       method: 'DELETE',
     })
     if (!response.ok) throw new Error('Failed to delete DPR')
+  },
+
+  async getComparisons(): Promise<Comparison[]> {
+    const response = await fetch(`${API_BASE_URL}/comparison-chats`)
+    if (!response.ok) throw new Error('Failed to fetch comparisons')
+    const data = await response.json()
+    return data.comparisons || []
+  },
+
+  async createComparison(name: string, dprIds: number[]): Promise<{ comparison_id: number; name: string }> {
+    const response = await fetch(`${API_BASE_URL}/comparison-chats`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, dpr_ids: dprIds }),
+    })
+    if (!response.ok) throw new Error('Failed to create comparison')
+    return response.json()
+  },
+
+  async getComparison(id: number): Promise<Comparison> {
+    const response = await fetch(`${API_BASE_URL}/comparison-chat/${id}`)
+    if (!response.ok) throw new Error('Failed to fetch comparison')
+    return response.json()
+  },
+
+  async sendComparisonMessage(comparisonId: number, message: string): Promise<ComparisonMessage> {
+    const response = await fetch(`${API_BASE_URL}/comparison-chat/${comparisonId}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message }),
+    })
+    if (!response.ok) throw new Error('Failed to send message')
+    const data = await response.json()
+    return {
+      id: data.message_id || 0,
+      comparison_id: comparisonId,
+      role: 'assistant',
+      text: data.reply,
+      timestamp: new Date().toISOString(),
+    }
+  },
+
+  async getComparisonChatHistory(comparisonId: number): Promise<ComparisonMessage[]> {
+    const response = await fetch(`${API_BASE_URL}/comparison-chat/${comparisonId}/chat/history`)
+    if (!response.ok) throw new Error('Failed to fetch comparison chat history')
+    const data = await response.json()
+    return data.messages || []
   },
 }
