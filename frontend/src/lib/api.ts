@@ -47,8 +47,8 @@ export const api = {
     return data.dprs || []
   },
 
-  async getDPR(id: number): Promise<DPR> {
-    const response = await fetch(`${API_BASE_URL}/dpr/${id}`)
+  async getDPR(id: number, language: string = 'en'): Promise<DPR> {
+    const response = await fetch(`${API_BASE_URL}/dpr/${id}?language=${language}`)
     if (!response.ok) throw new Error('Failed to fetch DPR')
     return response.json()
   },

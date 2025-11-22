@@ -18,7 +18,8 @@ def init_db(db_path: str = "data/dpr.db"):
             filepath TEXT NOT NULL,
             uploaded_file_ref TEXT NOT NULL,
             upload_ts TEXT NOT NULL,
-            summary_json TEXT NOT NULL
+            summary_json TEXT NOT NULL,
+            summary_json_multilang TEXT
         )
     """)
     
@@ -101,18 +102,19 @@ def init_db(db_path: str = "data/dpr.db"):
 
 
 def insert_dpr(filename: str, original_filename: str, filepath: str, file_ref: str, 
-               summary_json: dict, db_path: str = "data/dpr.db") -> int:
+               summary_json: dict, summary_json_multilang: dict = None, db_path: str = "data/dpr.db") -> int:
     """Insert a new DPR record and return its ID."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
     timestamp = datetime.now().isoformat()
     json_str = json.dumps(summary_json, indent=2)
+    multilang_str = json.dumps(summary_json_multilang, indent=2) if summary_json_multilang else None
     
     cursor.execute("""
-        INSERT INTO dprs (filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (filename, original_filename, filepath, file_ref, timestamp, json_str))
+        INSERT INTO dprs (filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (filename, original_filename, filepath, file_ref, timestamp, json_str, multilang_str))
     
     dpr_id = cursor.lastrowid
     conn.commit()

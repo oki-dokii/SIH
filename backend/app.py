@@ -119,6 +119,7 @@ async def upload_dpr(file: UploadFile = File(...), language: str = Form("en")):
         if existing_dpr:
             print(f"✓ PDF already exists: {original_filename} (ID: {existing_dpr['id']})")
             return JSONResponse({
+                "id": existing_dpr["id"],
                 "dpr_id": existing_dpr["id"],
                 "summary": existing_dpr["summary_json"],
                 "existing": True
@@ -140,8 +141,19 @@ async def upload_dpr(file: UploadFile = File(...), language: str = Form("en")):
         # Upload to Gemini Files API
         file_ref = gemini_client.upload_file(str(filepath))
         
-        # Generate JSON from the file (with language parameter)
-        parsed_json = gemini_client.generate_json_from_file(file_ref, str(SCHEMA_PATH), language=language)
+        # Generate JSON in multiple languages for future-proof multilingual support
+        print("⏳ Generating analysis in multiple languages...")
+        supported_languages = ["en", "hi"]
+        multilang_json = {}
+        
+        for lang in supported_languages:
+            print(f"  → Generating {lang.upper()} analysis...")
+            multilang_json[lang] = gemini_client.generate_json_from_file(file_ref, str(SCHEMA_PATH), language=lang)
+        
+        print(f"✓ Generated analysis in {len(multilang_json)} languages")
+        
+        # Use the requested language as the default summary_json for backward compatibility
+        parsed_json = multilang_json.get(language, multilang_json["en"])
         
         # Store in database
         dpr_id = db.insert_dpr(
@@ -149,10 +161,12 @@ async def upload_dpr(file: UploadFile = File(...), language: str = Form("en")):
             original_filename=original_filename,
             filepath=str(filepath),
             file_ref=file_ref,
-            summary_json=parsed_json
+            summary_json=parsed_json,
+            summary_json_multilang=multilang_json
         )
         
         return JSONResponse({
+            "id": dpr_id,
             "dpr_id": dpr_id,
             "summary": parsed_json,
             "existing": False
@@ -169,16 +183,31 @@ async def upload_dpr(file: UploadFile = File(...), language: str = Form("en")):
 
 
 @app.get("/dpr/{dpr_id}")
-async def get_dpr(dpr_id: int):
+async def get_dpr(dpr_id: int, language: str = "en"):
     """
     Retrieve a stored DPR by ID.
     
-    Returns the DPR metadata and parsed JSON.
+    Returns the DPR metadata and parsed JSON in the requested language.
+    
+    Args:
+        dpr_id: The DPR ID
+        language: Language code ("en", "hi", etc.) - defaults to "en"
     """
     dpr = db.get_dpr(dpr_id)
     
     if not dpr:
         raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+    
+    # If multilang data exists, use the requested language version
+    if dpr.get("summary_json_multilang"):
+        import json
+        multilang_data = json.loads(dpr["summary_json_multilang"]) if isinstance(dpr["summary_json_multilang"], str) else dpr["summary_json_multilang"]
+        
+        # Get the requested language version, fallback to English if not available
+        if language in multilang_data:
+            dpr["summary_json"] = multilang_data[language]
+        elif "en" in multilang_data:
+            dpr["summary_json"] = multilang_data["en"]
     
     return JSONResponse(dpr)
 

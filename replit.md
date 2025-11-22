@@ -26,6 +26,19 @@ A lightweight SQLite database stores DPR documents, chat messages, and compariso
 
 Google Gemini 2.5 Flash is the primary AI model for document analysis and chat, chosen for its speed, document understanding, large context windows, and PDF processing capabilities. The AI workflow involves a two-phase process: initial upload and structured data extraction, followed by interactive chat using the uploaded file reference. Chat sessions are managed in-memory, and a separate comparison chat flow allows cross-document analysis.
 
+### Multi-Language Support
+
+The application features a comprehensive multi-language system that generates AI analysis in multiple languages at upload time:
+
+- **Upload-time generation**: When a PDF is uploaded, the AI generates complete analysis in ALL supported languages (currently English and Hindi)
+- **Instant language switching**: Users can toggle between languages without re-processing; the pre-generated content is retrieved from the database
+- **Scalable architecture**: New languages can be added by simply updating the `supported_languages` array in `backend/app.py`
+- **Storage**: Multi-language JSON stored in `summary_json_multilang` column as `{"en": {...}, "hi": {...}, ...}`
+- **Frontend integration**: Language toggle triggers document re-fetch with language parameter; UI translations handled by `i18n.ts`
+
+**Supported Languages**: English (en), Hindi (hi)
+**Future Languages**: Can easily add Assamese, Bengali, and other regional languages by updating configuration
+
 ### Authentication & Authorization
 
 The application currently does not implement user authentication or authorization, assuming a single-user or trusted environment.
