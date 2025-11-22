@@ -190,11 +190,11 @@ export default function DocumentDetailPage() {
           </div>
           <Button variant="outline" onClick={handleShare}>
             {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-            {copied ? 'Copied!' : 'Share'}
+            {copied ? 'Copied!' : t('common.share')}
           </Button>
           <Button variant="outline" onClick={handleDownload}>
             <Download className="h-4 w-4 mr-2" />
-            Download
+            {t('common.download')}
           </Button>
         </div>
 
@@ -204,7 +204,7 @@ export default function DocumentDetailPage() {
               <Card className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                   <TrendingUp className="h-4 w-4" />
-                  Overall Score
+                  {t('documentDetail.overallScore')}
                 </div>
                 <div className="text-2xl font-bold text-primary">{data.overallScore}/100</div>
               </Card>
@@ -213,7 +213,7 @@ export default function DocumentDetailPage() {
               <Card className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                   <DollarSign className="h-4 w-4" />
-                  Investment
+                  {t('documentDetail.totalInvestment')}
                 </div>
                 <div className="text-xl font-bold">₹{data.financialAnalysis.projectCost.totalInitialInvestmentLakhINR}L</div>
               </Card>
@@ -222,16 +222,16 @@ export default function DocumentDetailPage() {
               <Card className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                   <Clock className="h-4 w-4" />
-                  Duration
+                  {t('documentDetail.implementationDuration')}
                 </div>
-                <div className="text-xl font-bold">{data.timelineAnalysis.implementationDurationMonths} months</div>
+                <div className="text-xl font-bold">{data.timelineAnalysis.implementationDurationMonths} {t('documentDetail.months')}</div>
               </Card>
             )}
             {data.projectLocation?.state && (
               <Card className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                   <MapPin className="h-4 w-4" />
-                  Location
+                  {t('documentDetail.location')}
                 </div>
                 <div className="text-lg font-bold">{data.projectLocation.state}</div>
               </Card>
@@ -246,7 +246,7 @@ export default function DocumentDetailPage() {
                   ) : (
                     <AlertCircle className="h-4 w-4" />
                   )}
-                  Status
+                  {t('documentDetail.recommendation')}
                 </div>
                 <div className="text-sm font-bold">{data.recommendation}</div>
               </Card>
@@ -255,7 +255,7 @@ export default function DocumentDetailPage() {
               <Card className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
                   <Users className="h-4 w-4" />
-                  Sector
+                  {t('documentDetail.sector')}
                 </div>
                 <div className="text-sm font-bold line-clamp-2">{data.projectSector}</div>
               </Card>
@@ -305,7 +305,7 @@ export default function DocumentDetailPage() {
             <Card className="h-[600px] flex flex-col">
               <div className="border-b p-4 flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">AI Assistant</h3>
+                <h3 className="font-semibold">{t('documentDetail.chat')}</h3>
               </div>
               
               <div className="flex-1 p-4 overflow-y-auto space-y-4">
@@ -343,7 +343,7 @@ export default function DocumentDetailPage() {
                   type="text"
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
-                  placeholder="Ask about the document..."
+                  placeholder={t('documentDetail.askQuestion')}
                   className="flex-1 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                   disabled={chatLoading}
                 />
@@ -360,6 +360,8 @@ export default function DocumentDetailPage() {
 }
 
 function OverviewTab({ data }: { data: any }) {
+  const { t } = useLanguage()
+  
   if (!data) {
     return (
       <div className="text-center py-8">
@@ -380,7 +382,7 @@ function OverviewTab({ data }: { data: any }) {
         <div>
           <h4 className="font-semibold mb-2 flex items-center gap-2">
             <MapPin className="h-4 w-4" />
-            Location
+            {t('documentDetail.location')}
           </h4>
           <p className="text-muted-foreground">
             {data.projectLocation.state}
@@ -395,7 +397,7 @@ function OverviewTab({ data }: { data: any }) {
         <div>
           <h4 className="font-semibold mb-2 flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            Executive Summary
+            {t('documentDetail.executiveSummary')}
           </h4>
           <p className="text-muted-foreground leading-relaxed">{data.executiveSummary}</p>
         </div>
@@ -407,7 +409,7 @@ function OverviewTab({ data }: { data: any }) {
             <div>
               <h4 className="font-semibold mb-2 flex items-center gap-2">
                 <Target className="h-4 w-4" />
-                Vision
+                {t('documentDetail.vision')}
               </h4>
               <p className="text-muted-foreground">{data.scopeAndObjectives.vision}</p>
             </div>
@@ -415,14 +417,14 @@ function OverviewTab({ data }: { data: any }) {
 
           {data.scopeAndObjectives.mission && (
             <div>
-              <h4 className="font-semibold mb-2">Mission</h4>
+              <h4 className="font-semibold mb-2">{t('documentDetail.mission')}</h4>
               <p className="text-muted-foreground">{data.scopeAndObjectives.mission}</p>
             </div>
           )}
 
           {data.scopeAndObjectives.objectives && data.scopeAndObjectives.objectives.length > 0 && (
             <div>
-              <h4 className="font-semibold mb-2">Key Objectives</h4>
+              <h4 className="font-semibold mb-2">{t('documentDetail.objectives')}</h4>
               <ul className="list-disc list-inside text-muted-foreground space-y-1">
                 {data.scopeAndObjectives.objectives.map((obj: string, idx: number) => (
                   <li key={idx}>{obj}</li>
@@ -437,13 +439,13 @@ function OverviewTab({ data }: { data: any }) {
         <div className="grid md:grid-cols-2 gap-4">
           {data.financialAnalysis.returnsAndCoverage.avgDSCR && (
             <Card className="p-4 bg-cyan-50">
-              <div className="text-sm text-muted-foreground mb-1">Avg DSCR</div>
+              <div className="text-sm text-muted-foreground mb-1">{t('documentDetail.avgDSCR')}</div>
               <div className="text-3xl font-bold text-primary">{data.financialAnalysis.returnsAndCoverage.avgDSCR}</div>
             </Card>
           )}
           {data.financialAnalysis.returnsAndCoverage.IRRPercent && (
             <Card className="p-4 bg-cyan-50">
-              <div className="text-sm text-muted-foreground mb-1">IRR</div>
+              <div className="text-sm text-muted-foreground mb-1">{t('documentDetail.irr')}</div>
               <div className="text-3xl font-bold text-primary">{data.financialAnalysis.returnsAndCoverage.IRRPercent}%</div>
             </Card>
           )}
@@ -454,6 +456,8 @@ function OverviewTab({ data }: { data: any }) {
 }
 
 function TimelineTab({ data }: { data: any }) {
+  const { t } = useLanguage()
+  
   if (!data?.timelineAnalysis) {
     return (
       <div className="text-center py-8">
@@ -471,8 +475,8 @@ function TimelineTab({ data }: { data: any }) {
           <div className="flex items-center gap-4">
             <Clock className="h-10 w-10 text-primary" />
             <div>
-              <div className="text-sm text-muted-foreground">Implementation Duration</div>
-              <div className="text-3xl font-bold">{timeline.implementationDurationMonths} Months</div>
+              <div className="text-sm text-muted-foreground">{t('documentDetail.implementationDuration')}</div>
+              <div className="text-3xl font-bold">{timeline.implementationDurationMonths} {t('documentDetail.months')}</div>
             </div>
           </div>
         </Card>
@@ -482,7 +486,7 @@ function TimelineTab({ data }: { data: any }) {
         <div>
           <h4 className="font-semibold mb-4 flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Project Milestones
+            {t('documentDetail.keyMilestones')}
           </h4>
           <div className="space-y-3">
             {timeline.milestones.map((milestone: string, idx: number) => (
