@@ -5,15 +5,17 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from weasyprint import HTML
 
 import backend.db as db
 import backend.gemini_client as gemini_client
+import backend.report_generator as report_generator
 
 # Load environment variables
 load_dotenv()
@@ -175,6 +177,80 @@ async def get_dpr(dpr_id: int):
         raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
     
     return JSONResponse(dpr)
+
+
+@app.get("/dpr/{dpr_id}/report")
+async def generate_dpr_report(dpr_id: int):
+    """
+    Generate a comprehensive PDF report for a DPR with charts and analysis.
+    
+    Returns a PDF file with all sections: Overview, Financial Analysis, Timeline, Risk Assessment, Compliance.
+    """
+    try:
+        # Get DPR data
+        dpr = db.get_dpr(dpr_id)
+        if not dpr:
+            raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+        
+        # Validate summary_json exists
+        summary_json = dpr.get('summary_json')
+        if not summary_json:
+            raise HTTPException(
+                status_code=422, 
+                detail=f"DPR {dpr_id} has not been analyzed yet. Please wait for analysis to complete."
+            )
+        
+        # Parse summary_json if it's a string
+        if isinstance(summary_json, str):
+            import json
+            try:
+                summary_json = json.loads(summary_json)
+            except json.JSONDecodeError as e:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"DPR {dpr_id} has invalid analysis data: {str(e)}"
+                )
+        
+        # Ensure summary_json is a dict
+        if not isinstance(summary_json, dict):
+            raise HTTPException(
+                status_code=422,
+                detail=f"DPR {dpr_id} analysis data is in an unexpected format"
+            )
+        
+        # Generate charts (with error handling inside)
+        charts = report_generator.prepare_chart_data(summary_json)
+        
+        # Prepare template context with safe defaults
+        context = {
+            'dpr': summary_json,
+            'charts': charts,
+            'generated_date': datetime.now().strftime('%B %d, %Y at %I:%M %p')
+        }
+        
+        # Render HTML template
+        html_content = templates.get_template('reports/dpr_report.html').render(context)
+        
+        # Convert HTML to PDF
+        pdf_bytes = HTML(string=html_content).write_pdf()
+        
+        # Return PDF as response
+        filename = f"DPR_Report_{dpr_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Report generation error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to generate report: {str(e)}")
 
 
 @app.post("/dpr/{dpr_id}/chat")

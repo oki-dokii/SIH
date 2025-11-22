@@ -115,10 +115,10 @@ export default function DocumentDetailPage() {
   }
 
   function handleDownload() {
-    if (document?.filepath) {
+    if (id) {
       const link = window.document.createElement('a')
-      link.href = `/api/${document.filepath}`
-      link.download = document.original_filename
+      link.href = `/api/dpr/${id}/report`
+      link.download = `DPR_Report_${id}_${new Date().toISOString().split('T')[0]}.pdf`
       link.click()
     }
   }

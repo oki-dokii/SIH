@@ -145,6 +145,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+**November 22, 2025 (Update 4)**: Added comprehensive PDF report generation with charts
+- **PDF Report Generation**: Implemented server-side PDF generation using WeasyPrint + Plotly/Kaleido
+- **Professional Report Template**: Created Jinja2 HTML template with all sections:
+  - Overview (project details, vision, mission, objectives, scores)
+  - Financial Analysis (investment amounts, DSCR/IRR, capital structure charts)
+  - Timeline (duration, milestones, operations calendar, risks)
+  - Risk Assessment (severity-coded risk table)
+  - Compliance Check (statutory, environmental requirements)
+- **Chart Integration**: Embedded pie charts and bar charts as PNG images in the PDF
+- **Download Functionality**: Updated download button to generate comprehensive analysis report instead of original PDF
+- **System Dependencies**: Added Chromium for Kaleido chart rendering
+
 **November 22, 2025 (Update 3)**: Fixed "View Analysis" button navigation and enhanced chart colors
 - **Navigation Fix**: Fixed "View Analysis" button on Documents page to navigate to correct route (`/documents/:id` instead of `/document/:id`)
 - **Enhanced Chart Colors**: Updated chart color palette with 10 vibrant, varied colors (blue, green, orange, red, violet, pink, cyan, teal, indigo)

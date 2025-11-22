@@ -4,6 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
+packages = ["fontconfig", "ghostscript", "glib", "harfbuzz", "pango", "chromium"]
 
 [workflows]
 runButton = "Project"
@@ -34,7 +35,7 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 42551
+localPort = 44917
 externalPort = 3001
 
 [[ports]]
