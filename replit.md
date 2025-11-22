@@ -12,22 +12,36 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-**Multi-Page Application Pattern**: The application uses a traditional multi-page architecture with separate HTML pages for distinct user flows:
-- `home.html` - Landing page with upload functionality and navigation
-- `list.html` - Grid view of all uploaded DPRs with comparison mode
-- `detail.html` - Individual DPR analysis with chat interface
-- `comparison.html` - Multi-DPR comparison with dedicated chat
-- `comparisons.html` - Management page for comparison sessions
+**React + TypeScript SPA**: Modern single-page application built with React 18, TypeScript, and Tailwind CSS. The frontend is served as a development server on port 5000 (Vite) which proxies API calls to the FastAPI backend on port 8000.
 
-**Shared Styling**: All pages utilize a unified `styles.css` with a dark theme, gradient backgrounds, and responsive design principles. The design system uses consistent color palette (#00d4ff accents, dark backgrounds) and reusable component classes.
+**Page Structure**:
+- `/` - Landing page with hero section, upload zone, and feature highlights
+- `/documents` - Document list with search, filtering, and statistics dashboard
+- `/document/:id` - Individual document detail with analysis tabs and AI chat
 
-**Page-Specific JavaScript**: Each HTML page has a corresponding JavaScript file that handles:
-- Dynamic content loading via REST API calls
-- Real-time UI updates (loading states, error handling)
-- Interactive features (file selection, chat messaging)
-- Navigation flow between pages
+**Component Architecture**:
+- `src/components/` - Reusable UI components (Header, UploadZone, FeatureCard)
+- `src/components/ui/` - Base UI primitives (Button, Card) with Tailwind variants
+- `src/pages/` - Page components with routing logic (Index, Documents, DocumentDetail)
+- `src/lib/` - Utility functions (cn for class names, api service layer)
 
-**State Management**: Simple client-side state management using JavaScript variables and DOM manipulation. No frontend framework dependencies.
+**Design System**: Light-themed UI with:
+- Primary color: Cyan blue (#0ea5e9)
+- Accent color: Darker cyan (#0891b2)
+- Typography: System font stack with careful hierarchy
+- Tailwind CSS for utility-first styling
+- Custom animations (fade-in, slide-up, scale-in, float)
+- Responsive design with mobile-first approach
+
+**State Management**: React hooks (useState, useEffect) for local component state. No global state management library needed for current scope.
+
+**API Integration**: Custom API service (`src/lib/api.ts`) provides typed functions for:
+- Fetching document lists and details
+- Uploading PDFs with progress tracking
+- Sending chat messages and fetching history
+- Deleting documents
+
+**Routing**: React Router v6 for client-side navigation without page reloads.
 
 ### Backend Architecture
 
@@ -115,6 +129,27 @@ Preferred communication style: Simple, everyday language.
 ### File System Dependencies
 
 - Local file storage in `data/` directory for uploaded PDFs
-- Static file serving from `backend/static/`
-- Template files in `backend/templates/`
+- React frontend source in `frontend/src/`
+- Built frontend artifacts in `frontend/dist/` (production builds)
 - Schema definition in `backend/schema.json`
+
+### JavaScript Dependencies
+
+- `react` (18.3.1) - UI library
+- `react-dom` (18.3.1) - React DOM rendering
+- `react-router-dom` (6.28.0) - Client-side routing
+- `lucide-react` (0.468.0) - Icon library
+- `tailwindcss` (3.4.17) - Utility-first CSS framework
+- `vite` (5.4.21) - Build tool and dev server
+- `typescript` (5.6.3) - Type safety and developer experience
+
+## Recent Changes
+
+**November 22, 2025**: Complete frontend redesign
+- Migrated from vanilla JavaScript + Jinja2 templates to React + TypeScript + Tailwind CSS
+- Implemented modern, light-themed UI matching user design specifications
+- Created API service layer for backend integration with full type safety
+- Added upload progress tracking, loading states, and error handling
+- Implemented real-time chat interface with Gemini AI integration
+- Set up dual-server development environment (Vite on 5000, FastAPI on 8000)
+- All frontend functionality now fully integrated with existing FastAPI backend

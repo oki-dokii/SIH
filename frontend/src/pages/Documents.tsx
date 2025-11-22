@@ -10,59 +10,72 @@ import {
   Trash2,
   Upload,
   Calendar,
+  Loader2,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { api, type DPR } from '@/lib/api'
 
 export default function DocumentsPage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
+  const [documents, setDocuments] = useState<DPR[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const mockDocuments = [
-    {
-      id: 1,
-      title: 'Highway Development Project - Phase 1',
-      status: 'Completed',
-      date: '2025-01-15',
-      pages: 145,
-      statusColor: 'text-green-600',
-      statusBg: 'bg-green-50',
-    },
-    {
-      id: 2,
-      title: 'Bridge Construction Analysis Report',
-      status: 'Completed',
-      date: '2025-01-14',
-      pages: 89,
-      statusColor: 'text-green-600',
-      statusBg: 'bg-green-50',
-    },
-    {
-      id: 3,
-      title: 'Urban Infrastructure Modernization',
-      status: 'Processing',
-      date: '2025-01-13',
-      pages: 203,
-      statusColor: 'text-blue-600',
-      statusBg: 'bg-blue-50',
-    },
-    {
-      id: 4,
-      title: 'Water Supply System Enhancement',
-      status: 'Completed',
-      date: '2025-01-12',
-      pages: 156,
-      statusColor: 'text-green-600',
-      statusBg: 'bg-green-50',
-    },
-  ]
+  useEffect(() => {
+    loadDocuments()
+  }, [])
+
+  const loadDocuments = async () => {
+    try {
+      setLoading(true)
+      const dprs = await api.getDPRs()
+      setDocuments(dprs)
+    } catch (err) {
+      setError('Failed to load documents')
+      console.error('Error loading documents:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this document?')) return
+    
+    try {
+      await api.deleteDPR(id)
+      setDocuments(documents.filter(doc => doc.id !== id))
+    } catch (err) {
+      alert('Failed to delete document')
+      console.error('Error deleting document:', err)
+    }
+  }
+
+  const getDocumentStatus = (doc: DPR) => {
+    if (doc.summary_json) {
+      return { label: 'Completed', color: 'text-green-600', bg: 'bg-green-50' }
+    }
+    return { label: 'Processing', color: 'text-blue-600', bg: 'bg-blue-50' }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString()
+  }
+
+  const completedCount = documents.filter(d => d.summary_json).length
+  const processingCount = documents.length - completedCount
 
   const stats = [
-    { label: 'Total Documents', value: '24', change: '+12%', color: 'text-primary' },
-    { label: 'Completed', value: '21', change: '+8%', color: 'text-green-600' },
-    { label: 'Processing', value: '2', change: '0%', color: 'text-gray-500' },
-    { label: 'Total Pages', value: '3.2K', change: '+15%', color: 'text-primary' },
+    { label: 'Total Documents', value: documents.length.toString(), color: 'text-primary' },
+    { label: 'Completed', value: completedCount.toString(), color: 'text-green-600' },
+    { label: 'Processing', value: processingCount.toString(), color: 'text-gray-500' },
+    { label: 'Total Files', value: documents.length.toString(), color: 'text-primary' },
   ]
+
+  const filteredDocuments = documents.filter(doc =>
+    doc.original_filename.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -74,7 +87,7 @@ export default function DocumentsPage() {
             <h1 className="text-4xl font-bold mb-2">My Documents</h1>
             <p className="text-muted-foreground">Manage and analyze your DPR documents</p>
           </div>
-          <Button size="lg">
+          <Button size="lg" onClick={() => navigate('/')}>
             <Upload className="h-4 w-4" />
             Upload New Document
           </Button>
@@ -105,57 +118,82 @@ export default function DocumentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
             <Card key={index} className="p-6">
-              <div className="flex justify-between items-start mb-2">
-                <div className={`text-3xl font-bold ${stat.color}`}>{stat.value}</div>
-                <div className="text-sm text-green-600 bg-green-50 px-2 py-1 rounded">
-                  {stat.change}
-                </div>
-              </div>
+              <div className={`text-3xl font-bold ${stat.color} mb-2`}>{stat.value}</div>
               <div className="text-sm text-muted-foreground">{stat.label}</div>
             </Card>
           ))}
         </div>
 
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 mb-6">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && filteredDocuments.length === 0 && (
+          <Card className="p-12 text-center">
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No documents found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchQuery ? 'Try a different search term' : 'Upload your first DPR document to get started'}
+            </p>
+            <Button onClick={() => navigate('/')}>
+              <Upload className="h-4 w-4" />
+              Upload Document
+            </Button>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockDocuments.map((doc) => (
-            <Card key={doc.id} className="p-6 hover:border-primary/40 transition-all">
-              <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <FileText className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold mb-1 line-clamp-2">{doc.title}</h3>
-                  <div className={`inline-flex text-xs px-2 py-1 rounded-full ${doc.statusBg} ${doc.statusColor} font-medium`}>
-                    {doc.status}
+          {filteredDocuments.map((doc) => {
+            const status = getDocumentStatus(doc)
+            return (
+              <Card key={doc.id} className="p-6 hover:border-primary/40 transition-all">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    <FileText className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold mb-1 line-clamp-2">{doc.original_filename}</h3>
+                    <div className={`inline-flex text-xs px-2 py-1 rounded-full ${status.bg} ${status.color} font-medium`}>
+                      {status.label}
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {doc.date}
+                
+                <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    {formatDate(doc.upload_ts)}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <FileText className="h-4 w-4" />
-                  {doc.pages} pages
-                </div>
-              </div>
 
-              <div className="flex gap-2">
-                <Button
-                  className="flex-1"
-                  onClick={() => navigate(`/document/${doc.id}`)}
-                >
-                  <Eye className="h-4 w-4" />
-                  View Analysis
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </Card>
-          ))}
+                <div className="flex gap-2">
+                  <Button
+                    className="flex-1"
+                    onClick={() => navigate(`/document/${doc.id}`)}
+                    disabled={!doc.summary_json}
+                  >
+                    <Eye className="h-4 w-4" />
+                    View Analysis
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDelete(doc.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </Card>
+            )
+          })}
         </div>
       </main>
     </div>

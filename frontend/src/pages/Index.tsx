@@ -5,12 +5,33 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Sparkles, Zap, Lock, BarChart3, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '@/lib/api'
+import { useState } from 'react'
 
 export default function IndexPage() {
   const navigate = useNavigate()
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [error, setError] = useState<string | null>(null)
 
   const handleUpload = async (file: File) => {
-    console.log('Uploading file:', file.name)
+    setUploading(true)
+    setError(null)
+    setUploadProgress(0)
+
+    try {
+      const result = await api.uploadDPR(file, (progress) => {
+        setUploadProgress(progress)
+      })
+      
+      navigate(`/document/${result.id}`)
+    } catch (err) {
+      setError('Failed to upload file. Please try again.')
+      console.error('Upload error:', err)
+    } finally {
+      setUploading(false)
+      setUploadProgress(0)
+    }
   }
 
   return (
@@ -47,7 +68,35 @@ export default function IndexPage() {
             </div>
 
             <div>
-              <UploadZone onUpload={handleUpload} />
+              {uploading ? (
+                <Card className="p-8">
+                  <div className="text-center">
+                    <div className="mb-4">
+                      <div className="w-16 h-16 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Uploading Document...</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Processing your PDF with AI
+                    </p>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">{Math.round(uploadProgress)}%</p>
+                  </div>
+                </Card>
+              ) : (
+                <>
+                  <UploadZone onUpload={handleUpload} />
+                  {error && (
+                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
+                      {error}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </section>
