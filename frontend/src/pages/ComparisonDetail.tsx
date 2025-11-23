@@ -6,6 +6,7 @@ import { Header } from '../components/Header'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { useLanguage } from '../contexts/LanguageContext'
+import { ChatMessageFormatter } from '../components/ChatMessageFormatter'
 
 export default function ComparisonDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -196,27 +197,7 @@ export default function ComparisonDetailPage() {
                   </div>
                 ) : (
                   messages.map((message, index) => (
-                    <div
-                      key={index}
-                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-lg px-4 py-3 ${
-                          message.role === 'user'
-                            ? 'bg-cyan-500 text-white'
-                            : 'bg-white border border-gray-200'
-                        }`}
-                      >
-                        <p className="whitespace-pre-wrap">{message.text}</p>
-                        <p
-                          className={`text-xs mt-2 ${
-                            message.role === 'user' ? 'text-cyan-100' : 'text-gray-500'
-                          }`}
-                        >
-                          {new Date(message.timestamp).toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
+                    <ChatMessageFormatter key={index} text={message.text} isUser={message.role === 'user'} />
                   ))
                 )}
                 <div ref={messagesEndRef} />

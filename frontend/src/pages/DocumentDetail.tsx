@@ -320,17 +320,7 @@ export default function DocumentDetailPage() {
                   </div>
                 )}
                 {chatHistory.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      'p-3 rounded-lg',
-                      msg.role === 'user' 
-                        ? 'bg-primary text-white ml-8' 
-                        : 'bg-muted mr-8'
-                    )}
-                  >
-                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                  </div>
+                  <ChatMessageFormatter key={index} text={msg.text} isUser={msg.role === 'user'} />
                 ))}
                 {chatLoading && (
                   <div className="p-3 rounded-lg bg-muted mr-8 flex items-center gap-2">
