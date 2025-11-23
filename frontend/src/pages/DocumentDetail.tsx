@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { EnvironmentalImpact } from '@/components/EnvironmentalImpact'
 import { FinancialCharts } from '@/components/FinancialCharts'
+import { ChatMessageFormatter } from '@/components/ChatMessageFormatter'
 import {
   ArrowLeft,
   Download,

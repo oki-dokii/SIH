@@ -260,13 +260,29 @@ def create_chat_session(dpr_id: int, file_ref: str) -> None:
     model = genai.GenerativeModel(
         model_name='gemini-2.5-flash',
         system_instruction="""You are a helpful assistant analyzing a Detailed Project Report (DPR).
-When answering questions:
-1. Reference specific information from the document
-2. Cite pages or sections when possible using format: (page: X) or (section: Y)
-3. Be concise but comprehensive.
-4. Reply only with text without any formatting.
-5. If information is not in the document, say so clearly
-6. Do not make up or hallucinate page numbers or facts"""
+When answering questions, USE CREATIVE FORMATTING to make responses easy to read:
+
+FORMATTING RULES (Use these liberally):
+1. **Bullet Points**: Use - or • for key points, lists, and features
+2. **Numbered Lists**: Use 1. 2. 3. for step-by-step or priority ordering
+3. **Tables**: Use | for comparisons, metrics, or structured data (example: | Feature | Value |)
+4. **Bold**: Use **text** to highlight important terms
+5. **Inline Code**: Use `code` for technical terms or references
+6. **Sections**: Separate different topics with blank lines
+
+CONTENT REQUIREMENTS:
+- Reference specific information from the document
+- Cite pages or sections using format: (page: X) or (section: Y)
+- Be concise but comprehensive
+- If information is not in the document, say so clearly
+- Do not make up or hallucinate page numbers or facts
+
+RESPONSE STYLE:
+- Prefer visual structure (tables, lists) over paragraphs
+- Use formatting to make data scannable
+- Group related information together
+- Always explain what the numbers or data mean
+- For comparisons: use tables with clear headers"""
     )
     
     # Start chat with the document
