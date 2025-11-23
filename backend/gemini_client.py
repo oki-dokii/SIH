@@ -111,9 +111,16 @@ MANDATORY BEHAVIOR (follow exactly):
 8) RISK ANALYSIS: For `riskAssessment`, list the top 3-6 risks with a one-line mitigation each. For each risk include severity: HIGH / MEDIUM / LOW, and a brief evidence note (page/table).
 9) SCORING & RECOMMENDATION MAPPING: Compute `overallScore` using the rubric below; map recommendation by thresholds (but you may deviate only if you explain in `INFERRED_REASON:`).
 
-10) **INCONSISTENCY DETECTION** (CRITICAL - Phase 3):
+10) **MANDATORY FINANCIAL VALIDATION** (CRITICAL - MUST DO):
+   - **REQUIRED**: Sum of projectCost components (capitalExpenditureLakhINR + workingCapitalLakhINR + contingencyLakhINR + marginMoneyLakhINR + culturalCostLakhINR) MUST EQUAL totalInitialInvestmentLakhINR
+   - **REQUIRED**: Sum of capitalStructure components (all Lakh fields) MUST EQUAL totalInitialInvestmentLakhINR
+   - **REQUIRED**: If source document values don't add up, RECALCULATE and NORMALIZE them so they balance. Prioritize tabular values.
+   - If you adjust any financial values to make them balance, add `FINANCIAL_VALIDATION:` explanation to assumptions
+   - This validation is NON-NEGOTIABLE: do not return mismatched totals
+
+11) **INCONSISTENCY DETECTION** (CRITICAL - Phase 3):
    Thoroughly analyze the DPR for inconsistencies and populate the `inconsistencyDetection` object:
-   - Check if financial components add up correctly (e.g., total investment = sum of components?)
+   - **FLAG AS CRITICAL ISSUE** if financial components don't sum correctly
    - Verify beneficiary counts are consistent across sections
    - Identify timeline conflicts (duration vs milestones, unrealistic deadlines)
    - Detect calculation errors (ROI, IRR, payback periods)
@@ -122,7 +129,7 @@ MANDATORY BEHAVIOR (follow exactly):
    - Set `hasInconsistencies` to true if ANY issues found
    - Count total inconsistencies accurately
 
-11) **MDONER COMPLIANCE SCORING** (CRITICAL - Phase 3):
+12) **MDONER COMPLIANCE SCORING** (CRITICAL - Phase 3):
    Calculate weighted compliance score in `mdonerComplianceScoring`:
    - **North Eastern Focus (25%)**: NE states location? NE-specific challenges addressed? Score 0-100
    - **Beneficiary Alignment (20%)**: Tribal/marginalized communities targeted? Realistic counts? Score 0-100
@@ -133,7 +140,7 @@ MANDATORY BEHAVIOR (follow exactly):
    - Calculate `overallComplianceScore` = (northEasternFocus*0.25 + beneficiaryAlignment*0.20 + environmentalCompliance*0.20 + landAcquisition*0.15 + documentationQuality*0.10 + financialViability*0.10)
    - List specific compliance gaps and strengths
 
-12) **SMART RECOMMENDATIONS** (CRITICAL - Phase 3):
+13) **SMART RECOMMENDATIONS** (CRITICAL - Phase 3):
    Generate actionable recommendations in `smartRecommendations`:
    - **Critical Actions**: Must-fix items before approval (address Critical inconsistencies, mandatory gaps)
    - **Improvement Suggestions**: Enhancements to strengthen project (Medium/High inconsistencies, weak compliance areas)
@@ -141,7 +148,7 @@ MANDATORY BEHAVIOR (follow exactly):
    - **Next Steps**: Prioritized actionable steps (1st, 2nd priority, etc.)
    - Be specific, actionable, reference sections/pages
 
-13) JSON ONLY: Your entire response must be parseable JSON ONLY. No extra lines or text.
+14) JSON ONLY: Your entire response must be parseable JSON ONLY. No extra lines or text.
 
 Scoring rubric (apply to compute overallScore 0-100):
 - Weighted components (approx): Financial viability (NPV/IRR/Payback) 45%, Market & demand 15%, Technical readiness 15%, Team/governance 10%, Risks/residual 15%.
@@ -162,6 +169,7 @@ Follow the rubric and trace any deviations. Return only the JSON object.
 {schema_content}
 
 ADDITIONAL INSTRUCTIONS (repeat of key rules):
+- **FINANCIAL VALIDATION (MANDATORY)**: Sum(projectCost components) = totalInitialInvestment AND Sum(capitalStructure components) = totalInitialInvestment. Adjust/normalize values if needed and document in assumptions with `FINANCIAL_VALIDATION:` prefix.
 - overallScore: compute a number 0-100 using document evidence and the rubric in the system instruction. If the DPR uses a different scale, convert to 0–100 and explain conversion with `INFERRED_REASON:` in assumptions.
 - recommendation: one of ["Approved","Approved with Conditions","Rejected","Needs Review"]. Derive from overallScore and risk analysis; if you deviate from the thresholds, explain using `INFERRED_REASON:`.
 - financialAnalysis: populate numeric fields. If a numeric value is missing, infer conservatively and explain with `INFERRED_REASON:` in assumptions.
