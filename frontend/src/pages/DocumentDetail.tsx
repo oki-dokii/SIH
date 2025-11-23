@@ -2,6 +2,7 @@ import { Header } from '@/components/Header'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { EnvironmentalImpact } from '@/components/EnvironmentalImpact'
+import { FinancialCharts } from '@/components/FinancialCharts'
 import {
   ArrowLeft,
   Download,
@@ -28,20 +29,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { api, type DPR, type Message } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-
-const COLORS = [
-  '#0ea5e9', // Sky blue
-  '#10b981', // Emerald green
-  '#f59e0b', // Amber orange
-  '#ef4444', // Red
-  '#8b5cf6', // Violet
-  '#ec4899', // Pink
-  '#06b6d4', // Cyan
-  '#f97316', // Orange
-  '#14b8a6', // Teal
-  '#6366f1', // Indigo
-]
 
 export default function DocumentDetailPage() {
   const navigate = useNavigate()
@@ -554,114 +541,11 @@ function AnalysisTab({ data }: { data: any }) {
     )
   }
 
-  const financial = data.financialAnalysis
-
-  const capitalStructureData = financial.capitalStructure ? [
-    { name: 'NCDC Loan', value: financial.capitalStructure.ncdcLoanLakhINR || 0 },
-    { name: 'Subsidy', value: financial.capitalStructure.subsidyLakhINR || 0 },
-    { name: 'Own Contribution', value: financial.capitalStructure.equityOrOwnContributionLakhINR || 0 },
-  ].filter(item => item.value > 0) : []
-
-  const projectCostData = financial.projectCost ? [
-    { name: 'Capital Expenditure', value: financial.projectCost.capitalExpenditureLakhINR || 0 },
-    { name: 'Working Capital', value: financial.projectCost.workingCapitalLakhINR || 0 },
-    { name: 'Contingency', value: financial.projectCost.contingencyLakhINR || 0 },
-  ].filter(item => item.value > 0) : []
-
-  const costBreakdownData = financial.costs?.fixedCostBreakdown ? 
-    Object.entries(financial.costs.fixedCostBreakdown).map(([key, value]) => ({
-      name: key.replace(/([A-Z])/g, ' $1').trim(),
-      value: value as number
-    })) : []
-
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-bold mb-4">Financial Analysis</h3>
 
-      {financial.projectCost && (
-        <div>
-          <h4 className="font-semibold mb-3">Project Cost Summary</h4>
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Total Investment</div>
-              <div className="text-2xl font-bold text-primary">
-                ₹{financial.projectCost.totalInitialInvestmentLakhINR} Lakhs
-              </div>
-            </Card>
-            {financial.projectCost.capitalExpenditureLakhINR && (
-              <Card className="p-4">
-                <div className="text-sm text-muted-foreground">Capital Expenditure</div>
-                <div className="text-2xl font-bold">
-                  ₹{financial.projectCost.capitalExpenditureLakhINR} Lakhs
-                </div>
-              </Card>
-            )}
-          </div>
-        </div>
-      )}
-
-      {capitalStructureData.length > 0 && (
-        <div>
-          <h4 className="font-semibold mb-3">Capital Structure</h4>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={capitalStructureData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }: any) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {capitalStructureData.map((_entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => `₹${value} Lakhs`} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {projectCostData.length > 0 && (
-        <div>
-          <h4 className="font-semibold mb-3">Project Cost Breakdown</h4>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={projectCostData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip formatter={(value) => `₹${value} Lakhs`} />
-              <Bar dataKey="value">
-                {projectCostData.map((_entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {costBreakdownData.length > 0 && (
-        <div>
-          <h4 className="font-semibold mb-3">Fixed Cost Distribution</h4>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={costBreakdownData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis dataKey="name" type="category" width={150} />
-              <Tooltip formatter={(value) => `₹${value} Lakhs`} />
-              <Bar dataKey="value">
-                {costBreakdownData.map((_entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+      <FinancialCharts data={data} />
 
       {data.riskAssessment && data.riskAssessment.length > 0 && (
         <div>
