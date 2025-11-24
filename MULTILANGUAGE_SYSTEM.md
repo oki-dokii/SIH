@@ -1,7 +1,7 @@
 # Multi-Language System Implementation
 
 ## Overview
-The DPR Analyzer now supports full bidirectional multi-language functionality, allowing users to view document analysis in different languages by toggling the language selector.
+The DPR Analyzer now supports full bidirectional multi-language functionality, allowing users to view document analysis in different languages by toggling the language selector .
 
 ## How It Works
 
