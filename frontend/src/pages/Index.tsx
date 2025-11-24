@@ -25,8 +25,8 @@ export default function IndexPage() {
       const result = await api.uploadDPR(file, language, (progress) => {
         setUploadProgress(progress)
       })
-      
-      navigate(`/document/${result.id}`)
+
+      navigate(`/documents/${result.id}`)
     } catch (err) {
       setError('Failed to upload file. Please try again.')
       console.error('Upload error:', err)
@@ -39,7 +39,7 @@ export default function IndexPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1">
         <section className="container mx-auto px-4 py-16 md:py-24 animate-fade-in">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -48,16 +48,16 @@ export default function IndexPage() {
                 <Sparkles className="h-4 w-4" />
                 {t('landing.subtitle')}
               </div>
-              
+
               <h1 className="text-5xl md:text-6xl font-bold leading-tight">
                 {t('landing.heroTitle')}{' '}
                 <span className="text-primary">{t('landing.heroHighlight')}</span> {t('landing.heroSuffix')}
               </h1>
-              
+
               <p className="text-xl text-muted-foreground">
                 {t('landing.description')}
               </p>
-              
+
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" onClick={() => navigate('/documents')}>
                   {t('landing.getStarted')} <ArrowRight className="h-4 w-4" />
@@ -126,7 +126,7 @@ export default function IndexPage() {
               {t('landing.keyFeaturesDesc')}
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FeatureCard
               icon={Sparkles}

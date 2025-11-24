@@ -24,6 +24,7 @@ import {
   Shield,
   Copy,
   Check,
+  Trash2,
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -75,6 +76,18 @@ export default function DocumentDetailPage() {
       setChatHistory(history)
     } catch (err) {
       console.error('Failed to load chat history:', err)
+    }
+  }
+
+  async function handleClearChat() {
+    if (!id || !confirm(t('common.confirmClearChat'))) return
+
+    try {
+      await api.clearChatHistory(parseInt(id))
+      setChatHistory([])
+    } catch (err) {
+      console.error('Failed to clear chat:', err)
+      // Optional: show toast error
     }
   }
 
@@ -167,7 +180,7 @@ export default function DocumentDetailPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-6">
           <Button variant="outline" onClick={() => navigate('/documents')}>
@@ -275,7 +288,7 @@ export default function DocumentDetailPage() {
                   ))}
                 </div>
               </div>
-              
+
               <div className="p-6">
                 {activeTab === 'overview' && (
                   <OverviewTab data={data} />
@@ -306,11 +319,24 @@ export default function DocumentDetailPage() {
 
           <div className="lg:col-span-1">
             <Card className="h-[600px] flex flex-col">
-              <div className="border-b p-4 flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">{t('documentDetail.chat')}</h3>
+              <div className="border-b p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  <h3 className="font-semibold">{t('documentDetail.chat')}</h3>
+                </div>
+                {chatHistory.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearChat}
+                    className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                    title={t('common.clearChat')}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-              
+
               <div className="flex-1 p-4 overflow-y-auto space-y-4">
                 {chatHistory.length === 0 && (
                   <div className="p-3 rounded-lg bg-muted">
@@ -354,7 +380,7 @@ export default function DocumentDetailPage() {
 
 function OverviewTab({ data }: { data: any }) {
   const { t } = useLanguage()
-  
+
   if (!data) {
     return (
       <div className="text-center py-8">
@@ -395,39 +421,23 @@ function OverviewTab({ data }: { data: any }) {
           <p className="text-muted-foreground leading-relaxed">{data.executiveSummary}</p>
         </div>
       )}
-
-      {data.scopeAndObjectives && (
-        <div className="space-y-4">
-          {data.scopeAndObjectives.vision && (
-            <div>
-              <h4 className="font-semibold mb-2 flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                {t('documentDetail.vision')}
-              </h4>
-              <p className="text-muted-foreground">{data.scopeAndObjectives.vision}</p>
-            </div>
-          )}
-
-          {data.scopeAndObjectives.mission && (
-            <div>
-              <h4 className="font-semibold mb-2">{t('documentDetail.mission')}</h4>
-              <p className="text-muted-foreground">{data.scopeAndObjectives.mission}</p>
-            </div>
-          )}
-
-          {data.scopeAndObjectives.objectives && data.scopeAndObjectives.objectives.length > 0 && (
-            <div>
-              <h4 className="font-semibold mb-2">{t('documentDetail.objectives')}</h4>
-              <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                {data.scopeAndObjectives.objectives.map((obj: string, idx: number) => (
-                  <li key={idx}>{obj}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+      {data.scopeAndObjectives.mission && (
+        <div>
+          <h4 className="font-semibold mb-2">{t('documentDetail.mission')}</h4>
+          <p className="text-muted-foreground">{data.scopeAndObjectives.mission}</p>
         </div>
       )}
 
+      {data.scopeAndObjectives.objectives && data.scopeAndObjectives.objectives.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-2">{t('documentDetail.objectives')}</h4>
+          <ul className="list-disc list-inside text-muted-foreground space-y-1">
+            {data.scopeAndObjectives.objectives.map((obj: string, idx: number) => (
+              <li key={idx}>{obj}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       {data.financialAnalysis?.returnsAndCoverage && (
         <div className="grid md:grid-cols-2 gap-4">
           {data.financialAnalysis.returnsAndCoverage.avgDSCR && (
@@ -450,7 +460,7 @@ function OverviewTab({ data }: { data: any }) {
 
 function TimelineTab({ data }: { data: any }) {
   const { t } = useLanguage()
-  
+
   if (!data?.timelineAnalysis) {
     return (
       <div className="text-center py-8">
@@ -549,15 +559,15 @@ function AnalysisTab({ data }: { data: any }) {
               <Card key={idx} className={cn(
                 'p-4',
                 risk.severity === 'High' ? 'border-red-300 bg-red-50' :
-                risk.severity === 'Medium' ? 'border-orange-300 bg-orange-50' :
-                'border-green-300 bg-green-50'
+                  risk.severity === 'Medium' ? 'border-orange-300 bg-orange-50' :
+                    'border-green-300 bg-green-50'
               )}>
                 <div className="flex items-start gap-3">
                   <div className={cn(
                     'px-2 py-1 rounded text-xs font-semibold',
                     risk.severity === 'High' ? 'bg-red-200 text-red-800' :
-                    risk.severity === 'Medium' ? 'bg-orange-200 text-orange-800' :
-                    'bg-green-200 text-green-800'
+                      risk.severity === 'Medium' ? 'bg-orange-200 text-orange-800' :
+                        'bg-green-200 text-green-800'
                   )}>
                     {risk.severity}
                   </div>

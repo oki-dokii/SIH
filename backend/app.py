@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, Response
@@ -20,9 +21,6 @@ import backend.report_generator as report_generator
 # Load environment variables
 load_dotenv()
 
-# Initialize FastAPI app
-app = FastAPI(title="DPR Analyzer", version="1.0.0")
-
 # Paths
 DATA_DIR = Path("data")
 SCHEMA_PATH = Path("backend/schema.json")
@@ -32,6 +30,60 @@ DATA_DIR.mkdir(exist_ok=True)
 
 # Initialize database
 db.init_db(str(DATA_DIR / "dpr.db"))
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for startup and shutdown events.
+    On startup, check for interrupted DPRs and resume processing in background.
+    """
+    import asyncio
+    
+    async def resume_processing():
+        print("⏳ Checking for interrupted DPR processing...")
+        # Run DB query in thread pool to avoid blocking
+        processing_dprs = await asyncio.to_thread(db.get_processing_dprs)
+        
+        if not processing_dprs:
+            print("✓ No interrupted DPRs found.")
+            return
+            
+        print(f"⚠ Found {len(processing_dprs)} interrupted DPRs. Resuming processing...")
+        
+        for dpr in processing_dprs:
+            dpr_id = dpr['id']
+            filename = dpr['filename']
+            file_ref = dpr['uploaded_file_ref']
+            
+            print(f"▶ Resuming analysis for DPR {dpr_id} ({filename})...")
+            
+            try:
+                # Generate analysis (now async)
+                multilang_json = await gemini_client.generate_multilang_json_from_file(file_ref, str(SCHEMA_PATH))
+                
+                # Default to English for the main summary_json
+                parsed_json = multilang_json.get("en", multilang_json)
+                
+                # Update database (run in thread pool)
+                await asyncio.to_thread(db.update_dpr, dpr_id, parsed_json, multilang_json)
+                print(f"✓ Completed analysis for DPR {dpr_id}")
+                
+            except Exception as e:
+                print(f"✗ Failed to resume analysis for DPR {dpr_id}: {str(e)}")
+                # If file ref is invalid, we might need to re-upload, but keeping it simple for now
+                if "404" in str(e) or "403" in str(e):
+                     print(f"⚠ File reference might be expired. Consider re-uploading {filename}")
+
+    # Start the background task
+    asyncio.create_task(resume_processing())
+    
+    yield
+    # Shutdown logic (if any) goes here
+
+
+# Initialize FastAPI app with lifespan
+app = FastAPI(title="DPR Analyzer", version="1.0.0", lifespan=lifespan)
 
 # Mount static files and templates
 app.mount("/static", StaticFiles(directory="backend/static"), name="static")
@@ -138,39 +190,46 @@ async def upload_dpr(file: UploadFile = File(...), language: str = Form("en")):
             f.write(content)
         print(f"✓ File saved: {filepath} ({len(content)} bytes)")
         
-        # Upload to Gemini Files API
-        file_ref = gemini_client.upload_file(str(filepath))
+        # Upload to Gemini Files API (now async)
+        file_ref = await gemini_client.upload_file(str(filepath))
         
-        # Generate JSON in multiple languages for future-proof multilingual support
-        print("⏳ Generating analysis in multiple languages...")
-        supported_languages = ["en", "hi"]
-        multilang_json = {}
-        
-        for lang in supported_languages:
-            print(f"  → Generating {lang.upper()} analysis...")
-            multilang_json[lang] = gemini_client.generate_json_from_file(file_ref, str(SCHEMA_PATH), language=lang)
-        
-        print(f"✓ Generated analysis in {len(multilang_json)} languages")
-        
-        # Use the requested language as the default summary_json for backward compatibility
-        parsed_json = multilang_json.get(language, multilang_json["en"])
-        
-        # Store in database
+        # Insert initial record into database (so it shows as "Processing")
+        print(f"⏳ Inserting initial DPR record for {filename}...")
         dpr_id = db.insert_dpr(
             filename=filename,
             original_filename=original_filename,
             filepath=str(filepath),
             file_ref=file_ref,
-            summary_json=parsed_json,
-            summary_json_multilang=multilang_json
+            summary_json=None,  # Initially None -> Processing
+            summary_json_multilang=None
         )
         
-        return JSONResponse({
-            "id": dpr_id,
-            "dpr_id": dpr_id,
-            "summary": parsed_json,
-            "existing": False
-        })
+        # Generate JSON in multiple languages for future-proof multilingual support
+        print("⏳ Generating analysis in multiple languages (English & Hindi)...")
+        
+        try:
+            # Single call to get both English and Hindi analysis (now async)
+            multilang_json = await gemini_client.generate_multilang_json_from_file(file_ref, str(SCHEMA_PATH))
+            
+            print(f"✓ Generated analysis in {len(multilang_json)} languages")
+            
+            # Use the requested language as the default summary_json for backward compatibility
+            parsed_json = multilang_json.get(language, multilang_json["en"])
+            
+            # Update database with analysis results
+            db.update_dpr(dpr_id, parsed_json, multilang_json)
+            
+            return JSONResponse({
+                "id": dpr_id,
+                "dpr_id": dpr_id,
+                "summary": parsed_json,
+                "existing": False
+            })
+            
+        except Exception as e:
+            print(f"✗ Analysis failed: {str(e)}")
+            # Optional: db.delete_dpr(dpr_id)
+            raise e
         
     except ValueError as e:
         # JSON validation or parsing error
@@ -210,6 +269,40 @@ async def get_dpr(dpr_id: int, language: str = "en"):
             dpr["summary_json"] = multilang_data["en"]
     
     return JSONResponse(dpr)
+
+
+@app.delete("/dpr/{dpr_id}")
+async def delete_dpr(dpr_id: int):
+    """
+    Delete a DPR and all associated data.
+    """
+    # Verify DPR exists
+    dpr = db.get_dpr(dpr_id)
+    if not dpr:
+        raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+    
+    try:
+        # Delete from database and get filepath
+        filepath = db.delete_dpr(dpr_id)
+        
+        # Delete file from disk
+        if filepath and os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+                print(f"✓ Deleted file: {filepath}")
+            except Exception as e:
+                print(f"⚠ Failed to delete file {filepath}: {str(e)}")
+        
+        # Clear in-memory chat session
+        gemini_client.clear_chat_session(dpr_id)
+        
+        return JSONResponse({
+            "success": True,
+            "message": f"Deleted DPR {dpr_id}"
+        })
+    except Exception as e:
+        print(f"✗ Delete DPR error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete DPR: {str(e)}")
 
 
 @app.get("/dpr/{dpr_id}/report")
@@ -303,8 +396,8 @@ async def chat_with_dpr(dpr_id: int, chat_message: ChatMessage):
         # Store user message
         db.insert_message(dpr_id, "user", chat_message.message)
         
-        # Get response from Gemini
-        response = gemini_client.send_chat_message(
+        # Get response from Gemini (now async)
+        response = await gemini_client.send_chat_message(
             dpr_id=dpr_id,
             message=chat_message.message,
             file_ref=dpr["uploaded_file_ref"]
@@ -436,7 +529,14 @@ async def chat_with_comparison(comparison_id: int, chat_message: ChatMessage):
         print(f"⏳ Processing comparison chat message for comparison {comparison_id}")
         db.insert_comparison_message(comparison_id, "user", chat_message.message)
         file_refs = [dpr["uploaded_file_ref"] for dpr in comparison["dprs"]]
-        response = gemini_client.send_comparison_message(comparison_id=comparison_id, message=chat_message.message, file_refs=file_refs)
+        
+        # Get response from Gemini (now async)
+        response = await gemini_client.send_comparison_message(
+            comparison_id=comparison_id, 
+            message=chat_message.message, 
+            file_refs=file_refs
+        )
+        
         db.insert_comparison_message(comparison_id, "assistant", response['reply'])
         messages = db.get_comparison_messages(comparison_id)
         message_id = messages[-1]['id'] if messages else 0
@@ -471,6 +571,24 @@ async def clear_comparison_chat(comparison_id: int):
         print(f"✗ Clear comparison chat error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to clear comparison chat: {str(e)}")
 
+
+@app.delete("/comparison-chat/{comparison_id}")
+async def delete_comparison_chat(comparison_id: int):
+    """Delete a comparison chat and all its history."""
+    comparison = db.get_comparison_chat(comparison_id)
+    if not comparison:
+        raise HTTPException(status_code=404, detail=f"Comparison chat {comparison_id} not found")
+    
+    try:
+        db.delete_comparison_chat(comparison_id)
+        # Also clear from in-memory cache if exists
+        gemini_client.clear_comparison_chat_session(comparison_id)
+        return JSONResponse({"success": True, "message": f"Deleted comparison chat {comparison_id}"})
+    except Exception as e:
+        print(f"✗ Delete comparison chat error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete comparison chat: {str(e)}")
+
+
 @app.get("/health")
 async def health_check():
     """Simple health check endpoint."""
@@ -481,4 +599,5 @@ if __name__ == "__main__":
     import uvicorn
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", 8000))
+    # Use 1 worker on Windows to avoid WinError 10022
     uvicorn.run(app, host=host, port=port)

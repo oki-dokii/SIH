@@ -1,11 +1,9 @@
 import os
 import json
 import time
+import asyncio
 from typing import Dict, Optional
 import google.generativeai as genai
-
-# backend/gemini_client.py (add near top)
-import os
 from dotenv import load_dotenv
 
 load_dotenv()  # ensure .env is loaded
@@ -32,25 +30,22 @@ genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 _chat_sessions = {}
 
 
-def upload_file(file_path: str) -> str:
+async def upload_file(file_path: str) -> str:
     """
     Upload a file to Gemini Files API and wait for it to be processed.
     Returns the file reference (name/uri) that can be used in generation requests.
-    
-    NOTE: The exact attribute to return (uploaded_file.name vs uploaded_file.uri)
-    depends on the SDK version. Currently using uploaded_file.name.
     """
     print(f"⏳ Uploading file to Gemini: {file_path}")
     start_time = time.time()
     
-    # Upload the file
-    uploaded_file = genai.upload_file(file_path)
+    # Upload the file (blocking call offloaded to thread)
+    uploaded_file = await asyncio.to_thread(genai.upload_file, file_path)
     
     # Poll until the file is processed
     print(f"⏳ Waiting for file to be processed: {uploaded_file.name}")
     while uploaded_file.state.name == "PROCESSING":
-        time.sleep(2)
-        uploaded_file = genai.get_file(uploaded_file.name)
+        await asyncio.sleep(2)
+        uploaded_file = await asyncio.to_thread(genai.get_file, uploaded_file.name)
     
     if uploaded_file.state.name == "FAILED":
         raise ValueError(f"File processing failed: {uploaded_file.name}")
@@ -62,45 +57,42 @@ def upload_file(file_path: str) -> str:
     return uploaded_file.name
 
 
-def generate_json_from_file(file_ref: str, schema_path: str, language: str = "en") -> Dict:
+async def generate_multilang_json_from_file(file_ref: str, schema_path: str) -> Dict:
     """
-    Generate structured JSON from an uploaded file using Gemini.
-    
-    Args:
-        file_ref: The file reference returned by upload_file()
-        schema_path: Path to schema.json file
-        language: "en" for English, "hi" for Hindi (default: "en")
-    
-    Returns:
-        Parsed JSON dict matching the schema
+    Generate structured JSON from an uploaded file using Gemini in both English and Hindi.
     """
-    print(f"⏳ Generating JSON from file: {file_ref} (language: {language})")
+    print(f"⏳ Generating Multilingual JSON from file: {file_ref}")
     start_time = time.time()
     
     # Read the schema
     with open(schema_path, 'r') as f:
         schema_content = f.read()
     
-    # Get the file object
-    file_obj = genai.get_file(file_ref)
-    
-    # Language instruction
-    lang_instruction = ""
-    if language == "hi":
-        lang_instruction = "\n\nLANGUAGE REQUIREMENT: All textual analysis, summaries, descriptions, recommendations, assessments, and narrative content MUST be provided in HINDI (हिंदी). Keep technical terms, field names, numbers, proper nouns, and JSON structure in English. Only translate the values of text fields."
-    
     # Create a strict system prompt
-    system_instruction = f"""You are an expert project analyst for Detailed Project Reports (DPRs). Read the attached PDF and produce EXACTLY one valid JSON object that exactly matches the schema supplied in the user prompt. RETURN ONLY the JSON object — no markdown, no commentary, no extra text. The JSON must parse cleanly.{lang_instruction}
+    system_instruction = f"""You are an expert project analyst for Detailed Project Reports (DPRs). Read the attached PDF and produce EXACTLY one valid JSON object containing analysis in both English and Hindi.
 
-MANDATORY BEHAVIOR (follow exactly):
-1) OUTPUT: Return exactly one JSON object whose keys and nested structure match the supplied schema. Do NOT add or remove top-level keys or change nesting.
+OUTPUT FORMAT:
+The output must be a single JSON object with exactly two keys: "en" and "hi".
+{{
+  "en": {{ ... English JSON matching schema ... }},
+  "hi": {{ ... Hindi JSON matching schema ... }}
+}}
+
+1. "en": The analysis in English.
+2. "hi": The EXACT SAME analysis, but with all textual fields translated into Hindi (Devanagari script).
+   - Keep all field names, keys, numbers, and technical terms in English.
+   - Translate values of string fields like "executiveSummary", "recommendation" (e.g. "Approved" -> "स्वीकृत"), "riskAssessment.mitigation", etc.
+   - Ensure the structure and numeric values in "hi" are IDENTICAL to "en".
+
+MANDATORY BEHAVIOR (Apply to both "en" and "hi" versions):
+1) OUTPUT: Return exactly one JSON object with "en" and "hi" keys. Do NOT add markdown or extra text.
 2) ANALYZE & INFER: You must both extract explicit values from the PDF and also ANALYZE the information and INFER values where the document does not state them. In particular you MUST compute:
    - overallScore: a numeric score 0-100 (see scoring rubric below). Do NOT return null for overallScore.
-   - recommendation: one of exactly ["Approved","Approved with Conditions","Rejected","Needs Review"]. Do NOT return null for recommendation.
+   - recommendation: one of exactly ["Approved","Approved with Conditions","Rejected","Needs Review"] (and Hindi equivalents). Do NOT return null.
    - financialAnalysis: populate numeric fields (if missing, infer conservatively and explain).
    - riskAssessment: identify top risks, severity and evidence (these are analytical outputs).
 3) REQUIRED NON-NULL FIELDS: The following fields MUST NOT be null (fill them or infer if missing): 
-   `"projectName"`, `"projectLocation.state"`, `"projectSector"`, `"executiveSummary"`, `"overallScore"`, `"recommendation"`, and the entire `"financialAnalysis"` object (its numeric fields should be present or conservatively inferred).
+   `"projectName"`, `"projectLocation.state"`, `"projectSector"`, `"executiveSummary"`, `"overallScore"`, `"recommendation"`, and the entire `"financialAnalysis"` object.
    Note: `"projectLocation.districts"` is allowed to be an empty array or null if districts are absent.
 4) TRACEABILITY: If you infer or compute any field (overallScore, recommendation, any financial number, or risk severity), PREPEND a single concise explanation sentence (≤25 words) at the START of the `assumptions` array. That sentence MUST begin exactly with `INFERRED_REASON:` (example: `INFERRED_REASON: Converted 4.5/5 scale to 90/100 and used NPV>0 as supporting evidence`).
 5) PREFER TABULAR SOURCES: When numbers conflict, prefer table values (tables > paragraph text). If you choose one source over another, state that choice in an `INFERRED_REASON:` assumption.
@@ -164,14 +156,16 @@ Follow the rubric and trace any deviations. Return only the JSON object.
 
     
     # Create the user prompt with schema
-    user_prompt = f"""Analyze the attached PDF and return EXACTLY one JSON object that follows the schema below (types are illustrative). Fill all fields per the schema; the only permitted empty/nullable field is projectLocation.districts.
+    user_prompt = f"""Analyze the attached PDF and return EXACTLY one JSON object with "en" and "hi" keys, where each key contains an object following the schema below.
 
+SCHEMA:
 {schema_content}
 
 ADDITIONAL INSTRUCTIONS (repeat of key rules):
+- **OUTPUT**: {{ "en": {{...}}, "hi": {{...}} }}
 - **FINANCIAL VALIDATION (MANDATORY)**: Sum(projectCost components) = totalInitialInvestment AND Sum(capitalStructure components) = totalInitialInvestment. Adjust/normalize values if needed and document in assumptions with `FINANCIAL_VALIDATION:` prefix.
-- overallScore: compute a number 0-100 using document evidence and the rubric in the system instruction. If the DPR uses a different scale, convert to 0–100 and explain conversion with `INFERRED_REASON:` in assumptions.
-- recommendation: one of ["Approved","Approved with Conditions","Rejected","Needs Review"]. Derive from overallScore and risk analysis; if you deviate from the thresholds, explain using `INFERRED_REASON:`.
+- overallScore: compute a number 0-100 using document evidence and the rubric in the system instruction.
+- recommendation: one of ["Approved","Approved with Conditions","Rejected","Needs Review"].
 - financialAnalysis: populate numeric fields. If a numeric value is missing, infer conservatively and explain with `INFERRED_REASON:` in assumptions.
 - riskAssessment: list top 3-6 risks; for each risk include a one-line mitigation and include page/table evidence in the evidence field.
 - projectLocation.districts may be [], null, or list; other required fields above must be non-null.
@@ -187,13 +181,20 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
         system_instruction=system_instruction
     )
     
-    # Generate content with the file attached
-    response = model.generate_content([file_obj, user_prompt])
+    # Generate content with the file attached (blocking call offloaded to thread)
+    # Note: genai.get_file is also a network call, so we offload that too if needed, 
+    # but here we can just pass the file_ref name string if the SDK supports it, 
+    # or fetch the file object in a thread.
+    
+    def _generate():
+        file_obj = genai.get_file(file_ref)
+        return model.generate_content([file_obj, user_prompt])
+
+    response = await asyncio.to_thread(_generate)
     
     elapsed = time.time() - start_time
-    print(f"✓ JSON generated in {elapsed:.2f}s (response length: {len(response.text)} chars)")
+    print(f"✓ Multilingual JSON generated in {elapsed:.2f}s (response length: {len(response.text)} chars)")
     
-    # print(response.text[:1500] + '...' if len(response.text) > 1500 else response.text)
     # Parse and validate the JSON
     try:
         # Clean up response text (remove markdown if present)
@@ -208,17 +209,14 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
         
         parsed_json = json.loads(response_text)
         
-        # print("==== PARSED JSON FROM GEMINI ====")
-        # print(parsed_json)
-        # print("overallScore:", parsed_json.get("overallScore"))
-        # print("recommendation:", parsed_json.get("recommendation"))
-        # print("=================================")
-
-
-        # Validate that it's a dict and has basic required keys
+        # Validate structure
         if not isinstance(parsed_json, dict):
             raise ValueError("Response is not a JSON object")
         
+        if "en" not in parsed_json or "hi" not in parsed_json:
+            raise ValueError("Response missing 'en' or 'hi' keys")
+        
+        # Validate English object
         required_keys = [
             "projectName", "projectLocation", "projectSector", 
             "executiveSummary", "overallScore", "recommendation",
@@ -227,11 +225,13 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
             "inconsistencyDetection", "mdonerComplianceScoring", "smartRecommendations"
         ]
         
-        missing_keys = [key for key in required_keys if key not in parsed_json]
-        if missing_keys:
-            raise ValueError(f"Missing required keys: {missing_keys}")
+        for lang in ["en", "hi"]:
+            lang_json = parsed_json[lang]
+            missing_keys = [key for key in required_keys if key not in lang_json]
+            if missing_keys:
+                raise ValueError(f"Missing required keys in '{lang}' object: {missing_keys}")
         
-        print(f"✓ JSON validated successfully")
+        print(f"✓ Multilingual JSON validated successfully")
         return parsed_json
         
     except json.JSONDecodeError as e:
@@ -240,26 +240,33 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
         raise ValueError(f"Failed to parse JSON from Gemini response: {str(e)}")
 
 
-def create_chat_session(dpr_id: int, file_ref: str) -> None:
+async def create_chat_session(dpr_id: int, file_ref: str) -> None:
     """
     Create a new chat session for a DPR if it doesn't exist.
-    
-    Args:
-        dpr_id: The DPR ID
-        file_ref: The file reference for the DPR document
     """
     if dpr_id in _chat_sessions:
         return
     
     print(f"⏳ Creating chat session for DPR {dpr_id}")
     
-    # Get the file object
-    file_obj = genai.get_file(file_ref)
-    
-    # Create model with system instructions for chat
-    model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
-        system_instruction="""You are a helpful assistant analyzing a Detailed Project Report (DPR).
+    def _create_session():
+        try:
+            # Get the file object
+            file_obj = genai.get_file(file_ref)
+            
+            # Check if file is still valid
+            if file_obj.state.name == "FAILED":
+                raise ValueError(f"File has expired or is no longer available: {file_ref}")
+        except Exception as e:
+            error_msg = str(e)
+            if "403" in error_msg or "permission" in error_msg.lower() or "not found" in error_msg.lower():
+                raise ValueError(f"Cannot access file {file_ref}: The file may have expired (Gemini files expire after 48 hours). Please re-upload the PDF to enable chat.")
+            raise ValueError(f"Cannot access file {file_ref}: {error_msg}")
+        
+        # Create model with system instructions for chat
+        model = genai.GenerativeModel(
+            model_name='gemini-2.5-flash',
+            system_instruction="""You are a helpful assistant analyzing a Detailed Project Report (DPR).
 When answering questions, USE CREATIVE FORMATTING to make responses easy to read:
 
 FORMATTING RULES (Use these liberally):
@@ -283,10 +290,15 @@ RESPONSE STYLE:
 - Group related information together
 - Always explain what the numbers or data mean
 - For comparisons: use tables with clear headers"""
-    )
-    
-    # Start chat with the document
-    chat = model.start_chat(history=[])
+        )
+        
+        # Start chat with the document
+        chat = model.start_chat(history=[])
+        
+        return chat, file_obj
+
+    # Offload session creation to thread
+    chat, file_obj = await asyncio.to_thread(_create_session)
     
     # Store the chat session and file reference
     _chat_sessions[dpr_id] = {
@@ -297,31 +309,23 @@ RESPONSE STYLE:
     print(f"✓ Chat session created for DPR {dpr_id}")
 
 
-def send_chat_message(dpr_id: int, message: str, file_ref: str) -> Dict:
+async def send_chat_message(dpr_id: int, message: str, file_ref: str) -> Dict:
     """
     Send a message in the chat session and get a response.
-    
-    Args:
-        dpr_id: The DPR ID
-        message: User's message
-        file_ref: The file reference for the DPR document
-    
-    Returns:
-        Dict with 'reply' and optionally 'sources'
     """
     print(f"⏳ Processing chat message for DPR {dpr_id}")
     start_time = time.time()
     
     # Create session if it doesn't exist
     if dpr_id not in _chat_sessions:
-        create_chat_session(dpr_id, file_ref)
+        await create_chat_session(dpr_id, file_ref)
     
     session = _chat_sessions[dpr_id]
     chat = session['chat']
     file_obj = session['file']
     
-    # Send message with file context
-    response = chat.send_message([file_obj, message])
+    # Send message with file context (blocking call offloaded)
+    response = await asyncio.to_thread(chat.send_message, [file_obj, message])
     
     elapsed = time.time() - start_time
     print(f"✓ Chat response generated in {elapsed:.2f}s (length: {len(response.text)} chars)")
@@ -339,6 +343,142 @@ def send_chat_message(dpr_id: int, message: str, file_ref: str) -> Dict:
 # - Generate: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent
 # - Use Authorization: Bearer {GEMINI_API_KEY} header
 # - See: https://ai.google.dev/api/rest
+
+def clear_chat_session(dpr_id: int) -> None:
+    """Clear the in-memory chat session for a DPR."""
+    if dpr_id in _chat_sessions:
+        del _chat_sessions[dpr_id]
+        print(f"✓ Cleared chat session for DPR {dpr_id}")
+
+
+# ===== COMPARISON CHAT FUNCTIONS =====
+
+# In-memory comparison chat sessions: {comparison_id: chat_object}
+_comparison_chat_sessions = {}
+
+
+async def create_comparison_chat_session(comparison_id: int, file_refs: list[str]) -> None:
+    """
+    Create a new comparison chat session with multiple files.
+    """
+    if comparison_id in _comparison_chat_sessions:
+        return
+    
+    print(f"⏳ Creating comparison chat session for comparison {comparison_id} with {len(file_refs)} files")
+    
+    def _create_session():
+        # Get all file objects
+        file_objs = [genai.get_file(ref) for ref in file_refs]
+        
+        # Create detailed system instruction for comparison
+        system_instruction = """You are an expert Detailed Project Report (DPR) Analyzer and Comparison Assistant.
+
+Your role is to help users analyze and compare multiple DPR documents simultaneously. When users ask questions, you should:
+
+1. **Cross-Document Analysis**: Compare and contrast information across all provided DPRs
+2. **Identify Patterns**: Highlight common themes, differences, strengths, and weaknesses across documents
+3. **Financial Comparison**: Compare financial metrics like costs, revenues, IRR, DSCR, payback periods
+4. **Risk Assessment Comparison**: Compare risk profiles and mitigation strategies
+5. **Recommendations**: Provide comparative insights and recommendations based on the analysis
+
+**Response Guidelines**:
+- Always specify which document(s) you're referencing (e.g., "Document 1 shows...", "Compared to Document 2...")
+- Use clear comparisons: "higher/lower", "better/worse", "more/less comprehensive"
+- Cite page numbers when available, format: (Doc 1, page: X)
+- Be objective and data-driven in comparisons
+- When asked about specific aspects, compare across ALL documents
+- If information is missing from some documents, explicitly state which ones lack that information 
+- Provide tabular or structured responses when comparing metrics
+- Do not make up or hallucinate facts or page numbers
+
+**Your expertise includes**:
+- Financial viability analysis and comparison
+- Risk assessment across multiple projects
+- Timeline and implementation feasibility comparison
+- Resource allocation and cost structure comparison
+- Compliance and regulatory requirement comparison
+
+Always maintain a professional, analytical tone and provide actionable insights from your comparisons."""
+        
+        # Create model with system instructions for comparison
+        model = genai.GenerativeModel(
+            model_name='gemini-2.5-flash',
+            system_instruction=system_instruction
+        )
+        
+        # Start chat with all documents
+        chat = model.start_chat(history=[])
+        
+        return chat, file_objs
+
+    # Offload to thread
+    chat, file_objs = await asyncio.to_thread(_create_session)
+    
+    # Store the chat session and file references
+    _comparison_chat_sessions[comparison_id] = {
+        'chat': chat,
+        'files': file_objs
+    }
+    
+    print(f"✓ Comparison chat session created for comparison {comparison_id}")
+
+
+async def send_comparison_message(comparison_id: int, message: str, file_refs: list[str]) -> Dict:
+    """
+    Send a message in the comparison chat session and get a response.
+    """
+    print(f"⏳ Processing comparison chat message for comparison {comparison_id}")
+    start_time = time.time()
+    
+    # Create session if it doesn't exist
+    if comparison_id not in _comparison_chat_sessions:
+        await create_comparison_chat_session(comparison_id, file_refs)
+    
+    session = _comparison_chat_sessions[comparison_id]
+    chat = session['chat']
+    file_objs = session['files']
+    
+    # Send message with all file contexts (blocking call offloaded)
+    response = await asyncio.to_thread(chat.send_message, file_objs + [message])
+    
+    elapsed = time.time() - start_time
+    print(f"✓ Comparison chat response generated in {elapsed:.2f}s (length: {len(response.text)} chars)")
+    
+    return {
+        'reply': response.text,
+        'sources': []
+    }
+
+
+def clear_comparison_chat_session(comparison_id: int) -> None:
+    """Clear the in-memory comparison chat session."""
+    if comparison_id in _comparison_chat_sessions:
+        del _comparison_chat_sessions[comparison_id]
+        print(f"✓ Cleared comparison chat session for comparison {comparison_id}")
+
+# Some versions of the google-genai SDK expect genai.configure(...)
+try:
+    import google.generativeai as genai
+    key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if key:
+        try:
+            genai.configure(api_key=key)
+            print("Configured google.generativeai with GEMINI_API_KEY from .env")
+        except AttributeError:
+            # older/newer SDK may not have configure(); we'll still continue and rely on env var
+            print("genai.configure not present; relying on GOOGLE_API_KEY env var")
+except Exception as e:
+    print("Could not import google.generativeai to configure automatically:", e)
+
+
+# Configure Gemini
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+
+# In-memory chat sessions: {dpr_id: chat_object}
+_chat_sessions = {}
+
+
+
 
 def clear_chat_session(dpr_id: int) -> None:
     """Clear the in-memory chat session for a DPR."""

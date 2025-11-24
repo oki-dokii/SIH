@@ -23,3 +23,9 @@ data/
 .idea/
 .DS_Store
 Thumbs.db
+
+# --- Node.js ---
+node_modules/
+frontend/node_modules/
+npm-debug.log
+yarn-error.log

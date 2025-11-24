@@ -23,6 +23,15 @@ def init_db(db_path: str = "data/dpr.db"):
         )
     """)
     
+    # MIGRATION: Add summary_json_multilang column if it doesn't exist
+    cursor.execute("PRAGMA table_info(dprs)")
+    columns = [col[1] for col in cursor.fetchall()]
+    
+    if 'summary_json_multilang' not in columns:
+        print("⏳ Migrating database: adding summary_json_multilang column...")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN summary_json_multilang TEXT")
+        print("✓ Database migration complete")
+    
     # Create index on original_filename for faster lookups
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_original_filename 
@@ -124,6 +133,54 @@ def insert_dpr(filename: str, original_filename: str, filepath: str, file_ref: s
     return dpr_id
 
 
+def update_dpr(dpr_id: int, summary_json: dict, summary_json_multilang: dict = None, db_path: str = "data/dpr.db"):
+    """Update an existing DPR record with analysis results."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    json_str = json.dumps(summary_json, indent=2)
+    multilang_str = json.dumps(summary_json_multilang, indent=2) if summary_json_multilang else None
+    
+    cursor.execute("""
+        UPDATE dprs 
+        SET summary_json = ?, summary_json_multilang = ?
+        WHERE id = ?
+    """, (json_str, multilang_str, dpr_id))
+    
+    conn.commit()
+    conn.close()
+    print(f"✓ DPR {dpr_id} updated with analysis results")
+
+
+def delete_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[str]:
+    """
+    Delete a DPR and all associated data.
+    Returns the filepath of the deleted DPR so it can be removed from disk.
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    # Get filepath before deletion
+    cursor.execute("SELECT filepath FROM dprs WHERE id = ?", (dpr_id,))
+    row = cursor.fetchone()
+    filepath = row[0] if row else None
+    
+    # Delete from messages (chat history)
+    cursor.execute("DELETE FROM messages WHERE dpr_id = ?", (dpr_id,))
+    
+    # Delete from comparison_chat_pdfs (remove from comparisons)
+    cursor.execute("DELETE FROM comparison_chat_pdfs WHERE dpr_id = ?", (dpr_id,))
+    
+    # Delete from dprs table
+    cursor.execute("DELETE FROM dprs WHERE id = ?", (dpr_id,))
+    
+    conn.commit()
+    conn.close()
+    
+    print(f"✓ Deleted DPR {dpr_id} from database")
+    return filepath
+
+
 def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
     """Retrieve a DPR by ID."""
     conn = sqlite3.connect(db_path)
@@ -131,7 +188,7 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json
+        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang
         FROM dprs WHERE id = ?
     """, (dpr_id,))
     
@@ -146,7 +203,8 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
             "filepath": row["filepath"],
             "uploaded_file_ref": row["uploaded_file_ref"],
             "upload_ts": row["upload_ts"],
-            "summary_json": json.loads(row["summary_json"])
+            "summary_json": json.loads(row["summary_json"]),
+            "summary_json_multilang": row["summary_json_multilang"]
         }
     return None
 
@@ -158,7 +216,7 @@ def get_dpr_by_filename(original_filename: str, db_path: str = "data/dpr.db") ->
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json
+        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang
         FROM dprs WHERE original_filename = ?
     """, (original_filename,))
     
@@ -173,7 +231,8 @@ def get_dpr_by_filename(original_filename: str, db_path: str = "data/dpr.db") ->
             "filepath": row["filepath"],
             "uploaded_file_ref": row["uploaded_file_ref"],
             "upload_ts": row["upload_ts"],
-            "summary_json": json.loads(row["summary_json"])
+            "summary_json": json.loads(row["summary_json"]),
+            "summary_json_multilang": row["summary_json_multilang"]
         }
     return None
 
@@ -185,7 +244,7 @@ def get_all_dprs(db_path: str = "data/dpr.db") -> List[Dict]:
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json
+        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang
         FROM dprs
         ORDER BY upload_ts DESC
     """)
@@ -201,7 +260,36 @@ def get_all_dprs(db_path: str = "data/dpr.db") -> List[Dict]:
             "filepath": row["filepath"],
             "uploaded_file_ref": row["uploaded_file_ref"],
             "upload_ts": row["upload_ts"],
-            "summary_json": json.loads(row["summary_json"])
+            "summary_json": json.loads(row["summary_json"]),
+            "summary_json_multilang": row["summary_json_multilang"]
+        }
+        for row in rows
+    ]
+
+
+def get_processing_dprs(db_path: str = "data/dpr.db") -> List[Dict]:
+    """Retrieve all DPRs that are still processing (summary_json is NULL)."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts
+        FROM dprs
+        WHERE summary_json IS NULL OR summary_json = ''
+    """)
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [
+        {
+            "id": row["id"],
+            "filename": row["filename"],
+            "original_filename": row["original_filename"],
+            "filepath": row["filepath"],
+            "uploaded_file_ref": row["uploaded_file_ref"],
+            "upload_ts": row["upload_ts"]
         }
         for row in rows
     ]
@@ -385,7 +473,7 @@ def get_all_comparison_chats(db_path: str = "data/dpr.db") -> List[Dict]:
             "id": row["id"],
             "name": row["name"],
             "created_ts": row["created_ts"],
-            "pdf_count": pdf_count,
+            "dpr_count": pdf_count,
             "message_count": message_count
         })
     
@@ -452,3 +540,28 @@ def clear_comparison_history(comparison_id: int, db_path: str = "data/dpr.db"):
     
     print(f"✓ Cleared {deleted_count} messages for comparison chat {comparison_id}")
     return deleted_count
+
+
+def delete_comparison_chat(comparison_id: int, db_path: str = "data/dpr.db"):
+    """Delete a comparison chat and all associated data."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    # Delete messages
+    cursor.execute("""
+        DELETE FROM comparison_messages WHERE comparison_chat_id = ?
+    """, (comparison_id,))
+    
+    # Delete PDF associations
+    cursor.execute("""
+        DELETE FROM comparison_chat_pdfs WHERE comparison_chat_id = ?
+    """, (comparison_id,))
+    
+    # Delete the comparison chat itself
+    cursor.execute("""
+        DELETE FROM comparison_chats WHERE id = ?
+    """, (comparison_id,))
+    
+    conn.commit()
+    conn.close()
+    print(f"✓ Deleted comparison chat {comparison_id}")

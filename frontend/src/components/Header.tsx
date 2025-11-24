@@ -1,14 +1,17 @@
 import { FileText, Moon, Sun, Languages } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from './ui/Button'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '../contexts/LanguageContext'
+import { api } from '@/lib/api'
 
 export function Header() {
   const [isDark, setIsDark] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
   const { language, setLanguage, t } = useLanguage()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const isDarkMode = document.documentElement.classList.contains('dark')
@@ -24,6 +27,33 @@ export function Header() {
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'hi' : 'en')
+  }
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      alert('Please upload a PDF file')
+      return
+    }
+
+    try {
+      const result = await api.uploadDPR(file, language)
+      navigate(`/documents/${result.id}`)
+    } catch (err) {
+      console.error('Upload error:', err)
+      alert('Failed to upload file. Please try again.')
+    }
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   return (
@@ -82,10 +112,17 @@ export function Header() {
           >
             {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
-          <Button>
+          <Button onClick={handleUploadClick}>
             <FileText className="h-4 w-4" />
             {t('common.upload')}
           </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            onChange={handleFileChange}
+            className="hidden"
+          />
         </div>
       </div>
     </header>

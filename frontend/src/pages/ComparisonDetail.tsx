@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { FileText, Send, Loader2, ArrowLeft, Calendar } from 'lucide-react'
+import { FileText, Send, Loader2, ArrowLeft, Calendar, Trash2 } from 'lucide-react'
 import { api, Comparison, ComparisonMessage } from '../lib/api'
 import { Header } from '../components/Header'
 import { Button } from '../components/ui/Button'
@@ -52,6 +52,18 @@ export default function ComparisonDetailPage() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const handleClearChat = async () => {
+    if (!id || !confirm(t('common.confirmClearChat'))) return
+
+    try {
+      await api.clearComparisonChatHistory(Number(id))
+      setMessages([])
+    } catch (error) {
+      console.error('Failed to clear chat:', error)
+      alert('Failed to clear chat history')
+    }
   }
 
   const handleSend = async () => {
@@ -117,9 +129,9 @@ export default function ComparisonDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <Header />
-      
+
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-6">
           <Button
@@ -130,11 +142,11 @@ export default function ComparisonDetailPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             {t('comparisons.backToComparisons')}
           </Button>
-          
+
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{comparison.name}</h1>
-              <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{comparison.name}</h1>
+              <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   <span>{comparison.dprs?.length || 0} documents</span>
@@ -151,24 +163,24 @@ export default function ComparisonDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('comparisons.documentsInComparison')}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('comparisons.documentsInComparison')}</h3>
               <div className="space-y-3">
                 {comparison.dprs?.map((dpr) => (
                   <div
                     key={dpr.id}
-                    className="p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-cyan-500 transition-colors"
+                    className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-cyan-500 dark:hover:border-cyan-500 transition-colors"
                     onClick={() => navigate(`/documents/${dpr.id}`)}
                   >
-                    <p className="font-medium text-gray-900 text-sm truncate">
+                    <p className="font-medium text-gray-900 dark:text-white text-sm truncate">
                       {dpr.summary_json?.projectName || dpr.original_filename}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1 truncate">{dpr.original_filename}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">{dpr.original_filename}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-6 p-4 bg-cyan-50 rounded-lg border border-cyan-200">
-                <p className="text-sm text-gray-700">
+              <div className="mt-6 p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg border border-cyan-200 dark:border-cyan-800">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
                   <strong>💡 Tips for comparison:</strong>
                   <br />
                   Ask questions like "Which project has better ROI?" or "Compare the implementation timelines"
@@ -179,19 +191,32 @@ export default function ComparisonDetailPage() {
 
           <div className="lg:col-span-2">
             <Card className="flex flex-col h-[calc(100vh-280px)]">
-              <div className="p-4 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">{t('comparisons.aiChat')}</h3>
-                <p className="text-sm text-gray-600">{t('comparisons.askAboutDocuments')}</p>
+              <div className="p-4 border-b dark:border-gray-700 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('comparisons.aiChat')}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('comparisons.askAboutDocuments')}</p>
+                </div>
+                {messages.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearChat}
+                    className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                    title={t('common.clearChat')}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FileText className="w-8 h-8 text-cyan-600" />
+                    <div className="w-16 h-16 bg-cyan-100 dark:bg-cyan-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-8 h-8 text-cyan-600 dark:text-cyan-400" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Start comparing documents</h3>
-                    <p className="text-gray-600 max-w-md mx-auto">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Start comparing documents</h3>
+                    <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
                       Ask questions to compare these documents, find differences, or get insights across all of them.
                     </p>
                   </div>
@@ -203,7 +228,7 @@ export default function ComparisonDetailPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-4 border-t">
+              <div className="p-4 border-t dark:border-gray-700">
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -212,7 +237,7 @@ export default function ComparisonDetailPage() {
                     onKeyPress={handleKeyPress}
                     placeholder={t('documentDetail.askQuestion')}
                     disabled={sending}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-gray-100"
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-gray-100 dark:disabled:bg-gray-800 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                   />
                   <Button onClick={handleSend} disabled={!inputMessage.trim() || sending}>
                     {sending ? (

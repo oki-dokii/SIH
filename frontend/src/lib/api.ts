@@ -108,6 +108,13 @@ export const api = {
     return data.messages || []
   },
 
+  async clearChatHistory(dprId: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/dpr/${dprId}/chat`, {
+      method: 'DELETE',
+    })
+    if (!response.ok) throw new Error('Failed to clear chat history')
+  },
+
   async deleteDPR(id: number): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/dpr/${id}`, {
       method: 'DELETE',
@@ -140,6 +147,13 @@ export const api = {
     return response.json()
   },
 
+  async deleteComparison(id: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/comparison-chat/${id}`, {
+      method: 'DELETE',
+    })
+    if (!response.ok) throw new Error('Failed to delete comparison')
+  },
+
   async sendComparisonMessage(comparisonId: number, message: string): Promise<ComparisonMessage> {
     const response = await fetch(`${API_BASE_URL}/comparison-chat/${comparisonId}/chat`, {
       method: 'POST',
@@ -164,5 +178,12 @@ export const api = {
     if (!response.ok) throw new Error('Failed to fetch comparison chat history')
     const data = await response.json()
     return data.messages || []
+  },
+
+  async clearComparisonChatHistory(comparisonId: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/comparison-chat/${comparisonId}/chat`, {
+      method: 'DELETE',
+    })
+    if (!response.ok) throw new Error('Failed to clear comparison chat history')
   },
 }

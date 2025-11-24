@@ -15,7 +15,7 @@ function App() {
           <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/documents/:id" element={<DocumentDetailPage />} />
           <Route path="/comparisons" element={<ComparisonsPage />} />
-          <Route path="/comparison/:id" element={<ComparisonDetailPage />} />
+          <Route path="/comparison-chat/:id/detail" element={<ComparisonDetailPage />} />
         </Routes>
       </BrowserRouter>
     </LanguageProvider>
