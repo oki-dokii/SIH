@@ -1,4 +1,4 @@
-import { FileText, Moon, Sun, Languages, CheckCircle2 } from 'lucide-react'
+import { FileText, Moon, Sun, Languages, Loader2, CheckCircle2 } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from './ui/Button'
 import { useState, useEffect, useRef } from 'react'
@@ -48,7 +48,7 @@ export function Header() {
     if (!file) return
 
     if (!file.name.toLowerCase().endsWith('.pdf')) {
-      alert(t('common.uploadPDFError'))
+      alert('Please upload a PDF file')
       return
     }
 
@@ -86,7 +86,7 @@ export function Header() {
       }, 1500)
     } catch (err) {
       console.error('Upload error:', err)
-      alert(t('common.uploadError'))
+      alert('Failed to upload file. Please try again.')
       setUploading(false)
     } finally {
       setPendingFile(null)
@@ -121,7 +121,7 @@ export function Header() {
                 isActive('/projects') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
               )}
             >
-              {t('documents.title')}
+              Projects
             </Link>
             <Link
               to="/comparisons"
@@ -186,8 +186,8 @@ export function Header() {
                       <CheckCircle2 className="h-8 w-8 text-green-600" />
                     </div>
                   </div>
-                  <h3 className="text-lg font-semibold mb-2 text-green-600">{t('common.uploadComplete')}</h3>
-                  <p className="text-muted-foreground">{t('common.redirecting')}</p>
+                  <h3 className="text-lg font-semibold mb-2 text-green-600">Upload Complete!</h3>
+                  <p className="text-muted-foreground">Redirecting to analysis...</p>
                 </div>
               ) : (
                 <>
@@ -195,11 +195,11 @@ export function Header() {
                     <div className="w-16 h-16 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                   </div>
                   <h3 className="text-lg font-semibold mb-2">
-                    {processing ? t('common.processing') : t('common.loading')}
+                    {processing ? 'Processing Document...' : t('common.loading')}
                   </h3>
                   <p className="text-muted-foreground mb-4">
                     {processing
-                      ? t('common.analyzing')
+                      ? 'Analyzing content with AI. This may take a moment.'
                       : t('landing.uploadPrompt')}
                   </p>
                   <div className="w-full bg-gray-200 rounded-full h-2">

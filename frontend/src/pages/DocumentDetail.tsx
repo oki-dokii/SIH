@@ -386,19 +386,19 @@ export default function DocumentDetailPage() {
       {showClearChatConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
-            <h3 className="text-lg font-bold mb-2">{t('common.confirmClearChatTitle')}</h3>
+            <h3 className="text-lg font-bold mb-2">{t('common.confirmClearChat')}</h3>
             <p className="text-muted-foreground mb-6">
-              {t('common.confirmClearChatText')}
+              Are you sure you want to clear the chat history? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowClearChatConfirm(false)}>
-                {t('common.cancel')}
+                Cancel
               </Button>
               <Button
                 className="bg-red-600 hover:bg-red-700 text-white"
                 onClick={confirmClearChat}
               >
-                {t('common.clearChatAction')}
+                Clear Chat
               </Button>
             </div>
           </Card>

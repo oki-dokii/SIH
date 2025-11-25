@@ -52,7 +52,7 @@ export default function IndexPage() {
         navigate(`/documents/${result.id}`)
       }, 1500)
     } catch (err) {
-      setError(t('common.uploadError'))
+      setError('Failed to upload file. Please try again.')
       console.error('Upload error:', err)
       setUploading(false)
       setProcessing(false)
@@ -104,8 +104,8 @@ export default function IndexPage() {
                             <CheckCircle2 className="h-8 w-8 text-green-600" />
                           </div>
                         </div>
-                        <h3 className="text-lg font-semibold mb-2 text-green-600">{t('common.uploadComplete')}</h3>
-                        <p className="text-muted-foreground">{t('common.redirecting')}</p>
+                        <h3 className="text-lg font-semibold mb-2 text-green-600">Upload Complete!</h3>
+                        <p className="text-muted-foreground">Redirecting to analysis...</p>
                       </div>
                     ) : (
                       <>
@@ -113,11 +113,11 @@ export default function IndexPage() {
                           <div className="w-16 h-16 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                         </div>
                         <h3 className="text-lg font-semibold mb-2">
-                          {processing ? t('common.processing') : t('common.loading')}
+                          {processing ? 'Processing Document...' : t('common.loading')}
                         </h3>
                         <p className="text-muted-foreground mb-4">
                           {processing
-                            ? t('common.analyzing')
+                            ? 'Analyzing content with AI. This may take a moment.'
                             : t('landing.uploadPrompt')}
                         </p>
                         <div className="w-full bg-gray-200 rounded-full h-2">
