@@ -107,6 +107,63 @@ class CreateComparisonRequest(BaseModel):
 
 
 
+
+class CreateProjectRequest(BaseModel):
+    name: str
+    state: str
+    scheme: str
+    sector: str
+
+
+# ===== PROJECT API ROUTES =====
+
+@app.get("/projects")
+async def list_projects():
+    """Get a list of all projects."""
+    projects = db.get_projects()
+    return JSONResponse({"projects": projects, "count": len(projects)})
+
+@app.post("/projects")
+async def create_project(request: CreateProjectRequest):
+    """Create a new project."""
+    try:
+        project_id = db.create_project(request.name, request.state, request.scheme, request.sector)
+        return JSONResponse({
+            "id": project_id,
+            "name": request.name,
+            "message": "Project created successfully"
+        })
+    except Exception as e:
+        print(f"✗ Create project error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to create project: {str(e)}")
+
+@app.delete("/projects/{project_id}")
+async def delete_project(project_id: int):
+    """Delete a project."""
+    try:
+        success = db.delete_project(project_id)
+        if not success:
+            raise HTTPException(status_code=404, detail=f"Project {project_id} not found")
+        return JSONResponse({"message": "Project deleted successfully"})
+    except Exception as e:
+        print(f"✗ Delete project error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete project: {str(e)}")
+
+@app.get("/projects/{project_id}")
+async def get_project(project_id: int):
+    """Get project details."""
+    project = db.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail=f"Project {project_id} not found")
+    return JSONResponse(project)
+
+@app.get("/projects/{project_id}/dprs")
+async def get_project_dprs(project_id: int):
+    """Get all DPRs for a specific project."""
+    dprs = db.get_dprs_by_project(project_id)
+    return JSONResponse({"dprs": dprs, "count": len(dprs)})
+
+
 # ===== PAGE ROUTES =====
 
 @app.get("/", response_class=HTMLResponse)
@@ -146,6 +203,97 @@ async def list_all_dprs():
     """Get a list of all DPRs with metadata."""
     dprs = db.get_all_dprs()
     return JSONResponse({"dprs": dprs, "count": len(dprs)})
+
+
+
+@app.post("/upload-dpr")
+async def upload_dpr(
+    file: UploadFile = File(...), 
+    language: str = Form("en"),
+    project_id: Optional[int] = Form(None)
+):
+    """
+    Upload a DPR PDF, process it with Gemini, and return structured JSON.
+    """
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are accepted")
+    
+    try:
+        original_filename = file.filename
+        
+        # Check if this PDF already exists
+        existing_dpr = db.get_dpr_by_filename(original_filename)
+        if existing_dpr:
+            print(f"✓ PDF already exists: {original_filename} (ID: {existing_dpr['id']})")
+            
+            # Update project_id if provided and different
+            if project_id is not None and existing_dpr.get('project_id') != project_id:
+                print(f"⏳ Updating project association: DPR {existing_dpr['id']} → Project {project_id}")
+                import sqlite3
+                conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+                cursor = conn.cursor()
+                cursor.execute("UPDATE dprs SET project_id = ? WHERE id = ?", (project_id, existing_dpr['id']))
+                conn.commit()
+                conn.close()
+                print(f"✓ Project association updated")
+            
+            return JSONResponse({
+                "id": existing_dpr["id"],
+                "dpr_id": existing_dpr["id"],
+                "summary": existing_dpr["summary_json"],
+                "existing": True
+            })
+        
+        # Generate unique filename for storage
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_id = str(uuid.uuid4())[:8]
+        filename = f"{timestamp}_{unique_id}_{original_filename}"
+        filepath = DATA_DIR / filename
+        
+        # Save the uploaded file
+        print(f"⏳ Saving uploaded file: {filename}")
+        with open(filepath, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        print(f"✓ File saved: {filepath} ({len(content)} bytes)")
+        
+        # Upload to Gemini Files API
+        file_ref = await gemini_client.upload_file(str(filepath))
+        
+        # Insert initial record into database with project_id
+        print(f"⏳ Inserting initial DPR record for {filename}...")
+        dpr_id = db.insert_dpr(
+            filename=filename,
+            original_filename=original_filename,
+            filepath=str(filepath),
+            file_ref=file_ref,
+            summary_json=None,
+            summary_json_multilang=None,
+            project_id=project_id
+        )
+        
+        # Generate analysis in background
+        print("⏳ Generating analysis in multiple languages...")
+        try:
+            multilang_json = await gemini_client.generate_multilang_json_from_file(file_ref, str(SCHEMA_PATH))
+            print(f"✓ Generated analysis in {len(multilang_json)} languages")
+            
+            parsed_json = multilang_json.get(language, multilang_json["en"])
+            db.update_dpr(dpr_id, parsed_json, multilang_json)
+            
+            return JSONResponse({
+                "id": dpr_id,
+                "dpr_id": dpr_id,
+                "summary": parsed_json,
+                "existing": False
+            })
+        except Exception as e:
+            print(f"✗ Analysis failed: {str(e)}")
+            raise e
+        
+    except Exception as e:
+        print(f"✗ Unexpected error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to process DPR: {str(e)}")
 
 
 @app.post("/upload-dpr")

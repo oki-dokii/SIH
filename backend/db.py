@@ -9,17 +9,31 @@ def init_db(db_path: str = "data/dpr.db"):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
+    # Create Projects table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            state TEXT NOT NULL,
+            scheme TEXT NOT NULL,
+            sector TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
+    """)
+
     # Create DPRs table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS dprs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
             filename TEXT NOT NULL,
             original_filename TEXT NOT NULL,
             filepath TEXT NOT NULL,
             uploaded_file_ref TEXT NOT NULL,
             upload_ts TEXT NOT NULL,
             summary_json TEXT NOT NULL,
-            summary_json_multilang TEXT
+            summary_json_multilang TEXT,
+            FOREIGN KEY (project_id) REFERENCES projects (id)
         )
     """)
     
@@ -31,6 +45,17 @@ def init_db(db_path: str = "data/dpr.db"):
         print("⏳ Migrating database: adding summary_json_multilang column...")
         cursor.execute("ALTER TABLE dprs ADD COLUMN summary_json_multilang TEXT")
         print("✓ Database migration complete")
+
+    if 'project_id' not in columns:
+        print("⏳ Migrating database: adding project_id column...")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN project_id INTEGER")
+        cursor.execute("PRAGMA foreign_keys=off;")
+        cursor.execute("BEGIN TRANSACTION;")
+        # We can't easily add FK constraint to existing table in SQLite without recreating
+        # For now just add the column
+        cursor.execute("COMMIT;")
+        cursor.execute("PRAGMA foreign_keys=on;")
+        print("✓ Database migration complete (project_id)")
     
     # Create index on original_filename for faster lookups
     cursor.execute("""
@@ -111,7 +136,7 @@ def init_db(db_path: str = "data/dpr.db"):
 
 
 def insert_dpr(filename: str, original_filename: str, filepath: str, file_ref: str, 
-               summary_json: dict, summary_json_multilang: dict = None, db_path: str = "data/dpr.db") -> int:
+               summary_json: dict, summary_json_multilang: dict = None, project_id: int = None, db_path: str = "data/dpr.db") -> int:
     """Insert a new DPR record and return its ID."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -121,9 +146,9 @@ def insert_dpr(filename: str, original_filename: str, filepath: str, file_ref: s
     multilang_str = json.dumps(summary_json_multilang, indent=2) if summary_json_multilang else None
     
     cursor.execute("""
-        INSERT INTO dprs (filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (filename, original_filename, filepath, file_ref, timestamp, json_str, multilang_str))
+        INSERT INTO dprs (filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang, project_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (filename, original_filename, filepath, file_ref, timestamp, json_str, multilang_str, project_id))
     
     dpr_id = cursor.lastrowid
     conn.commit()
@@ -565,3 +590,110 @@ def delete_comparison_chat(comparison_id: int, db_path: str = "data/dpr.db"):
     conn.commit()
     conn.close()
     print(f"✓ Deleted comparison chat {comparison_id}")
+
+# ===== PROJECT FUNCTIONS =====
+
+def get_projects(db_path: str = "data/dpr.db") -> List[Dict]:
+    """Retrieve all projects with their DPR counts."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT p.*, COUNT(d.id) as dpr_count
+        FROM projects p
+        LEFT JOIN dprs d ON p.id = d.project_id
+        GROUP BY p.id
+        ORDER BY p.created_at DESC
+    """)
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in rows]
+
+
+def create_project(name: str, state: str, scheme: str, sector: str, db_path: str = "data/dpr.db") -> int:
+    """Create a new project."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    timestamp = datetime.now().isoformat()
+    
+    cursor.execute("""
+        INSERT INTO projects (name, state, scheme, sector, created_at)
+        VALUES (?, ?, ?, ?, ?)
+    """, (name, state, scheme, sector, timestamp))
+    
+    project_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    
+    print(f"✓ Project created with ID: {project_id}")
+    return project_id
+
+
+def delete_project(project_id: int, db_path: str = "data/dpr.db") -> bool:
+    """Delete a project and unlink its DPRs."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    # Unlink DPRs (set project_id to NULL)
+    cursor.execute("""
+        UPDATE dprs SET project_id = NULL WHERE project_id = ?
+    """, (project_id,))
+    
+    # Delete project
+    cursor.execute("""
+        DELETE FROM projects WHERE id = ?
+    """, (project_id,))
+    
+    deleted = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    
+    return deleted
+
+
+def get_project(project_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Get project details."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return dict(row)
+    return None
+
+
+def get_dprs_by_project(project_id: int, db_path: str = "data/dpr.db") -> List[Dict]:
+    """Get all DPRs for a specific project."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, filename, original_filename, upload_ts, summary_json, project_id
+        FROM dprs
+        WHERE project_id = ?
+        ORDER BY upload_ts DESC
+    """, (project_id,))
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    dprs = []
+    for row in rows:
+        dpr = dict(row)
+        if dpr['summary_json']:
+            try:
+                dpr['summary_json'] = json.loads(dpr['summary_json'])
+            except:
+                dpr['summary_json'] = None
+        dprs.append(dpr)
+        
+    return dprs

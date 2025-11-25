@@ -22,7 +22,7 @@ export default function IndexPage() {
     setUploadProgress(0)
 
     try {
-      const result = await api.uploadDPR(file, language, (progress) => {
+      const result = await api.uploadDPR(file, language, undefined, (progress) => {
         setUploadProgress(progress)
       })
 

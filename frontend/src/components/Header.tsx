@@ -43,7 +43,7 @@ export function Header() {
     }
 
     try {
-      const result = await api.uploadDPR(file, language)
+      const result = await api.uploadDPR(file, language, undefined)
       navigate(`/documents/${result.id}`)
     } catch (err) {
       console.error('Upload error:', err)
@@ -77,13 +77,13 @@ export function Header() {
             {t('common.home')}
           </Link>
           <Link
-            to="/documents"
+            to="/projects"
             className={cn(
               'text-sm font-medium transition-colors hover:text-primary',
-              isActive('/documents') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
+              isActive('/projects') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
             )}
           >
-            {t('common.documents')}
+            Projects
           </Link>
           <Link
             to="/comparisons"

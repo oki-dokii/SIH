@@ -39,7 +39,56 @@ export interface ComparisonMessage {
   timestamp: string
 }
 
+export interface Project {
+  id: number
+  name: string
+  state: string
+  scheme: string
+  sector: string
+  created_at: string
+  dpr_count?: number
+}
+
 export const api = {
+  async getProjects(): Promise<Project[]> {
+    const response = await fetch(`${API_BASE_URL}/projects`)
+    if (!response.ok) throw new Error('Failed to fetch projects')
+    const data = await response.json()
+    return data.projects || []
+  },
+
+  async createProject(project: Omit<Project, 'id' | 'created_at' | 'dpr_count'>): Promise<Project> {
+    const response = await fetch(`${API_BASE_URL}/projects`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(project),
+    })
+    if (!response.ok) throw new Error('Failed to create project')
+    return response.json()
+  },
+
+  async deleteProject(id: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
+      method: 'DELETE',
+    })
+    if (!response.ok) throw new Error('Failed to delete project')
+  },
+
+  async getProject(id: number): Promise<Project> {
+    const response = await fetch(`${API_BASE_URL}/projects/${id}`)
+    if (!response.ok) throw new Error('Failed to fetch project')
+    return response.json()
+  },
+
+  async getProjectDPRs(projectId: number): Promise<DPR[]> {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/dprs`)
+    if (!response.ok) throw new Error('Failed to fetch project DPRs')
+    const data = await response.json()
+    return data.dprs || []
+  },
+
   async getDPRs(): Promise<DPR[]> {
     const response = await fetch(`${API_BASE_URL}/dprs`)
     if (!response.ok) throw new Error('Failed to fetch DPRs')
@@ -53,10 +102,13 @@ export const api = {
     return response.json()
   },
 
-  async uploadDPR(file: File, language: string = 'en', onProgress?: (progress: number) => void): Promise<UploadResponse> {
+  async uploadDPR(file: File, language: string = 'en', projectId?: number, onProgress?: (progress: number) => void): Promise<UploadResponse> {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('language', language)
+    if (projectId) {
+      formData.append('project_id', projectId.toString())
+    }
 
     const xhr = new XMLHttpRequest()
 

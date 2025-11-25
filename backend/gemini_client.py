@@ -201,13 +201,28 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
         response_text = response.text.strip()
         if response_text.startswith('```json'):
             response_text = response_text[7:]
-        if response_text.startswith('```'):
+        elif response_text.startswith('```'):
             response_text = response_text[3:]
+        
         if response_text.endswith('```'):
             response_text = response_text[:-3]
+            
         response_text = response_text.strip()
         
-        parsed_json = json.loads(response_text)
+        try:
+            parsed_json = json.loads(response_text)
+        except json.JSONDecodeError:
+            print("⚠ Initial JSON parse failed, attempting robust extraction...")
+            # Fallback: try to find JSON object boundaries
+            start_idx = response_text.find('{')
+            end_idx = response_text.rfind('}')
+            
+            if start_idx != -1 and end_idx != -1:
+                json_str = response_text[start_idx:end_idx+1]
+                parsed_json = json.loads(json_str)
+                print("✓ Robust extraction succeeded")
+            else:
+                raise
         
         # Validate structure
         if not isinstance(parsed_json, dict):
@@ -440,148 +455,6 @@ async def send_comparison_message(comparison_id: int, message: str, file_refs: l
     
     # Send message with all file contexts (blocking call offloaded)
     response = await asyncio.to_thread(chat.send_message, file_objs + [message])
-    
-    elapsed = time.time() - start_time
-    print(f"✓ Comparison chat response generated in {elapsed:.2f}s (length: {len(response.text)} chars)")
-    
-    return {
-        'reply': response.text,
-        'sources': []
-    }
-
-
-def clear_comparison_chat_session(comparison_id: int) -> None:
-    """Clear the in-memory comparison chat session."""
-    if comparison_id in _comparison_chat_sessions:
-        del _comparison_chat_sessions[comparison_id]
-        print(f"✓ Cleared comparison chat session for comparison {comparison_id}")
-
-# Some versions of the google-genai SDK expect genai.configure(...)
-try:
-    import google.generativeai as genai
-    key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    if key:
-        try:
-            genai.configure(api_key=key)
-            print("Configured google.generativeai with GEMINI_API_KEY from .env")
-        except AttributeError:
-            # older/newer SDK may not have configure(); we'll still continue and rely on env var
-            print("genai.configure not present; relying on GOOGLE_API_KEY env var")
-except Exception as e:
-    print("Could not import google.generativeai to configure automatically:", e)
-
-
-# Configure Gemini
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-
-# In-memory chat sessions: {dpr_id: chat_object}
-_chat_sessions = {}
-
-
-
-
-def clear_chat_session(dpr_id: int) -> None:
-    """Clear the in-memory chat session for a DPR."""
-    if dpr_id in _chat_sessions:
-        del _chat_sessions[dpr_id]
-        print(f"✓ Cleared chat session for DPR {dpr_id}")
-
-
-# ===== COMPARISON CHAT FUNCTIONS =====
-
-# In-memory comparison chat sessions: {comparison_id: chat_object}
-_comparison_chat_sessions = {}
-
-
-def create_comparison_chat_session(comparison_id: int, file_refs: list[str]) -> None:
-    """
-    Create a new comparison chat session with multiple files.
-    
-    Args:
-        comparison_id: The comparison chat ID
-        file_refs: List of file references for all PDFs in the comparison
-    """
-    if comparison_id in _comparison_chat_sessions:
-        return
-    
-    print(f"⏳ Creating comparison chat session for comparison {comparison_id} with {len(file_refs)} files")
-    
-    # Get all file objects
-    file_objs = [genai.get_file(ref) for ref in file_refs]
-    
-    # Create detailed system instruction for comparison
-    system_instruction = """You are an expert Detailed Project Report (DPR) Analyzer and Comparison Assistant.
-
-Your role is to help users analyze and compare multiple DPR documents simultaneously. When users ask questions, you should:
-
-1. **Cross-Document Analysis**: Compare and contrast information across all provided DPRs
-2. **Identify Patterns**: Highlight common themes, differences, strengths, and weaknesses across documents
-3. **Financial Comparison**: Compare financial metrics like costs, revenues, IRR, DSCR, payback periods
-4. **Risk Assessment Comparison**: Compare risk profiles and mitigation strategies
-5. **Recommendations**: Provide comparative insights and recommendations based on the analysis
-
-**Response Guidelines**:
-- Always specify which document(s) you're referencing (e.g., "Document 1 shows...", "Compared to Document 2...")
-- Use clear comparisons: "higher/lower", "better/worse", "more/less comprehensive"
-- Cite page numbers when available, format: (Doc 1, page: X)
-- Be objective and data-driven in comparisons
-- When asked about specific aspects, compare across ALL documents
-- If information is missing from some documents, explicitly state which ones lack that information 
-- Provide tabular or structured responses when comparing metrics
-- Do not make up or hallucinate facts or page numbers
-
-**Your expertise includes**:
-- Financial viability analysis and comparison
-- Risk assessment across multiple projects
-- Timeline and implementation feasibility comparison
-- Resource allocation and cost structure comparison
-- Compliance and regulatory requirement comparison
-
-Always maintain a professional, analytical tone and provide actionable insights from your comparisons."""
-    
-    # Create model with system instructions for comparison
-    model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
-        system_instruction=system_instruction
-    )
-    
-    # Start chat with all documents
-    chat = model.start_chat(history=[])
-    
-    # Store the chat session and file references
-    _comparison_chat_sessions[comparison_id] = {
-        'chat': chat,
-        'files': file_objs
-    }
-    
-    print(f"✓ Comparison chat session created for comparison {comparison_id}")
-
-
-def send_comparison_message(comparison_id: int, message: str, file_refs: list[str]) -> Dict:
-    """
-    Send a message in the comparison chat session and get a response.
-    
-    Args:
-        comparison_id: The comparison chat ID
-        message: User's message
-        file_refs: List of file references for all PDFs
-    
-    Returns:
-        Dict with 'reply' and optionally 'sources'
-    """
-    print(f"⏳ Processing comparison chat message for comparison {comparison_id}")
-    start_time = time.time()
-    
-    # Create session if it doesn't exist
-    if comparison_id not in _comparison_chat_sessions:
-        create_comparison_chat_session(comparison_id, file_refs)
-    
-    session = _comparison_chat_sessions[comparison_id]
-    chat = session['chat']
-    file_objs = session['files']
-    
-    # Send message with all file contexts
-    response = chat.send_message(file_objs + [message])
     
     elapsed = time.time() - start_time
     print(f"✓ Comparison chat response generated in {elapsed:.2f}s (length: {len(response.text)} chars)")
