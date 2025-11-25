@@ -3,36 +3,61 @@ import { UploadZone } from '@/components/UploadZone'
 import { FeatureCard } from '@/components/FeatureCard'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Sparkles, Zap, Lock, BarChart3, ArrowRight } from 'lucide-react'
+import { Sparkles, Zap, Lock, BarChart3, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { useState } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { ProjectSelectionModal } from '@/components/ProjectSelectionModal'
 
 export default function IndexPage() {
   const navigate = useNavigate()
   const { t, language } = useLanguage()
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [processing, setProcessing] = useState(false)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Project Selection State
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false)
+
   const handleUpload = async (file: File) => {
+    setPendingFile(file)
+    setIsProjectModalOpen(true)
+  }
+
+  const handleProjectSelect = async (projectId: number) => {
+    if (!pendingFile) return
+
+    setIsProjectModalOpen(false)
     setUploading(true)
+    setProcessing(false)
+    setUploadSuccess(false)
     setError(null)
     setUploadProgress(0)
 
     try {
-      const result = await api.uploadDPR(file, language, undefined, (progress) => {
+      const result = await api.uploadDPR(pendingFile, language, projectId, (progress) => {
         setUploadProgress(progress)
+        if (progress === 100) {
+          setProcessing(true)
+        }
       })
 
-      navigate(`/documents/${result.id}`)
+      setUploadSuccess(true)
+      // Small delay to show success message before redirect
+      setTimeout(() => {
+        navigate(`/documents/${result.id}`)
+      }, 1500)
     } catch (err) {
-      setError('Failed to upload file. Please try again.')
+      setError(t('common.uploadError'))
       console.error('Upload error:', err)
-    } finally {
       setUploading(false)
-      setUploadProgress(0)
+      setProcessing(false)
+    } finally {
+      setPendingFile(null)
     }
   }
 
@@ -72,20 +97,40 @@ export default function IndexPage() {
               {uploading ? (
                 <Card className="p-8">
                   <div className="text-center">
-                    <div className="mb-4">
-                      <div className="w-16 h-16 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">{t('common.loading')}</h3>
-                    <p className="text-muted-foreground mb-4">
-                      {t('landing.uploadPrompt')}
-                    </p>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full transition-all"
-                        style={{ width: `${uploadProgress}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">{Math.round(uploadProgress)}%</p>
+                    {uploadSuccess ? (
+                      <div className="animate-in fade-in zoom-in duration-300">
+                        <div className="mb-4 flex justify-center">
+                          <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+                            <CheckCircle2 className="h-8 w-8 text-green-600" />
+                          </div>
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2 text-green-600">{t('common.uploadComplete')}</h3>
+                        <p className="text-muted-foreground">{t('common.redirecting')}</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mb-4">
+                          <div className="w-16 h-16 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                        <h3 className="text-lg font-semibold mb-2">
+                          {processing ? t('common.processing') : t('common.loading')}
+                        </h3>
+                        <p className="text-muted-foreground mb-4">
+                          {processing
+                            ? t('common.analyzing')
+                            : t('landing.uploadPrompt')}
+                        </p>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-primary h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${uploadProgress}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          {processing ? '100%' : `${Math.round(uploadProgress)}%`}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </Card>
               ) : (
@@ -189,6 +234,15 @@ export default function IndexPage() {
           </div>
         </div>
       </footer>
+
+      <ProjectSelectionModal
+        isOpen={isProjectModalOpen}
+        onClose={() => {
+          setIsProjectModalOpen(false)
+          setPendingFile(null)
+        }}
+        onSelect={handleProjectSelect}
+      />
     </div>
   )
 }

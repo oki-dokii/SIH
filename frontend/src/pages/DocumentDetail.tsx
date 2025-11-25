@@ -44,6 +44,7 @@ export default function DocumentDetailPage() {
   const [chatLoading, setChatLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [showClearChatConfirm, setShowClearChatConfirm] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -79,12 +80,18 @@ export default function DocumentDetailPage() {
     }
   }
 
-  async function handleClearChat() {
-    if (!id || !confirm(t('common.confirmClearChat'))) return
+  function handleClearChat() {
+    if (!id) return
+    setShowClearChatConfirm(true)
+  }
+
+  async function confirmClearChat() {
+    if (!id) return
 
     try {
       await api.clearChatHistory(parseInt(id))
       setChatHistory([])
+      setShowClearChatConfirm(false)
     } catch (err) {
       console.error('Failed to clear chat:', err)
       // Optional: show toast error
@@ -374,6 +381,29 @@ export default function DocumentDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* Clear Chat Confirmation Modal */}
+      {showClearChatConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
+            <h3 className="text-lg font-bold mb-2">{t('common.confirmClearChatTitle')}</h3>
+            <p className="text-muted-foreground mb-6">
+              {t('common.confirmClearChatText')}
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setShowClearChatConfirm(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={confirmClearChat}
+              >
+                {t('common.clearChatAction')}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }
