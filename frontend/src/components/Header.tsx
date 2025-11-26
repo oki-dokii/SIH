@@ -1,4 +1,4 @@
-import { FileText, Moon, Sun, Languages, Loader2, CheckCircle2 } from 'lucide-react'
+import { FileText, Moon, Sun, Languages, CheckCircle2 } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from './ui/Button'
 import { useState, useEffect, useRef } from 'react'

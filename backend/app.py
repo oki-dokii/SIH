@@ -737,6 +737,66 @@ async def delete_comparison_chat(comparison_id: int):
         raise HTTPException(status_code=500, detail=f"Failed to delete comparison chat: {str(e)}")
 
 
+
+@app.post("/comparison-chat/{comparison_id}/add-dpr")
+async def add_dpr_to_comparison_endpoint(comparison_id: int, request: dict):
+    """Add a DPR to an existing comparison."""
+    comparison = db.get_comparison_chat(comparison_id)
+    if not comparison:
+        raise HTTPException(status_code=404, detail=f"Comparison chat {comparison_id} not found")
+    
+    dpr_id = request.get("dpr_id")
+    if not dpr_id:
+        raise HTTPException(status_code=400, detail="dpr_id is required")
+    
+    # Check if DPR exists
+    dpr = db.get_dpr(dpr_id)
+    if not dpr:
+        raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+    
+    try:
+        success = db.add_dpr_to_comparison(comparison_id, dpr_id)
+        if not success:
+            raise HTTPException(status_code=400, detail="DPR is already in this comparison")
+        
+        # Clear the chat session so next messages use updated PDF list
+        gemini_client.clear_comparison_chat_session(comparison_id)
+        print(f"✓ Cleared comparison chat session {comparison_id} after adding DPR")
+        
+        # Return updated comparison
+        updated_comparison = db.get_comparison_chat(comparison_id)
+        return JSONResponse(updated_comparison)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Add DPR to comparison error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to add DPR to comparison: {str(e)}")
+
+
+@app.delete("/comparison-chat/{comparison_id}/remove-dpr/{dpr_id}")
+async def remove_dpr_from_comparison_endpoint(comparison_id: int, dpr_id: int):
+    """Remove a DPR from a comparison."""
+    comparison = db.get_comparison_chat(comparison_id)
+    if not comparison:
+        raise HTTPException(status_code=404, detail=f"Comparison chat {comparison_id} not found")
+    
+    try:
+        success = db.remove_dpr_from_comparison(comparison_id, dpr_id)
+        if not success:
+            raise HTTPException(status_code=400, detail="Cannot remove DPR: comparison must have at least 2 DPRs")
+        
+        # Clear the chat session so next messages use updated PDF list
+        gemini_client.clear_comparison_chat_session(comparison_id)
+        print(f"✓ Cleared comparison chat session {comparison_id} after removing DPR")
+        
+        return JSONResponse({"success": True, "message": f"Removed DPR {dpr_id} from comparison {comparison_id}"})
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Remove DPR from comparison error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to remove DPR from comparison: {str(e)}")
+
+
 @app.get("/health")
 async def health_check():
     """Simple health check endpoint."""

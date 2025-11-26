@@ -2,7 +2,43 @@ import { useState, useEffect } from 'react'
 import { api, type Project } from '@/lib/api'
 import { Button } from './ui/Button'
 import { Card } from './ui/Card'
-import { X, Loader2, Folder, Search } from 'lucide-react'
+import { X, Loader2, Folder, Search, Plus } from 'lucide-react'
+
+// Dropdown Options (same as Projects page)
+const STATE_OPTIONS = [
+    'All', 'Arunachal Pradesh', 'Assam', 'Delhi', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura'
+]
+
+const SCHEME_OPTIONS = [
+    'All', 'NESIDS-OTRI', 'NESIDS-ROADS', 'PM-DevINE', 'Schemes of NEC', 'Special Packages'
+]
+
+const SECTOR_OPTIONS: Record<string, string[]> = {
+    'All': [
+        'All', 'Agriculture and Allied', 'Chose...', 'Education', 'Evaluation and Monitoring', 'Health', 'Industries',
+        'Information and Public Relation', 'Infrastructure', 'Irrigation and Flood Control', 'Miscellaneous', 'Power',
+        'Roads and Bridges', 'Science and Technology', 'Sports', 'Tourism and Culture', 'Transport and Communication', 'Water Supply'
+    ],
+    'NESIDS-OTRI': [
+        'All', 'Agriculture and Allied', 'Chose...', 'Education', 'Health', 'Irrigation and Flood Control', 'Miscellaneous',
+        'Power', 'Roads and Bridges', 'Sports', 'Tourism and Culture', 'Transport and Communication', 'Water Supply'
+    ],
+    'NESIDS-ROADS': [
+        'All', 'Roads and Bridges', 'Transport and Communication'
+    ],
+    'PM-DevINE': [
+        'All', 'Agriculture and Allied', 'Education', 'Health', 'Infrastructure', 'Miscellaneous', 'Power',
+        'Roads and Bridges', 'Sports', 'Tourism and Culture'
+    ],
+    'Schemes of NEC': [
+        'All', 'Agriculture and Allied', 'Education', 'Health', 'Infrastructure', 'Miscellaneous', 'Power',
+        'Roads and Bridges', 'Sports', 'Tourism and Culture'
+    ],
+    'Special Packages': [
+        'All', 'Agriculture and Allied', 'Education', 'Health', 'Infrastructure', 'Miscellaneous', 'Power',
+        'Roads and Bridges', 'Sports', 'Tourism and Culture'
+    ]
+}
 
 interface ProjectSelectionModalProps {
     isOpen: boolean
@@ -16,14 +52,36 @@ export function ProjectSelectionModal({ isOpen, onClose, onSelect }: ProjectSele
     const [error, setError] = useState<string | null>(null)
     const [selectedId, setSelectedId] = useState<number | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
+    const [showCreateForm, setShowCreateForm] = useState(false)
+    const [creating, setCreating] = useState(false)
+
+    // New project form state
+    const [newProject, setNewProject] = useState({
+        name: '',
+        state: 'All',
+        scheme: 'All',
+        sector: 'All'
+    })
 
     useEffect(() => {
         if (isOpen) {
             loadProjects()
             setSelectedId(null)
             setSearchQuery('')
+            setShowCreateForm(false)
+            setNewProject({ name: '', state: 'All', scheme: 'All', sector: 'All' })
         }
     }, [isOpen])
+
+    // Update sector when scheme changes (Forward Dependency)
+    useEffect(() => {
+        if (newProject.scheme !== 'All') {
+            const validSectors = SECTOR_OPTIONS[newProject.scheme] || SECTOR_OPTIONS['All']
+            if (!validSectors.includes(newProject.sector)) {
+                setNewProject(prev => ({ ...prev, sector: validSectors[0] }))
+            }
+        }
+    }, [newProject.scheme])
 
     const loadProjects = async () => {
         try {
@@ -35,6 +93,44 @@ export function ProjectSelectionModal({ isOpen, onClose, onSelect }: ProjectSele
             console.error(err)
         } finally {
             setLoading(false)
+        }
+    }
+
+    // Get valid schemes based on selected sector
+    const getValidSchemes = () => {
+        if (newProject.sector === 'All') return SCHEME_OPTIONS
+        return SCHEME_OPTIONS.filter(scheme => {
+            if (scheme === 'All') return true
+            const sectors = SECTOR_OPTIONS[scheme] || []
+            return sectors.includes(newProject.sector)
+        })
+    }
+
+    // Get valid sectors based on selected scheme
+    const getValidSectors = () => {
+        if (newProject.scheme === 'All') return SECTOR_OPTIONS['All']
+        return SECTOR_OPTIONS[newProject.scheme] || SECTOR_OPTIONS['All']
+    }
+
+    const handleCreateProject = async () => {
+        if (!newProject.name.trim()) {
+            setError('Please enter a project name')
+            return
+        }
+
+        try {
+            setCreating(true)
+            setError(null)
+            const result = await api.createProject(newProject)
+            await loadProjects()
+            setShowCreateForm(false)
+            setNewProject({ name: '', state: 'All', scheme: 'All', sector: 'All' })
+            setSelectedId(result.id)
+        } catch (err) {
+            setError('Failed to create project')
+            console.error(err)
+        } finally {
+            setCreating(false)
         }
     }
 
@@ -50,72 +146,160 @@ export function ProjectSelectionModal({ isOpen, onClose, onSelect }: ProjectSele
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="w-full max-w-md p-6 animate-in fade-in zoom-in duration-200 max-h-[80vh] flex flex-col">
                 <div className="flex justify-between items-center mb-4 shrink-0">
-                    <h2 className="text-xl font-bold">Select Project</h2>
+                    <h2 className="text-xl font-bold">{showCreateForm ? 'Create New Project' : 'Select Project'}</h2>
                     <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
-                <p className="text-muted-foreground mb-4 shrink-0">
-                    Choose a project to add this document to.
-                </p>
+                {showCreateForm ? (
+                    <>
+                        <p className="text-muted-foreground mb-4 shrink-0">
+                            Fill in the details to create a new project.
+                        </p>
 
-                <div className="relative mb-4 shrink-0">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder="Search projects..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    />
-                </div>
-
-                <div className="flex-1 overflow-y-auto min-h-0 space-y-2 mb-6">
-                    {loading ? (
-                        <div className="flex justify-center py-8">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
-                    ) : error ? (
-                        <div className="text-red-500 text-center py-4">{error}</div>
-                    ) : filteredProjects.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                            {projects.length === 0 ? "No projects found. Please create a project first." : "No matching projects found."}
-                        </div>
-                    ) : (
-                        filteredProjects.map(project => (
-                            <div
-                                key={project.id}
-                                onClick={() => setSelectedId(project.id)}
-                                className={`p-4 rounded-lg border cursor-pointer transition-all flex items-center gap-3 ${selectedId === project.id
-                                    ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                                    : 'hover:border-primary/50 hover:bg-muted/50'
-                                    }`}
-                            >
-                                <Folder className={`h-5 w-5 ${selectedId === project.id ? 'text-primary' : 'text-muted-foreground'}`} />
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-medium truncate">{project.name}</h3>
-                                    <p className="text-xs text-muted-foreground truncate">
-                                        {project.state} • {project.scheme}
-                                    </p>
-                                </div>
+                        <div className="flex-1 overflow-y-auto min-h-0 space-y-4 mb-6">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Project Name *</label>
+                                <input
+                                    type="text"
+                                    value={newProject.name}
+                                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                    placeholder="Enter project name"
+                                />
                             </div>
-                        ))
-                    )}
-                </div>
 
-                <div className="flex gap-3 shrink-0 mt-auto">
-                    <Button variant="outline" className="flex-1" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button
-                        className="flex-1"
-                        disabled={!selectedId}
-                        onClick={() => selectedId && onSelect(selectedId)}
-                    >
-                        Continue
-                    </Button>
-                </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">State *</label>
+                                <select
+                                    value={newProject.state}
+                                    onChange={(e) => setNewProject({ ...newProject, state: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                >
+                                    {STATE_OPTIONS.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Sector *</label>
+                                <select
+                                    value={newProject.sector}
+                                    onChange={(e) => setNewProject({ ...newProject, sector: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                >
+                                    {getValidSectors().map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Scheme *</label>
+                                <select
+                                    value={newProject.scheme}
+                                    onChange={(e) => setNewProject({ ...newProject, scheme: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                >
+                                    {getValidSchemes().map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {error && (
+                                <div className="text-red-500 text-sm">{error}</div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-3 shrink-0 mt-auto">
+                            <Button variant="outline" className="flex-1" onClick={() => setShowCreateForm(false)}>
+                                Back
+                            </Button>
+                            <Button
+                                className="flex-1"
+                                onClick={handleCreateProject}
+                                disabled={creating}
+                            >
+                                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create Project'}
+                            </Button>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <p className="text-muted-foreground mb-4 shrink-0">
+                            Choose a project to add this document to.
+                        </p>
+
+                        <div className="relative mb-4 shrink-0">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <input
+                                type="text"
+                                placeholder="Search projects..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            />
+                        </div>
+
+                        <Button
+                            variant="outline"
+                            className="w-full mb-4 shrink-0"
+                            onClick={() => setShowCreateForm(true)}
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create New Project
+                        </Button>
+
+                        <div className="flex-1 overflow-y-auto min-h-0 space-y-2 mb-6">
+                            {loading ? (
+                                <div className="flex justify-center py-8">
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                </div>
+                            ) : error ? (
+                                <div className="text-red-500 text-center py-4">{error}</div>
+                            ) : filteredProjects.length === 0 ? (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    {projects.length === 0 ? "No projects found. Create one to get started!" : "No matching projects found."}
+                                </div>
+                            ) : (
+                                filteredProjects.map(project => (
+                                    <div
+                                        key={project.id}
+                                        onClick={() => setSelectedId(project.id)}
+                                        className={`p-4 rounded-lg border cursor-pointer transition-all flex items-center gap-3 ${selectedId === project.id
+                                            ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                            : 'hover:border-primary/50 hover:bg-muted/50'
+                                            }`}
+                                    >
+                                        <Folder className={`h-5 w-5 ${selectedId === project.id ? 'text-primary' : 'text-muted-foreground'}`} />
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-medium truncate">{project.name}</h3>
+                                            <p className="text-xs text-muted-foreground truncate">
+                                                {project.state} • {project.scheme}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="flex gap-3 shrink-0 mt-auto">
+                            <Button variant="outline" className="flex-1" onClick={onClose}>
+                                Cancel
+                            </Button>
+                            <Button
+                                className="flex-1"
+                                disabled={!selectedId}
+                                onClick={() => selectedId && onSelect(selectedId)}
+                            >
+                                Continue
+                            </Button>
+                        </div>
+                    </>
+                )}
             </Card>
         </div>
     )

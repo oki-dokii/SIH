@@ -591,6 +591,81 @@ def delete_comparison_chat(comparison_id: int, db_path: str = "data/dpr.db"):
     conn.close()
     print(f"✓ Deleted comparison chat {comparison_id}")
 
+
+def add_dpr_to_comparison(comparison_id: int, dpr_id: int, db_path: str = "data/dpr.db") -> bool:
+    """Add a DPR to an existing comparison."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    try:
+        # Check if DPR is already in the comparison
+        cursor.execute("""
+            SELECT COUNT(*) FROM comparison_chat_pdfs 
+            WHERE comparison_chat_id = ? AND dpr_id = ?
+        """, (comparison_id, dpr_id))
+        
+        if cursor.fetchone()[0] > 0:
+            conn.close()
+            print(f"⚠ DPR {dpr_id} is already in comparison {comparison_id}")
+            return False
+        
+        # Add the DPR to the comparison
+        cursor.execute("""
+            INSERT INTO comparison_chat_pdfs (comparison_chat_id, dpr_id)
+            VALUES (?, ?)
+        """, (comparison_id, dpr_id))
+        
+        conn.commit()
+        conn.close()
+        print(f"✓ Added DPR {dpr_id} to comparison {comparison_id}")
+        return True
+    except Exception as e:
+        conn.close()
+        print(f"✗ Failed to add DPR to comparison: {str(e)}")
+        return False
+
+
+def remove_dpr_from_comparison(comparison_id: int, dpr_id: int, db_path: str = "data/dpr.db") -> bool:
+    """Remove a DPR from a comparison. Requires at least 2 DPRs to remain."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    try:
+        # Check current count of DPRs in comparison
+        cursor.execute("""
+            SELECT COUNT(*) FROM comparison_chat_pdfs 
+            WHERE comparison_chat_id = ?
+        """, (comparison_id,))
+        
+        current_count = cursor.fetchone()[0]
+        
+        if current_count <= 2:
+            conn.close()
+            print(f"⚠ Cannot remove DPR: comparison {comparison_id} must have at least 2 DPRs")
+            return False
+        
+        # Remove the DPR from the comparison
+        cursor.execute("""
+            DELETE FROM comparison_chat_pdfs 
+            WHERE comparison_chat_id = ? AND dpr_id = ?
+        """, (comparison_id, dpr_id))
+        
+        deleted = cursor.rowcount > 0
+        conn.commit()
+        conn.close()
+        
+        if deleted:
+            print(f"✓ Removed DPR {dpr_id} from comparison {comparison_id}")
+        else:
+            print(f"⚠ DPR {dpr_id} was not in comparison {comparison_id}")
+        
+        return deleted
+    except Exception as e:
+        conn.close()
+        print(f"✗ Failed to remove DPR from comparison: {str(e)}")
+        return False
+
+
 # ===== PROJECT FUNCTIONS =====
 
 def get_projects(db_path: str = "data/dpr.db") -> List[Dict]:
@@ -633,26 +708,48 @@ def create_project(name: str, state: str, scheme: str, sector: str, db_path: str
     return project_id
 
 
-def delete_project(project_id: int, db_path: str = "data/dpr.db") -> bool:
-    """Delete a project and unlink its DPRs."""
+def delete_project(project_id: int, db_path: str = "data/dpr.db") -> List[str]:
+    """
+    Delete a project and all its associated DPRs.
+    Returns a list of filepaths that should be deleted from disk.
+    """
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    # Unlink DPRs (set project_id to NULL)
+    # Get all DPR filepaths for this project before deletion
     cursor.execute("""
-        UPDATE dprs SET project_id = NULL WHERE project_id = ?
+        SELECT filepath FROM dprs WHERE project_id = ?
     """, (project_id,))
     
-    # Delete project
+    filepaths = [row[0] for row in cursor.fetchall()]
+    
+    # Get all DPR IDs for this project
+    cursor.execute("""
+        SELECT id FROM dprs WHERE project_id = ?
+    """, (project_id,))
+    
+    dpr_ids = [row[0] for row in cursor.fetchall()]
+    
+    # Delete messages for each DPR
+    for dpr_id in dpr_ids:
+        cursor.execute("DELETE FROM messages WHERE dpr_id = ?", (dpr_id,))
+        cursor.execute("DELETE FROM comparison_chat_pdfs WHERE dpr_id = ?", (dpr_id,))
+    
+    # Delete all DPRs in this project
+    cursor.execute("""
+        DELETE FROM dprs WHERE project_id = ?
+    """, (project_id,))
+    
+    # Delete the project itself
     cursor.execute("""
         DELETE FROM projects WHERE id = ?
     """, (project_id,))
     
-    deleted = cursor.rowcount > 0
     conn.commit()
     conn.close()
     
-    return deleted
+    print(f"✓ Deleted project {project_id} and {len(dpr_ids)} associated DPRs")
+    return filepaths
 
 
 def get_project(project_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:

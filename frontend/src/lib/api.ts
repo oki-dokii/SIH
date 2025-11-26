@@ -238,4 +238,23 @@ export const api = {
     })
     if (!response.ok) throw new Error('Failed to clear comparison chat history')
   },
+
+  async addDPRToComparison(comparisonId: number, dprId: number): Promise<Comparison> {
+    const response = await fetch(`${API_BASE_URL}/comparison-chat/${comparisonId}/add-dpr`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ dpr_id: dprId }),
+    })
+    if (!response.ok) throw new Error('Failed to add DPR to comparison')
+    return response.json()
+  },
+
+  async removeDPRFromComparison(comparisonId: number, dprId: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/comparison-chat/${comparisonId}/remove-dpr/${dprId}`, {
+      method: 'DELETE',
+    })
+    if (!response.ok) throw new Error('Failed to remove DPR from comparison')
+  },
 }
