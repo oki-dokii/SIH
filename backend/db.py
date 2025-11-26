@@ -177,6 +177,22 @@ def update_dpr(dpr_id: int, summary_json: dict, summary_json_multilang: dict = N
     print(f"✓ DPR {dpr_id} updated with analysis results")
 
 
+def update_dpr_file_ref(dpr_id: int, file_ref: str, db_path: str = "data/dpr.db"):
+    """Update the uploaded_file_ref for a DPR when re-uploading an expired file."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        UPDATE dprs 
+        SET uploaded_file_ref = ?
+        WHERE id = ?
+    """, (file_ref, dpr_id))
+    
+    conn.commit()
+    conn.close()
+    print(f"✓ DPR {dpr_id} file reference updated: {file_ref}")
+
+
 def delete_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[str]:
     """
     Delete a DPR and all associated data.

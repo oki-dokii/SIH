@@ -1,6 +1,8 @@
 # --- Secrets (CRITICAL) ---
-.env
-.env.local
+# .env is explicitly allowed by user request
+# .env
+# .env.local
+test_output.txt
 
 # --- Python & ML Junk ---
 __pycache__/

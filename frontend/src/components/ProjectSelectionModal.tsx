@@ -6,37 +6,37 @@ import { X, Loader2, Folder, Search, Plus } from 'lucide-react'
 
 // Dropdown Options (same as Projects page)
 const STATE_OPTIONS = [
-    'All', 'Arunachal Pradesh', 'Assam', 'Delhi', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura'
+    'Arunachal Pradesh', 'Assam', 'Delhi', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura'
 ]
 
 const SCHEME_OPTIONS = [
-    'All', 'NESIDS-OTRI', 'NESIDS-ROADS', 'PM-DevINE', 'Schemes of NEC', 'Special Packages'
+    'NESIDS-OTRI', 'NESIDS-ROADS', 'PM-DevINE', 'Schemes of NEC', 'Special Packages'
 ]
 
 const SECTOR_OPTIONS: Record<string, string[]> = {
-    'All': [
-        'All', 'Agriculture and Allied', 'Chose...', 'Education', 'Evaluation and Monitoring', 'Health', 'Industries',
-        'Information and Public Relation', 'Infrastructure', 'Irrigation and Flood Control', 'Miscellaneous', 'Power',
+    'All': [ 'Agriculture and Allied', 'Education', 'Evaluation and Monitoring', 'Health', 'Industries',
+        'Information and Public Relatio', 'Infrastructure', 'Irrigation and Flood Control', 'Miscellaneous', 'Power',
         'Roads and Bridges', 'Science and Technology', 'Sports', 'Tourism and Culture', 'Transport and Communication', 'Water Supply'
     ],
+    'NESIDS-ROADS': [
+        'Roads and Bridges', 'Transport and Communication'
+    ],
     'NESIDS-OTRI': [
-        'All', 'Agriculture and Allied', 'Chose...', 'Education', 'Health', 'Irrigation and Flood Control', 'Miscellaneous',
+        'Agriculture and Allied', 'Choose...', 'Education', 'Health', 'Irrigation and Flood Control', 'Miscellaneous',
         'Power', 'Roads and Bridges', 'Sports', 'Tourism and Culture', 'Transport and Communication', 'Water Supply'
     ],
-    'NESIDS-ROADS': [
-        'All', 'Roads and Bridges', 'Transport and Communication'
+    'Schemes of NEC': [
+        'Agriculture and Allied', 'Education', 'Evaluation and Monitoring', 'Health', 'Industries',
+        'Information and Public Relatio', 'Irrigation and Flood Control', 'Power', 'Science and Technology',
+        'Sports', 'Tourism and Culture', 'Transport and Communication'
     ],
     'PM-DevINE': [
-        'All', 'Agriculture and Allied', 'Education', 'Health', 'Infrastructure', 'Miscellaneous', 'Power',
-        'Roads and Bridges', 'Sports', 'Tourism and Culture'
-    ],
-    'Schemes of NEC': [
-        'All', 'Agriculture and Allied', 'Education', 'Health', 'Infrastructure', 'Miscellaneous', 'Power',
+        'Agriculture and Allied', 'Education', 'Health', 'Infrastructure', 'Miscellaneous', 'Power',
         'Roads and Bridges', 'Sports', 'Tourism and Culture'
     ],
     'Special Packages': [
-        'All', 'Agriculture and Allied', 'Education', 'Health', 'Infrastructure', 'Miscellaneous', 'Power',
-        'Roads and Bridges', 'Sports', 'Tourism and Culture'
+        'Agriculture and Allied', 'Education', 'Health', 'Industries', 'Infrastructure', 'Irrigation and Flood Control',
+        'Miscellaneous', 'Power', 'Roads and Bridges', 'Sports', 'Tourism and Culture', 'Water Supply'
     ]
 }
 
@@ -58,9 +58,9 @@ export function ProjectSelectionModal({ isOpen, onClose, onSelect }: ProjectSele
     // New project form state
     const [newProject, setNewProject] = useState({
         name: '',
-        state: 'All',
-        scheme: 'All',
-        sector: 'All'
+        state: STATE_OPTIONS[0],
+        scheme: SCHEME_OPTIONS[0],  
+        sector: SECTOR_OPTIONS[SCHEME_OPTIONS[0]][0]
     })
 
     useEffect(() => {
@@ -69,13 +69,19 @@ export function ProjectSelectionModal({ isOpen, onClose, onSelect }: ProjectSele
             setSelectedId(null)
             setSearchQuery('')
             setShowCreateForm(false)
-            setNewProject({ name: '', state: 'All', scheme: 'All', sector: 'All' })
+            setNewProject({
+                name: '',
+                state: STATE_OPTIONS[0],
+                scheme: SCHEME_OPTIONS[0],
+                sector: SECTOR_OPTIONS[SCHEME_OPTIONS[0]][0]
+            })
+            setError(null)
         }
     }, [isOpen])
 
     // Update sector when scheme changes (Forward Dependency)
     useEffect(() => {
-        if (newProject.scheme !== 'All') {
+        if (newProject.scheme) {
             const validSectors = SECTOR_OPTIONS[newProject.scheme] || SECTOR_OPTIONS['All']
             if (!validSectors.includes(newProject.sector)) {
                 setNewProject(prev => ({ ...prev, sector: validSectors[0] }))
@@ -98,9 +104,8 @@ export function ProjectSelectionModal({ isOpen, onClose, onSelect }: ProjectSele
 
     // Get valid schemes based on selected sector
     const getValidSchemes = () => {
-        if (newProject.sector === 'All') return SCHEME_OPTIONS
+        if (!newProject.sector) return SCHEME_OPTIONS
         return SCHEME_OPTIONS.filter(scheme => {
-            if (scheme === 'All') return true
             const sectors = SECTOR_OPTIONS[scheme] || []
             return sectors.includes(newProject.sector)
         })
@@ -108,13 +113,25 @@ export function ProjectSelectionModal({ isOpen, onClose, onSelect }: ProjectSele
 
     // Get valid sectors based on selected scheme
     const getValidSectors = () => {
-        if (newProject.scheme === 'All') return SECTOR_OPTIONS['All']
         return SECTOR_OPTIONS[newProject.scheme] || SECTOR_OPTIONS['All']
     }
 
     const handleCreateProject = async () => {
+        // Validation
         if (!newProject.name.trim()) {
             setError('Please enter a project name')
+            return
+        }
+        if (newProject.state === 'All') {
+            setError('Please select a state')
+            return
+        }
+        if (newProject.scheme === 'All') {
+            setError('Please select a scheme')
+            return
+        }
+        if (newProject.sector === 'All') {
+            setError('Please select a sector')
             return
         }
 
@@ -124,10 +141,15 @@ export function ProjectSelectionModal({ isOpen, onClose, onSelect }: ProjectSele
             const result = await api.createProject(newProject)
             await loadProjects()
             setShowCreateForm(false)
-            setNewProject({ name: '', state: 'All', scheme: 'All', sector: 'All' })
+            setNewProject({
+                name: '',
+                state: STATE_OPTIONS[0],
+                scheme: SCHEME_OPTIONS[0],
+                sector: SECTOR_OPTIONS[SCHEME_OPTIONS[0]][0]
+            })
             setSelectedId(result.id)
         } catch (err) {
-            setError('Failed to create project')
+            setError('Failed to create project. Please try again.')
             console.error(err)
         } finally {
             setCreating(false)
@@ -171,11 +193,12 @@ export function ProjectSelectionModal({ isOpen, onClose, onSelect }: ProjectSele
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium mb-1">State *</label>
+                                <label className="block text-sm font-medium mb-1">State <span className="text-red-500">*</span></label>
                                 <select
                                     value={newProject.state}
                                     onChange={(e) => setNewProject({ ...newProject, state: e.target.value })}
                                     className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                    required
                                 >
                                     {STATE_OPTIONS.map(opt => (
                                         <option key={opt} value={opt}>{opt}</option>
@@ -184,11 +207,26 @@ export function ProjectSelectionModal({ isOpen, onClose, onSelect }: ProjectSele
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium mb-1">Sector *</label>
+                                <label className="block text-sm font-medium mb-1">Scheme <span className="text-red-500">*</span></label>
+                                <select
+                                    value={newProject.scheme}
+                                    onChange={(e) => setNewProject({ ...newProject, scheme: e.target.value })}
+                                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                    required
+                                >
+                                    {SCHEME_OPTIONS.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Sector <span className="text-red-500">*</span></label>
                                 <select
                                     value={newProject.sector}
                                     onChange={(e) => setNewProject({ ...newProject, sector: e.target.value })}
                                     className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                    required
                                 >
                                     {getValidSectors().map(opt => (
                                         <option key={opt} value={opt}>{opt}</option>
@@ -196,21 +234,10 @@ export function ProjectSelectionModal({ isOpen, onClose, onSelect }: ProjectSele
                                 </select>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Scheme *</label>
-                                <select
-                                    value={newProject.scheme}
-                                    onChange={(e) => setNewProject({ ...newProject, scheme: e.target.value })}
-                                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                >
-                                    {getValidSchemes().map(opt => (
-                                        <option key={opt} value={opt}>{opt}</option>
-                                    ))}
-                                </select>
-                            </div>
-
                             {error && (
-                                <div className="text-red-500 text-sm">{error}</div>
+                                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-600 dark:text-red-400 text-sm">
+                                    {error}
+                                </div>
                             )}
                         </div>
 

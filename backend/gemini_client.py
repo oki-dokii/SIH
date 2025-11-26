@@ -26,6 +26,13 @@ except Exception as e:
 # Configure Gemini
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
+
+# Custom exception for expired file references
+class FileExpiredError(Exception):
+    """Raised when a Gemini file reference has expired (404/403)."""
+    pass
+
+
 # In-memory chat sessions: {dpr_id: chat_object}
 _chat_sessions = {}
 
@@ -274,8 +281,9 @@ async def create_chat_session(dpr_id: int, file_ref: str) -> None:
                 raise ValueError(f"File has expired or is no longer available: {file_ref}")
         except Exception as e:
             error_msg = str(e)
-            if "403" in error_msg or "permission" in error_msg.lower() or "not found" in error_msg.lower():
-                raise ValueError(f"Cannot access file {file_ref}: The file may have expired (Gemini files expire after 48 hours). Please re-upload the PDF to enable chat.")
+            if "403" in error_msg or "404" in error_msg or "permission" in error_msg.lower() or "not found" in error_msg.lower():
+                # Raise specific error for expiration so app.py can handle re-upload
+                raise FileExpiredError(f"File {file_ref} has expired or is inaccessible.")
             raise ValueError(f"Cannot access file {file_ref}: {error_msg}")
         
         # Create model with system instructions for chat

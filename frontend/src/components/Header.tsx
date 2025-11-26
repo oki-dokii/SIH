@@ -121,7 +121,7 @@ export function Header() {
                 isActive('/projects') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
               )}
             >
-              Projects
+              {t('common.projects')}
             </Link>
             <Link
               to="/comparisons"

@@ -25,7 +25,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 export default function ProjectDetailPage() {
     const navigate = useNavigate()
     const { id } = useParams<{ id: string }>()
-    const { language } = useLanguage()
+    const { language, t } = useLanguage()
     const [project, setProject] = useState<Project | null>(null)
     const [documents, setDocuments] = useState<DPR[]>([])
     const [searchQuery, setSearchQuery] = useState('')
@@ -54,7 +54,7 @@ export default function ProjectDetailPage() {
             setProject(projData)
             setDocuments(dprsData)
         } catch (err) {
-            setError('Failed to load project data')
+            setError(t('projectDetail.failedToLoadProject'))
             console.error('Error loading project data:', err)
         } finally {
             setLoading(false)
@@ -73,7 +73,7 @@ export default function ProjectDetailPage() {
         }
 
         if (!file.name.toLowerCase().endsWith('.pdf')) {
-            alert('Please upload a PDF file')
+            alert(t('projectDetail.uploadPdfOnly'))
             return
         }
 
@@ -89,7 +89,7 @@ export default function ProjectDetailPage() {
             await loadProjectData(parseInt(id))
         } catch (err) {
             console.error('Upload error:', err)
-            alert('Failed to upload file. Please try again.')
+            alert(t('projectDetail.uploadingError'))
         } finally {
             setUploading(false)
             setUploadProgress(0)
@@ -111,7 +111,7 @@ export default function ProjectDetailPage() {
             setDocuments(documents.filter(doc => doc.id !== dprToDelete))
             setDprToDelete(null)
         } catch (err) {
-            alert('Failed to delete document')
+            alert(t('projectDetail.deleteDocumentFailed'))
             console.error('Error deleting document:', err)
         }
     }
@@ -123,9 +123,9 @@ export default function ProjectDetailPage() {
 
     const getDocumentStatus = (doc: DPR) => {
         if (doc.summary_json) {
-            return { label: 'Completed', color: 'text-green-600', bg: 'bg-green-50' }
+            return { label: t('projectDetail.completed'), color: 'text-green-600', bg: 'bg-green-50' }
         }
-        return { label: 'Processing', color: 'text-blue-600', bg: 'bg-blue-50' }
+        return { label: t('projectDetail.processing'), color: 'text-blue-600', bg: 'bg-blue-50' }
     }
 
     const formatDate = (dateString: string) => {
@@ -153,9 +153,9 @@ export default function ProjectDetailPage() {
                 <Header />
                 <main className="flex-1 container mx-auto px-4 py-8">
                     <Card className="p-12 text-center">
-                        <h2 className="text-2xl font-bold mb-2">Project Not Found</h2>
+                        <h2 className="text-2xl font-bold mb-2">{t('projectDetail.projectNotFound')}</h2>
                         <p className="text-muted-foreground mb-6">
-                            {error || 'The requested project could not be found.'}
+                            {error || t('projectDetail.projectNotFoundDesc')}
                         </p>
                         <Button onClick={() => navigate('/projects')}>
                             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -196,7 +196,7 @@ export default function ProjectDetailPage() {
                                 </span>
                                 <span className="flex items-center gap-1">
                                     <Calendar className="h-4 w-4" />
-                                    Created: {formatDate(project.created_at)}
+                                    {t('projectDetail.created')}: {formatDate(project.created_at)}
                                 </span>
                             </div>
                         </div>
@@ -234,7 +234,7 @@ export default function ProjectDetailPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <input
                             type="text"
-                            placeholder="Search documents..."
+                            placeholder={t('projectDetail.searchPlaceholder')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
@@ -250,9 +250,9 @@ export default function ProjectDetailPage() {
                 {filteredDocuments.length === 0 && (
                     <Card className="p-12 text-center">
                         <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">No documents found</h3>
+                        <h3 className="text-lg font-semibold mb-2">{t('projectDetail.noDocuments')}</h3>
                         <p className="text-muted-foreground mb-4">
-                            {searchQuery ? 'Try a different search term' : 'Upload your first PDF document to this project'}
+                            {searchQuery ? t('projectDetail.differentSearchTerm') : t('projectDetail.uploadFirst')}
                         </p>
                         <Button onClick={handleUploadClick}>
                             <Upload className="h-4 w-4 mr-2" />
@@ -299,7 +299,7 @@ export default function ProjectDetailPage() {
                                         size="sm"
                                         className="shrink-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                                         onClick={(e) => handleDeleteClick(e, doc.id)}
-                                        title="Delete Document"
+                                        title={t('projectDetail.deleteDocument')}
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -315,7 +315,7 @@ export default function ProjectDetailPage() {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <Card className="w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-red-600">Delete Document</h2>
+                            <h2 className="text-xl font-bold text-red-600">{t('projectDetail.deleteDocument')}</h2>
                             <button onClick={() => setDprToDelete(null)} className="text-muted-foreground hover:text-foreground">
                                 <X className="h-5 w-5" />
                             </button>

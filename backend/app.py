@@ -544,12 +544,35 @@ async def chat_with_dpr(dpr_id: int, chat_message: ChatMessage):
         # Store user message
         db.insert_message(dpr_id, "user", chat_message.message)
         
-        # Get response from Gemini (now async)
-        response = await gemini_client.send_chat_message(
-            dpr_id=dpr_id,
-            message=chat_message.message,
-            file_ref=dpr["uploaded_file_ref"]
-        )
+        try:
+            # Get response from Gemini (now async)
+            response = await gemini_client.send_chat_message(
+                dpr_id=dpr_id,
+                message=chat_message.message,
+                file_ref=dpr["uploaded_file_ref"]
+            )
+        except gemini_client.FileExpiredError:
+            print(f"⚠ File for DPR {dpr_id} expired. Re-uploading...")
+            
+            # Re-upload the file
+            if not os.path.exists(dpr["filepath"]):
+                raise HTTPException(status_code=404, detail="Original file not found on server, cannot re-upload.")
+            
+            new_file_ref = await gemini_client.upload_file(dpr["filepath"])
+            
+            # Update database with new file reference
+            db.update_dpr_file_ref(dpr_id, new_file_ref)
+            
+            # Clear old chat session to force recreation with new file
+            gemini_client.clear_chat_session(dpr_id)
+            
+            # Retry sending message
+            print(f"↺ Retrying chat message for DPR {dpr_id} with new file ref...")
+            response = await gemini_client.send_chat_message(
+                dpr_id=dpr_id,
+                message=chat_message.message,
+                file_ref=new_file_ref
+            )
         
         # Store assistant message
         db.insert_message(dpr_id, "assistant", response['reply'])
@@ -678,12 +701,37 @@ async def chat_with_comparison(comparison_id: int, chat_message: ChatMessage):
         db.insert_comparison_message(comparison_id, "user", chat_message.message)
         file_refs = [dpr["uploaded_file_ref"] for dpr in comparison["dprs"]]
         
-        # Get response from Gemini (now async)
-        response = await gemini_client.send_comparison_message(
-            comparison_id=comparison_id, 
-            message=chat_message.message, 
-            file_refs=file_refs
-        )
+        try:
+            # Get response from Gemini (now async)
+            response = await gemini_client.send_comparison_message(
+                comparison_id=comparison_id, 
+                message=chat_message.message, 
+                file_refs=file_refs
+            )
+        except gemini_client.FileExpiredError:
+            print(f"⚠ Files for comparison {comparison_id} expired. Re-uploading all...")
+            
+            # Re-upload all files in the comparison
+            new_file_refs = []
+            for dpr in comparison["dprs"]:
+                print(f"↺ Re-uploading {dpr['filename']}...")
+                if not os.path.exists(dpr["filepath"]):
+                    raise HTTPException(status_code=404, detail=f"Original file {dpr['filename']} not found on server.")
+                
+                new_ref = await gemini_client.upload_file(dpr["filepath"])
+                db.update_dpr_file_ref(dpr["id"], new_ref)
+                new_file_refs.append(new_ref)
+            
+            # Clear old session
+            gemini_client.clear_comparison_chat_session(comparison_id)
+            
+            # Retry with new file references
+            print(f"↺ Retrying comparison chat message...")
+            response = await gemini_client.send_comparison_message(
+                comparison_id=comparison_id, 
+                message=chat_message.message, 
+                file_refs=new_file_refs
+            )
         
         db.insert_comparison_message(comparison_id, "assistant", response['reply'])
         messages = db.get_comparison_messages(comparison_id)
