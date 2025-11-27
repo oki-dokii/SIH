@@ -60,9 +60,9 @@ export default function ProjectsPage() {
     // Filter State
     const [showFilters, setShowFilters] = useState(false)
     const [filters, setFilters] = useState({
-        state: STATE_OPTIONS[0],
-        scheme: SCHEME_OPTIONS[0],
-        sector: SECTOR_OPTIONS['All'][0]
+        state: 'ALL',
+        scheme: 'ALL',
+        sector: 'ALL'
     })
 
     // Modal State
@@ -192,9 +192,9 @@ export default function ProjectsPage() {
 
     const filteredProjects = projects.filter(p => {
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase())
-        const matchesState = p.state === filters.state
-        const matchesScheme = p.scheme === filters.scheme
-        const matchesSector = p.sector === filters.sector
+        const matchesState = filters.state === 'ALL' || p.state === filters.state
+        const matchesScheme = filters.scheme === 'ALL' || p.scheme === filters.scheme
+        const matchesSector = filters.sector === 'ALL' || p.sector === filters.sector
         return matchesSearch && matchesState && matchesScheme && matchesSector
     })
 
@@ -239,36 +239,39 @@ export default function ProjectsPage() {
                     {showFilters && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg animate-in slide-in-from-top-2">
                             <div>
-                                <label className="block text-sm font-medium mb-1">{t('projects.state')} <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium mb-1">{t('projects.state')}</label>
                                 <select
                                     value={filters.state}
                                     onChange={(e) => setFilters({ ...filters, state: e.target.value })}
                                     className="w-full px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                                 >
+                                    <option value="ALL">ALL</option>
                                     {STATE_OPTIONS.map(opt => (
                                         <option key={opt} value={opt}>{opt}</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">{t('projects.scheme')} <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium mb-1">{t('projects.scheme')}</label>
                                 <select
                                     value={filters.scheme}
                                     onChange={(e) => setFilters({ ...filters, scheme: e.target.value })}
                                     className="w-full px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                                 >
+                                    <option value="ALL">ALL</option>
                                     {SCHEME_OPTIONS.map(opt => (
                                         <option key={opt} value={opt}>{opt}</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">{t('projects.sector')} <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium mb-1">{t('projects.sector')}</label>
                                 <select
                                     value={filters.sector}
                                     onChange={(e) => setFilters({ ...filters, sector: e.target.value })}
                                     className="w-full px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                                 >
+                                    <option value="ALL">ALL</option>
                                     {SECTOR_OPTIONS['All'].map(opt => (
                                         <option key={opt} value={opt}>{opt}</option>
                                     ))}
