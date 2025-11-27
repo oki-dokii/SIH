@@ -85,7 +85,7 @@ function displayDPRs(dprs) {
 }
 
 function createDPRCard(dpr) {
-    const summary = dpr.summary_json;
+    const summary = dpr.summary_json || {};
     const score = summary.overallScore || 0;
     const scoreClass = score >= 75 ? 'score-high' : score >= 50 ? 'score-medium' : 'score-low';
     const uploadDate = new Date(dpr.upload_ts).toLocaleDateString('en-US', {
@@ -103,13 +103,27 @@ function createDPRCard(dpr) {
                style="position: absolute; top: 15px; right: 15px; width: 20px; height: 20px; cursor: pointer; z-index: 10;">
     ` : '';
 
+    // Offline Badge
+    const offlineBadge = dpr.is_offline ?
+        `<span class="badge offline-badge" style="background: #6c757d; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; margin-left: 5px;">OFFLINE</span>` :
+        '';
+
+    // Processing Status
+    const isProcessing = dpr.processing_status && dpr.processing_status !== 'Complete';
+    const processingBadge = isProcessing ?
+        `<div style="color: #ffc107; font-size: 0.8em; margin-top: 5px;">⏳ ${dpr.processing_status}</div>` : '';
+
     return `
         <div class="dpr-card" data-dpr-id="${dpr.id}" style="position: relative; ${compareMode ? 'cursor: default;' : ''}">
             ${checkbox}
             <div class="dpr-card-header">
                 <div>
-                    <div class="dpr-filename">${escapeHtml(dpr.original_filename)}</div>
+                    <div class="dpr-filename">
+                        ${escapeHtml(dpr.original_filename)}
+                        ${offlineBadge}
+                    </div>
                     <div class="dpr-date">📅 ${uploadDate}</div>
+                    ${processingBadge}
                 </div>
             </div>
             

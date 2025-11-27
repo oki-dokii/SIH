@@ -33,6 +33,9 @@ def init_db(db_path: str = "data/dpr.db"):
             upload_ts TEXT NOT NULL,
             summary_json TEXT NOT NULL,
             summary_json_multilang TEXT,
+            is_offline INTEGER DEFAULT 0,
+            sync_status TEXT DEFAULT 'synced',
+            processing_status TEXT,
             FOREIGN KEY (project_id) REFERENCES projects (id)
         )
     """)
@@ -56,6 +59,14 @@ def init_db(db_path: str = "data/dpr.db"):
         cursor.execute("COMMIT;")
         cursor.execute("PRAGMA foreign_keys=on;")
         print("✓ Database migration complete (project_id)")
+    
+    # MIGRATION: Add offline tracking columns
+    if 'is_offline' not in columns:
+        print("⏳ Migrating database: adding offline tracking columns...")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN is_offline INTEGER DEFAULT 0")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN sync_status TEXT DEFAULT 'synced'")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN processing_status TEXT")
+        print("✓ Database migration complete (offline tracking)")
     
     # Create index on original_filename for faster lookups
     cursor.execute("""
@@ -136,19 +147,21 @@ def init_db(db_path: str = "data/dpr.db"):
 
 
 def insert_dpr(filename: str, original_filename: str, filepath: str, file_ref: str, 
-               summary_json: dict, summary_json_multilang: dict = None, project_id: int = None, db_path: str = "data/dpr.db") -> int:
+               summary_json: dict, summary_json_multilang: dict = None, project_id: int = None, 
+               is_offline: bool = False, processing_status: str = None, db_path: str = "data/dpr.db") -> int:
     """Insert a new DPR record and return its ID."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
     timestamp = datetime.now().isoformat()
-    json_str = json.dumps(summary_json, indent=2)
+    json_str = json.dumps(summary_json, indent=2) if summary_json else None
     multilang_str = json.dumps(summary_json_multilang, indent=2) if summary_json_multilang else None
+    sync_status = "pending" if is_offline else "synced"
     
     cursor.execute("""
-        INSERT INTO dprs (filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang, project_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (filename, original_filename, filepath, file_ref, timestamp, json_str, multilang_str, project_id))
+        INSERT INTO dprs (filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang, project_id, is_offline, sync_status, processing_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (filename, original_filename, filepath, file_ref, timestamp, json_str, multilang_str, project_id, 1 if is_offline else 0, sync_status, processing_status))
     
     dpr_id = cursor.lastrowid
     conn.commit()

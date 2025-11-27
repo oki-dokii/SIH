@@ -35,12 +35,21 @@ async function loadDPR() {
         const dpr = await response.json();
 
         // Update page title
-        dprTitle.textContent = `📊 ${dpr.original_filename}`;
-        dprSubtitle.textContent = dpr.summary_json.projectName || 'DPR Analysis';
+        const offlineBadge = dpr.is_offline ? '<span class="badge offline-badge" style="background: #6c757d; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.6em; vertical-align: middle; margin-left: 10px;">OFFLINE MODE</span>' : '';
+        dprTitle.innerHTML = `📊 ${dpr.original_filename} ${offlineBadge}`;
+        dprSubtitle.textContent = dpr.summary_json?.projectName || 'DPR Analysis';
 
-        // Display analysis
-        displayJSON(dpr.summary_json);
-        resultSection.classList.add('active');
+        // Check processing status
+        if (dpr.processing_status && dpr.processing_status !== 'Complete' && dpr.processing_status !== 'Failed') {
+            // Show processing UI
+            showProcessingState(dpr.processing_status);
+            // Start polling
+            pollStatus();
+        } else {
+            // Display analysis
+            displayJSON(dpr.summary_json || {});
+            resultSection.classList.add('active');
+        }
 
         // Auto-load chat history
         await loadChatHistory();
@@ -51,6 +60,81 @@ async function loadDPR() {
     } finally {
         loadingSection.classList.remove('active');
     }
+}
+
+let pollInterval;
+
+function showProcessingState(status) {
+    resultSection.classList.add('active');
+    resultSection.innerHTML = `
+        <div id="processingContainer" style="text-align: center; padding: 40px;">
+            <div class="spinner" style="width: 50px; height: 50px; border: 5px solid #0f3460; border-top: 5px solid #00d4ff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+            <h3 style="color: #00d4ff;">Analysis in Progress</h3>
+            <p id="statusText" style="color: #e0e0e0; margin-bottom: 20px;">Current Status: ${status}</p>
+            <div style="width: 100%; max-width: 600px; height: 10px; background: #1a1a2e; border-radius: 5px; margin: 0 auto; overflow: hidden;">
+                <div id="progressBar" style="width: 0%; height: 100%; background: #00d4ff; transition: width 0.5s ease;"></div>
+            </div>
+            <div id="partialResults" style="margin-top: 40px; text-align: left;"></div>
+        </div>
+        <style>
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        </style>
+    `;
+}
+
+async function pollStatus() {
+    if (pollInterval) clearInterval(pollInterval);
+
+    pollInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/dpr/${dprId}/status`);
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const statusText = document.getElementById('statusText');
+            const progressBar = document.getElementById('progressBar');
+
+            if (statusText) statusText.textContent = `Current Status: ${data.status}`;
+
+            // Update progress bar based on status
+            let progress = 10;
+            if (data.status.includes('Parsing')) progress = 30;
+            if (data.status.includes('Analyzing')) progress = 60;
+            if (data.status.includes('Generating')) progress = 90;
+            if (data.status === 'Complete') progress = 100;
+
+            if (progressBar) progressBar.style.width = `${progress}%`;
+
+            // Handle partial results
+            if (data.partial_analysis) {
+                const partialContainer = document.getElementById('partialResults');
+                if (partialContainer) {
+                    // We can render partial results here if we want, 
+                    // or just wait for completion. For now, let's just show what we have.
+                    // But re-rendering the whole displayJSON might be too jarring.
+                    // Let's just update the subtitle if project name is found
+                    if (data.partial_analysis.projectName) {
+                        dprSubtitle.textContent = data.partial_analysis.projectName;
+                    }
+                }
+            }
+
+            if (data.status === 'Complete') {
+                clearInterval(pollInterval);
+                setTimeout(() => {
+                    location.reload(); // Reload to show full results
+                }, 1000);
+            }
+
+            if (data.status === 'Failed') {
+                clearInterval(pollInterval);
+                showError("Analysis Failed. Please try again.");
+            }
+
+        } catch (error) {
+            console.error('Polling error:', error);
+        }
+    }, 2000); // Poll every 2 seconds
 }
 
 async function loadChatHistory() {
