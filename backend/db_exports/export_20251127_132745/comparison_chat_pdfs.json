@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "comparison_chat_id": 1,
+    "dpr_id": 2
+  },
+  {
+    "id": 2,
+    "comparison_chat_id": 1,
+    "dpr_id": 1
+  }
+]

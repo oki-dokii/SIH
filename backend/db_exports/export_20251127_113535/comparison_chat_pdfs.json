@@ -1,0 +1,17 @@
+[
+  {
+    "id": 2,
+    "comparison_chat_id": 1,
+    "dpr_id": 1
+  },
+  {
+    "id": 4,
+    "comparison_chat_id": 2,
+    "dpr_id": 1
+  },
+  {
+    "id": 7,
+    "comparison_chat_id": 2,
+    "dpr_id": 4
+  }
+]

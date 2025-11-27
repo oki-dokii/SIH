@@ -55,6 +55,7 @@ async def lifespan(app: FastAPI):
             dpr_id = dpr['id']
             filename = dpr['filename']
             file_ref = dpr['uploaded_file_ref']
+            filepath = dpr['filepath']
             
             print(f"▶ Resuming analysis for DPR {dpr_id} ({filename})...")
             
@@ -70,10 +71,44 @@ async def lifespan(app: FastAPI):
                 print(f"✓ Completed analysis for DPR {dpr_id}")
                 
             except Exception as e:
-                print(f"✗ Failed to resume analysis for DPR {dpr_id}: {str(e)}")
-                # If file ref is invalid, we might need to re-upload, but keeping it simple for now
-                if "404" in str(e) or "403" in str(e):
-                     print(f"⚠ File reference might be expired. Consider re-uploading {filename}")
+                error_str = str(e)
+                print(f"✗ Failed to resume analysis for DPR {dpr_id}: {error_str}")
+                
+                # Handle expired file URL
+                if "404" in error_str or "403" in error_str or "expired" in error_str.lower():
+                    print(f"⚠ File reference expired for DPR {dpr_id}. Re-uploading PDF...")
+                    
+                    try:
+                        # Check if the original file still exists on disk
+                        if not os.path.exists(filepath):
+                            print(f"✗ Original file not found: {filepath}. Skipping DPR {dpr_id}.")
+                            continue
+                        
+                        # Re-upload the PDF to Gemini
+                        new_file_ref = await gemini_client.upload_file(filepath)
+                        print(f"✓ Re-uploaded file. New reference: {new_file_ref}")
+                        
+                        # Update database with new file reference
+                        await asyncio.to_thread(db.update_dpr_file_ref, dpr_id, new_file_ref)
+                        print(f"✓ Updated database with new file reference")
+                        
+                        # Retry analysis with new file reference
+                        print(f"↺ Retrying analysis for DPR {dpr_id}...")
+                        multilang_json = await gemini_client.generate_multilang_json_from_file(new_file_ref, str(SCHEMA_PATH))
+                        
+                        # Default to English for the main summary_json
+                        parsed_json = multilang_json.get("en", multilang_json)
+                        
+                        # Update database with analysis results
+                        await asyncio.to_thread(db.update_dpr, dpr_id, parsed_json, multilang_json)
+                        print(f"✓ Completed analysis for DPR {dpr_id} after re-upload")
+                        
+                    except Exception as retry_error:
+                        print(f"✗ Failed to re-upload and analyze DPR {dpr_id}: {str(retry_error)}")
+                        # Leave the DPR in processing state for manual intervention
+                else:
+                    # For other errors, just log and continue
+                    print(f"⚠ Leaving DPR {dpr_id} in processing state for manual review")
 
     # Start the background task
     asyncio.create_task(resume_processing())
@@ -84,6 +119,12 @@ async def lifespan(app: FastAPI):
 
 # Initialize FastAPI app with lifespan
 app = FastAPI(title="DPR Analyzer", version="1.0.0", lifespan=lifespan)
+
+DATA_DIR.mkdir(exist_ok=True)
+
+# Initialize database
+db.init_db(str(DATA_DIR / "dpr.db"))
+
 
 # Mount static files and templates
 app.mount("/static", StaticFiles(directory="backend/static"), name="static")

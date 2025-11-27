@@ -19,6 +19,7 @@ env/
 # I am assuming 'data/' has large datasets. 
 # If 'data/' contains code, remove this line!
 data/
+backend/db_exports/
 
 # --- IDE & OS Settings ---
 .vscode/

@@ -1,0 +1,9 @@
+id,dpr_id,role,text,timestamp
+1,1,user,what is the ROI of the project,2025-11-27T09:59:21.298159
+2,1,assistant,"Based on the financial analysis provided in the Detailed Project Report, the **Internal Rate of Return (IRR)**, which is a key indicator of a project's profitability and can be considered analogous to ROI in project evaluations, is:
+
+| Metric | Value | Reference |
+| :------------------ | :------- | :--------------- |
+| **IRR (Internal Rate of Return)** | **43%** | (page: 14, S.N. 2.13) |
+
+This **43% IRR** indicates a strong return on the investment for the **Establishment of a Goatery Unit (100+4 unit)**, demonstrating the project's financial viability.",2025-11-27T09:59:26.905520

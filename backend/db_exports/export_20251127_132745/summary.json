@@ -1,0 +1,13 @@
+{
+  "export_timestamp": "2025-11-27T13:27:45.607180",
+  "database_path": "../data/dpr.db",
+  "tables": {
+    "comparison_chat_pdfs": 2,
+    "comparison_chats": 1,
+    "comparison_messages": 0,
+    "dprs": 2,
+    "messages": 0,
+    "projects": 1
+  },
+  "total_rows": 6
+}

@@ -1,0 +1,1737 @@
+[
+  {
+    "id": 1,
+    "project_id": 1,
+    "filename": "ba0ac744-c61c-4548-b4ac-32ea35baed0d.pdf",
+    "original_filename": "181508052016.Sample-DPR_Goatery-Project.pdf",
+    "filepath": "data\\ba0ac744-c61c-4548-b4ac-32ea35baed0d.pdf",
+    "uploaded_file_ref": "files/v1uldq2n0cfj",
+    "upload_ts": "2025-11-27T09:54:26.289004",
+    "summary_json": {
+      "projectName": "Establishment of Goatery Unit",
+      "projectLocation": {
+        "state": "West Bengal",
+        "districts": [
+          "ABC District"
+        ]
+      },
+      "projectSector": "Animal Husbandry / Livestock",
+      "executiveSummary": "This Detailed Project Report outlines the establishment of a Goatery Unit in ABC District, West Bengal, by the XYZ Goat Rearing Cooperative Society Ltd. The project aims to uplift rural livelihoods and strengthen small ruminant development through a cooperative model, addressing the significant demand for chevon. Each of the 20 members will manage a unit comprising 100 does and 4 bucks, receiving financial and technical assistance for infrastructure, feed, and veterinary care. The project emphasizes scientific rearing, organic meat production, and a robust marketing strategy to ensure profitability and sustainability, with a total initial investment of INR 9.8857 Lakh per unit.",
+      "overallScore": 86,
+      "recommendation": "Approved",
+      "financialAnalysis": {
+        "projectCost": {
+          "capitalExpenditureLakhINR": 7.572,
+          "workingCapitalLakhINR": 2.3137,
+          "culturalCostLakhINR": 0,
+          "contingencyLakhINR": 0,
+          "marginMoneyLakhINR": 0,
+          "totalInitialInvestmentLakhINR": 9.8857
+        },
+        "capitalStructure": {
+          "ncdcLoanLakhINR": null,
+          "subsidyLakhINR": 1.97714,
+          "subsidyMIDH_NHB_LakhINR": null,
+          "equityOrOwnContributionLakhINR": null,
+          "loanLakhINR": 6.91999,
+          "memberContributionLakhINR": 0.98857,
+          "termLoanInterestRatePercent": 12,
+          "assumedInterestRatePercent": 12
+        },
+        "capacityAndRevenue": {
+          "unitCapacity": {
+            "bucks": 4,
+            "does": 100
+          },
+          "kiddingPercentage": 85,
+          "kiddingPerYear": 1.5,
+          "saleableAgeOfKidsMonths": "08-09",
+          "averageMaleKidsSoldPerYear": 68,
+          "averageFemaleKidsSoldPerYear": 68,
+          "maleKidsSalePriceINR": 4200,
+          "femaleKidsSalePriceINR": 3700,
+          "culledDoesSalePriceINR": 3500,
+          "culledBucksSalePriceINR": 4000,
+          "manureIncomePerYearINR": 30000
+        },
+        "costs": {
+          "greenFodderCultivationCostPerAcreINR": 4000,
+          "greenFodderAcres": 2,
+          "concentrateFeedCostPerKgINR": 11,
+          "labourWagesPerDayPerPersonINR": 200,
+          "labourPersons": 2,
+          "insurancePremiumPercentOfBreedingStockCost": 5,
+          "veterinaryAidPerAdultPerYearINR": 25,
+          "electricityAndMiscExpensesPerAdultINR": 20
+        },
+        "profitability": {
+          "grossProfitYear1LakhINR": -2.4867,
+          "netProfitYear1LakhINR": -3.3171,
+          "totalIncomeYear1LakhINR": 0.25,
+          "totalExpenditureYear1LakhINR": 2.7367
+        },
+        "returnsAndCoverage": {
+          "avgDSCR": 3.53,
+          "IRRPercent": 43
+        },
+        "repaymentScheduleSummary": {
+          "repaymentPeriodYears": 6,
+          "gracePeriodYears": 1,
+          "principalOutstandingYear1LakhINR": 6.91999,
+          "interestDueYear1LakhINR": 0.8304,
+          "principalRepaymentYear1LakhINR": 0
+        },
+        "assumptions": [
+          "INFERRED_REASON: Project duration for implementation is inferred as 3 months based on summing up milestone durations and allowing for some overlap.",
+          "INFERRED_REASON: Overall score is calculated by weighting financial viability (IRR 43%, Avg DSCR 3.53) at 45%, market & demand at 15%, technical readiness at 15%, team/governance at 10%, and risks/residual at 15%.",
+          "FINANCIAL_VALIDATION: Total project cost is taken as 9.8857 LakhINR from page 12 (most detailed breakdown) over 9.88 LakhINR from page 4/5. Capital structure components (Loan, Subsidy, Member Contribution) are recalculated based on the percentages (70%, 20%, 10% respectively) of the validated total initial investment (9.8857 LakhINR) to ensure balance.",
+          "FINANCIAL_VALIDATION: Capital Expenditure is derived from the sum of Civil construction, Water supply, Equipment & machinery, and Cost of animals (7.572 LakhINR) from page 12. Working Capital is derived from the sum of Insurance, Veterinary aid, Fodder cultivation, Supplementary feed, and Labour wages (2.3137 LakhINR) from page 12.",
+          "key_tables: Financial data extracted primarily from 'UNIT COST FOR (100 + 4) GOATERY PROJECT' on page 12, 'ECONOMICS OF GOAT FARMING' on page 14, and 'REPAYMENT SCHEDULE' on page 15. Technical parameters from page 9 and 11."
+        ]
+      },
+      "timelineAnalysis": {
+        "implementationDurationMonths": 3,
+        "milestones": [
+          "Identification of land for construction: Time for commencement (Within one month from the date of receipt of sanction), Time for completion (15 days)",
+          "Civil construction: Time for commencement (Within 7 working days from the date of receipt of funds), Time for completion (One month)",
+          "Equipment & machinery (Chaff cutter/feeding trough/water supply & others): Time for commencement (Within 7 working days from the completion of civil works), Time for completion (15 days)",
+          "Procurement of animals: Time for commencement (Within 15 working days from the completion of civil works), Time for completion (15 days)",
+          "Procurement of fodder: Time for commencement (Before procurement of animals)",
+          "Vety. Aids & medicine, supplementary: Time for commencement (Timely basis by Animal Resource Department)"
+        ],
+        "operationsCalendar": "Operations expected to commence shortly after animal procurement and completion of basic amenities, within 3-4 months of project sanction.",
+        "timelineRisks": [
+          "Delays in fund receipt from NCDC could postpone all subsequent milestones.",
+          "Potential delays in land identification or civil construction could impact animal procurement and project start.",
+          "Coordination challenges between various departments and cooperative for timely execution."
+        ]
+      },
+      "scopeAndObjectives": {
+        "vision": "To uplift rural livelihoods and establish an organized, sustainable small ruminant sector through cooperatives.",
+        "mission": "To provide comprehensive financial assistance, training, and marketing support to cooperative members for scientific goat rearing, promoting organic meat, and ensuring economic sustainability.",
+        "objectives": [
+          "Up-liftment of rural livelihood",
+          "Strengthening of human resources for overall development of small ruminants through cooperative",
+          "Developing a skill-pool of Cooperatives for taking up small ruminant development projects",
+          "Orientation of Federation in future development to develop organized small ruminant sector in an integrated manner"
+        ],
+        "processAndMachinery": [
+          "Rearing of 100 does and 4 bucks per member unit.",
+          "Provision of financial assistance for shed construction (straw thatching, concrete flooring, net fencing).",
+          "Supply of feed concentrates and medicines through the cooperative.",
+          "Access to veterinary aids from Block Veterinary hospital/clinic.",
+          "Procurement and distribution of healthy goats to members.",
+          "Imparting hand-hold training to members on goat rearing.",
+          "Cooperative-managed marketing of animals at maturity.",
+          "Cultivation of green fodder on 2 acres of land.",
+          "Use of chaff cutter for feed preparation, feeding troughs, and pipeline for water supply."
+        ],
+        "packagingAndChannels": "Sale of live goats through local markets (ABC main bazaar, railway station market), local hotels, restaurants, and butchers. Future plans include opening a retail shop for hygienic organic goat meat and exploring the State capital market for large-scale production."
+      },
+      "riskAssessment": [
+        {
+          "riskCategory": "Market Price Volatility",
+          "severity": "Medium",
+          "description": "Selling prices for goats and meat are susceptible to local market forces, potentially impacting the cooperative's profitability.",
+          "evidence": "Page 3 (price decided by local butchers); Page 4 (Selling price decided by Board); Page 7 (linkages with local hotels, State capital market plan); Page 10 (organic meat for premium price)."
+        },
+        {
+          "riskCategory": "Animal Health & Mortality",
+          "severity": "Medium",
+          "description": "Risk of common health issues and stated mortality rates (5% adult, 10% kids) could lead to financial losses.",
+          "evidence": "Page 6 (Common Health Issues, Vaccines, Insurance); Page 7 (Green fodder cultivation for health); Page 9 (Mortality rates)."
+        },
+        {
+          "riskCategory": "Project Implementation Delays",
+          "severity": "Medium",
+          "description": "Potential delays in land identification, fund disbursement, civil works, or animal procurement could lead to cost overruns and operational delays.",
+          "evidence": "Page 8 (Implementation Schedule, specified timeline to avoid cost escalation, fortnightly reporting)."
+        },
+        {
+          "riskCategory": "Feed and Fodder Availability/Cost",
+          "severity": "Low",
+          "description": "Reliance on green fodder cultivation and concentrate feed. Unforeseen shortages or price increases could affect operational costs.",
+          "evidence": "Page 7 (2 acres green fodder cultivation, no shortage in surrounding areas, silage for dry season); Page 9 (cost of green fodder cultivation)."
+        },
+        {
+          "riskCategory": "Operational Experience/Skill Gap",
+          "severity": "Low",
+          "description": "Members have experience but may lack awareness of scientific rearing methods, potentially affecting productivity.",
+          "evidence": "Page 3 (lack proper marketing channels and unawareness of scientific method); Page 4 (hand-hold training, skill-pool development); Page 5 (training in PQR Cooperative Research and Training Centre)."
+        }
+      ],
+      "complianceCheck": {
+        "statutoryAndPermits": [
+          "Registered under WB State Cooperative Societies Act (page 3)"
+        ],
+        "EHS": [
+          "Emphasis on hygiene practices and sanitary housing for goats (page 4, 5)",
+          "Green fodder cultivation and manure utilization (page 7, 10)"
+        ],
+        "labour": "Labour charges are included in project costs (page 4, 12). No specific labor welfare or compliance details.",
+        "gapsOrUnknowns": [
+          "Specific environmental clearances and local land-use permits for the goatery unit and construction.",
+          "Detailed waste management plan beyond manure utilization for fodder.",
+          "Specific details on labor social security benefits or welfare measures.",
+          "Details on water sourcing and usage permits."
+        ]
+      },
+      "environmentalImpact": {
+        "overallRiskLevel": "Low",
+        "sensitiveAreaFlags": {
+          "isInProtectedForest": false,
+          "isNearWaterBody": false,
+          "isInTribalLand": false,
+          "isInWildlifeCorridor": false,
+          "isInEcologicallySensitiveZone": false
+        },
+        "clearancesRequired": [
+          "Local land use permits (inferred)",
+          "Animal husbandry licenses (inferred)",
+          "Environmental Clearance (potential, for specific scale/location - inferred)"
+        ],
+        "environmentalConcerns": [
+          "Potential for localized odor and waste management issues from the goatery unit if not adequately managed.",
+          "Water usage for green fodder cultivation, although scale is small."
+        ],
+        "mitigationMeasures": [
+          "Green fodder cultivation (2 acres) to reduce reliance on external feed and promote natural diet.",
+          "Manure is utilized for fodder cultivation, and remaining is sold, indicating waste recycling.",
+          "Sanitary housing for goats to minimize environmental impact from waste."
+        ],
+        "impactOnBiodiversity": "Low. The project involves a local breed (Black Bengal Goat) and a small land footprint (2.25 acres). Green fodder cultivation may replace some existing vegetation.",
+        "waterResourceImpact": "Low. Water supply pipeline to be installed. Water required for animals and fodder cultivation. No specific details on source or potential impact on local water bodies provided.",
+        "soilAndLandImpact": "Low. Land is owned by the society (2.25 acres). Utilization of manure for fodder cultivation promotes organic practices and soil health.",
+        "airQualityImpact": "Low. Potential for localized odor from animal waste, but unlikely to cause significant air quality issues at this scale."
+      },
+      "inconsistencyDetection": {
+        "hasInconsistencies": true,
+        "totalInconsistenciesFound": 3,
+        "issues": [
+          {
+            "category": "Budget Mismatch",
+            "severity": "Critical",
+            "description": "The total project cost varies slightly between different sections of the DPR, and the sum of capital structure components initially presented on page 12 does not align with the stated percentages or total project cost.",
+            "location": "Financial Sections (Page 4, 5, 12)",
+            "detectedValues": "Page 4/5 Total Cost: 9.88 Lakh INR; Page 12 Total Cost: 9.8857 Lakh INR. Page 12 Loan (70%) + Member Contribution (10%) = 7.90856 Lakh INR, not 9.8857 Lakh INR.",
+            "impact": "Requires recalculation and normalization of financial figures to ensure accuracy and consistent funding structure, which has been done in this analysis. This could impact financial planning and lender confidence."
+          },
+          {
+            "category": "Data Inconsistency",
+            "severity": "Medium",
+            "description": "Detailed cost breakdowns on page 12 differ from the summarized 'Cost components for each member' on page 4, although the overall total cost is nearly consistent.",
+            "location": "Page 4 (Cost components for each member), Page 12 (UNIT COST FOR (100 + 4) GOATERY PROJECT)",
+            "detectedValues": "Equipment & machinery: 0.72 Lakh INR (P4) vs. 0.12 Lakh INR (P12). Vety. Aids & medicine, fodder cultivation, supplementary: 0.66 Lakh INR (P4) vs. 0.6637 Lakh INR (sum of components on P12).",
+            "impact": "While the total cost is closely aligned, the variance in specific component breakdowns requires clarification for precise budget allocation and expenditure tracking."
+          },
+          {
+            "category": "Data Inconsistency",
+            "severity": "Low",
+            "description": "The 'Sex ratio' for kids is inconsistently stated in different sections of the technical parameters.",
+            "location": "Page 9 (Techno-economic parameters), Page 11 (TECHNICAL PARAMETERS)",
+            "detectedValues": "Sex ratio: 50 50 (P9) vs. 01 01 (P11).",
+            "impact": "This minor inconsistency should be clarified for accurate population growth projections, though 50:50 is the standard assumption and has been used."
+          }
+        ]
+      },
+      "mdonerComplianceScoring": {
+        "overallComplianceScore": 61,
+        "scoringBreakdown": {
+          "northEasternFocus": {
+            "score": 20,
+            "weight": 0.25,
+            "findings": "Project is located in West Bengal, not one of the designated North Eastern states. No specific challenges or benefits for the NE region are addressed.",
+            "met": false
+          },
+          "beneficiaryAlignment": {
+            "score": 85,
+            "weight": 0.2,
+            "findings": "Project strongly aligns with beneficiary upliftment, targeting rural livelihoods and strengthening marginalized farmers through a cooperative model.",
+            "met": true
+          },
+          "environmentalCompliance": {
+            "score": 50,
+            "weight": 0.2,
+            "findings": "The DPR mentions green fodder cultivation and manure utilization, promoting sustainable practices. However, it lacks explicit mention of environmental clearances or a detailed EHS plan.",
+            "met": false
+          },
+          "landAcquisition": {
+            "score": 90,
+            "weight": 0.15,
+            "findings": "The society already owns the 2.25 acres of land, ensuring clear ownership and mitigating land acquisition risks. No tribal rights issues are indicated.",
+            "met": true
+          },
+          "documentationQuality": {
+            "score": 70,
+            "weight": 0.1,
+            "findings": "The DPR is comprehensive with financial projections and operational details, but contains minor inconsistencies in cost breakdowns and lacks some specific compliance details. The 'SAMPLE' watermark also affects its perceived quality.",
+            "met": false
+          },
+          "financialViability": {
+            "score": 85,
+            "weight": 0.1,
+            "findings": "The project demonstrates strong financial viability with an IRR of 43% and an average DSCR of 3.53, indicating robust returns and debt servicing capacity.",
+            "met": true
+          }
+        },
+        "complianceGaps": [
+          "Lack of explicit environmental clearances and detailed EHS plan.",
+          "Limited information on social security and welfare for project laborers.",
+          "Project not located in the North Eastern region, limiting MDoNER's direct mandate alignment."
+        ],
+        "complianceStrengths": [
+          "Strong alignment with beneficiary empowerment through a cooperative structure.",
+          "Clear and documented land ownership, simplifying project implementation.",
+          "Robust financial viability indicated by high IRR and DSCR.",
+          "Emphasis on sustainable practices like green fodder cultivation and manure recycling."
+        ]
+      },
+      "smartRecommendations": {
+        "criticalActions": [
+          "Reconcile and provide a single, consistent set of financial figures for total project cost and capital structure across all sections of the DPR, clearly stating the source (e.g., page 12) and explaining any adjustments made for validation.",
+          "Initiate and document all required environmental clearances, land-use permits, and animal husbandry licenses necessary for project establishment and operation, ensuring full regulatory compliance."
+        ],
+        "improvementSuggestions": [
+          "Develop and integrate a comprehensive Environmental, Health, and Safety (EHS) management plan, detailing waste disposal methods (especially for animal waste beyond fodder use), water conservation strategies, and emergency protocols.",
+          "Detail specific labor welfare policies, including social security benefits, fair wage practices, and safety measures, to ensure ethical treatment of workers.",
+          "Explore advanced marketing strategies, including brand development for 'organic chevon' and direct-to-consumer sales channels, to enhance market reach and premium pricing beyond traditional buyers."
+        ],
+        "bestPractices": [
+          "Implement a robust Management Information System (MIS) for real-time tracking of production, animal health, inventory, and financial performance to enable data-driven decision-making.",
+          "Formalize partnerships with agricultural universities or research institutions for ongoing technical support, breed improvement, and disease management best practices.",
+          "Establish a contingency fund within the cooperative's financial framework to address unforeseen market fluctuations or significant animal health emergencies."
+        ],
+        "nextSteps": [
+          "1st Priority: Conduct a thorough internal audit of all financial data to rectify inconsistencies and present a unified financial summary.",
+          "2nd Priority: Submit applications for all identified statutory and environmental clearances, with a clear timeline for receipt.",
+          "3rd Priority: Draft a comprehensive EHS manual and a detailed human resources policy addressing labor welfare and safety."
+        ]
+      }
+    },
+    "summary_json_multilang": {
+      "en": {
+        "projectName": "Establishment of Goatery Unit",
+        "projectLocation": {
+          "state": "West Bengal",
+          "districts": [
+            "ABC District"
+          ]
+        },
+        "projectSector": "Animal Husbandry / Livestock",
+        "executiveSummary": "This Detailed Project Report outlines the establishment of a Goatery Unit in ABC District, West Bengal, by the XYZ Goat Rearing Cooperative Society Ltd. The project aims to uplift rural livelihoods and strengthen small ruminant development through a cooperative model, addressing the significant demand for chevon. Each of the 20 members will manage a unit comprising 100 does and 4 bucks, receiving financial and technical assistance for infrastructure, feed, and veterinary care. The project emphasizes scientific rearing, organic meat production, and a robust marketing strategy to ensure profitability and sustainability, with a total initial investment of INR 9.8857 Lakh per unit.",
+        "overallScore": 86,
+        "recommendation": "Approved",
+        "financialAnalysis": {
+          "projectCost": {
+            "capitalExpenditureLakhINR": 7.572,
+            "workingCapitalLakhINR": 2.3137,
+            "culturalCostLakhINR": 0,
+            "contingencyLakhINR": 0,
+            "marginMoneyLakhINR": 0,
+            "totalInitialInvestmentLakhINR": 9.8857
+          },
+          "capitalStructure": {
+            "ncdcLoanLakhINR": null,
+            "subsidyLakhINR": 1.97714,
+            "subsidyMIDH_NHB_LakhINR": null,
+            "equityOrOwnContributionLakhINR": null,
+            "loanLakhINR": 6.91999,
+            "memberContributionLakhINR": 0.98857,
+            "termLoanInterestRatePercent": 12,
+            "assumedInterestRatePercent": 12
+          },
+          "capacityAndRevenue": {
+            "unitCapacity": {
+              "bucks": 4,
+              "does": 100
+            },
+            "kiddingPercentage": 85,
+            "kiddingPerYear": 1.5,
+            "saleableAgeOfKidsMonths": "08-09",
+            "averageMaleKidsSoldPerYear": 68,
+            "averageFemaleKidsSoldPerYear": 68,
+            "maleKidsSalePriceINR": 4200,
+            "femaleKidsSalePriceINR": 3700,
+            "culledDoesSalePriceINR": 3500,
+            "culledBucksSalePriceINR": 4000,
+            "manureIncomePerYearINR": 30000
+          },
+          "costs": {
+            "greenFodderCultivationCostPerAcreINR": 4000,
+            "greenFodderAcres": 2,
+            "concentrateFeedCostPerKgINR": 11,
+            "labourWagesPerDayPerPersonINR": 200,
+            "labourPersons": 2,
+            "insurancePremiumPercentOfBreedingStockCost": 5,
+            "veterinaryAidPerAdultPerYearINR": 25,
+            "electricityAndMiscExpensesPerAdultINR": 20
+          },
+          "profitability": {
+            "grossProfitYear1LakhINR": -2.4867,
+            "netProfitYear1LakhINR": -3.3171,
+            "totalIncomeYear1LakhINR": 0.25,
+            "totalExpenditureYear1LakhINR": 2.7367
+          },
+          "returnsAndCoverage": {
+            "avgDSCR": 3.53,
+            "IRRPercent": 43
+          },
+          "repaymentScheduleSummary": {
+            "repaymentPeriodYears": 6,
+            "gracePeriodYears": 1,
+            "principalOutstandingYear1LakhINR": 6.91999,
+            "interestDueYear1LakhINR": 0.8304,
+            "principalRepaymentYear1LakhINR": 0
+          },
+          "assumptions": [
+            "INFERRED_REASON: Project duration for implementation is inferred as 3 months based on summing up milestone durations and allowing for some overlap.",
+            "INFERRED_REASON: Overall score is calculated by weighting financial viability (IRR 43%, Avg DSCR 3.53) at 45%, market & demand at 15%, technical readiness at 15%, team/governance at 10%, and risks/residual at 15%.",
+            "FINANCIAL_VALIDATION: Total project cost is taken as 9.8857 LakhINR from page 12 (most detailed breakdown) over 9.88 LakhINR from page 4/5. Capital structure components (Loan, Subsidy, Member Contribution) are recalculated based on the percentages (70%, 20%, 10% respectively) of the validated total initial investment (9.8857 LakhINR) to ensure balance.",
+            "FINANCIAL_VALIDATION: Capital Expenditure is derived from the sum of Civil construction, Water supply, Equipment & machinery, and Cost of animals (7.572 LakhINR) from page 12. Working Capital is derived from the sum of Insurance, Veterinary aid, Fodder cultivation, Supplementary feed, and Labour wages (2.3137 LakhINR) from page 12.",
+            "key_tables: Financial data extracted primarily from 'UNIT COST FOR (100 + 4) GOATERY PROJECT' on page 12, 'ECONOMICS OF GOAT FARMING' on page 14, and 'REPAYMENT SCHEDULE' on page 15. Technical parameters from page 9 and 11."
+          ]
+        },
+        "timelineAnalysis": {
+          "implementationDurationMonths": 3,
+          "milestones": [
+            "Identification of land for construction: Time for commencement (Within one month from the date of receipt of sanction), Time for completion (15 days)",
+            "Civil construction: Time for commencement (Within 7 working days from the date of receipt of funds), Time for completion (One month)",
+            "Equipment & machinery (Chaff cutter/feeding trough/water supply & others): Time for commencement (Within 7 working days from the completion of civil works), Time for completion (15 days)",
+            "Procurement of animals: Time for commencement (Within 15 working days from the completion of civil works), Time for completion (15 days)",
+            "Procurement of fodder: Time for commencement (Before procurement of animals)",
+            "Vety. Aids & medicine, supplementary: Time for commencement (Timely basis by Animal Resource Department)"
+          ],
+          "operationsCalendar": "Operations expected to commence shortly after animal procurement and completion of basic amenities, within 3-4 months of project sanction.",
+          "timelineRisks": [
+            "Delays in fund receipt from NCDC could postpone all subsequent milestones.",
+            "Potential delays in land identification or civil construction could impact animal procurement and project start.",
+            "Coordination challenges between various departments and cooperative for timely execution."
+          ]
+        },
+        "scopeAndObjectives": {
+          "vision": "To uplift rural livelihoods and establish an organized, sustainable small ruminant sector through cooperatives.",
+          "mission": "To provide comprehensive financial assistance, training, and marketing support to cooperative members for scientific goat rearing, promoting organic meat, and ensuring economic sustainability.",
+          "objectives": [
+            "Up-liftment of rural livelihood",
+            "Strengthening of human resources for overall development of small ruminants through cooperative",
+            "Developing a skill-pool of Cooperatives for taking up small ruminant development projects",
+            "Orientation of Federation in future development to develop organized small ruminant sector in an integrated manner"
+          ],
+          "processAndMachinery": [
+            "Rearing of 100 does and 4 bucks per member unit.",
+            "Provision of financial assistance for shed construction (straw thatching, concrete flooring, net fencing).",
+            "Supply of feed concentrates and medicines through the cooperative.",
+            "Access to veterinary aids from Block Veterinary hospital/clinic.",
+            "Procurement and distribution of healthy goats to members.",
+            "Imparting hand-hold training to members on goat rearing.",
+            "Cooperative-managed marketing of animals at maturity.",
+            "Cultivation of green fodder on 2 acres of land.",
+            "Use of chaff cutter for feed preparation, feeding troughs, and pipeline for water supply."
+          ],
+          "packagingAndChannels": "Sale of live goats through local markets (ABC main bazaar, railway station market), local hotels, restaurants, and butchers. Future plans include opening a retail shop for hygienic organic goat meat and exploring the State capital market for large-scale production."
+        },
+        "riskAssessment": [
+          {
+            "riskCategory": "Market Price Volatility",
+            "severity": "Medium",
+            "description": "Selling prices for goats and meat are susceptible to local market forces, potentially impacting the cooperative's profitability.",
+            "evidence": "Page 3 (price decided by local butchers); Page 4 (Selling price decided by Board); Page 7 (linkages with local hotels, State capital market plan); Page 10 (organic meat for premium price)."
+          },
+          {
+            "riskCategory": "Animal Health & Mortality",
+            "severity": "Medium",
+            "description": "Risk of common health issues and stated mortality rates (5% adult, 10% kids) could lead to financial losses.",
+            "evidence": "Page 6 (Common Health Issues, Vaccines, Insurance); Page 7 (Green fodder cultivation for health); Page 9 (Mortality rates)."
+          },
+          {
+            "riskCategory": "Project Implementation Delays",
+            "severity": "Medium",
+            "description": "Potential delays in land identification, fund disbursement, civil works, or animal procurement could lead to cost overruns and operational delays.",
+            "evidence": "Page 8 (Implementation Schedule, specified timeline to avoid cost escalation, fortnightly reporting)."
+          },
+          {
+            "riskCategory": "Feed and Fodder Availability/Cost",
+            "severity": "Low",
+            "description": "Reliance on green fodder cultivation and concentrate feed. Unforeseen shortages or price increases could affect operational costs.",
+            "evidence": "Page 7 (2 acres green fodder cultivation, no shortage in surrounding areas, silage for dry season); Page 9 (cost of green fodder cultivation)."
+          },
+          {
+            "riskCategory": "Operational Experience/Skill Gap",
+            "severity": "Low",
+            "description": "Members have experience but may lack awareness of scientific rearing methods, potentially affecting productivity.",
+            "evidence": "Page 3 (lack proper marketing channels and unawareness of scientific method); Page 4 (hand-hold training, skill-pool development); Page 5 (training in PQR Cooperative Research and Training Centre)."
+          }
+        ],
+        "complianceCheck": {
+          "statutoryAndPermits": [
+            "Registered under WB State Cooperative Societies Act (page 3)"
+          ],
+          "EHS": [
+            "Emphasis on hygiene practices and sanitary housing for goats (page 4, 5)",
+            "Green fodder cultivation and manure utilization (page 7, 10)"
+          ],
+          "labour": "Labour charges are included in project costs (page 4, 12). No specific labor welfare or compliance details.",
+          "gapsOrUnknowns": [
+            "Specific environmental clearances and local land-use permits for the goatery unit and construction.",
+            "Detailed waste management plan beyond manure utilization for fodder.",
+            "Specific details on labor social security benefits or welfare measures.",
+            "Details on water sourcing and usage permits."
+          ]
+        },
+        "environmentalImpact": {
+          "overallRiskLevel": "Low",
+          "sensitiveAreaFlags": {
+            "isInProtectedForest": false,
+            "isNearWaterBody": false,
+            "isInTribalLand": false,
+            "isInWildlifeCorridor": false,
+            "isInEcologicallySensitiveZone": false
+          },
+          "clearancesRequired": [
+            "Local land use permits (inferred)",
+            "Animal husbandry licenses (inferred)",
+            "Environmental Clearance (potential, for specific scale/location - inferred)"
+          ],
+          "environmentalConcerns": [
+            "Potential for localized odor and waste management issues from the goatery unit if not adequately managed.",
+            "Water usage for green fodder cultivation, although scale is small."
+          ],
+          "mitigationMeasures": [
+            "Green fodder cultivation (2 acres) to reduce reliance on external feed and promote natural diet.",
+            "Manure is utilized for fodder cultivation, and remaining is sold, indicating waste recycling.",
+            "Sanitary housing for goats to minimize environmental impact from waste."
+          ],
+          "impactOnBiodiversity": "Low. The project involves a local breed (Black Bengal Goat) and a small land footprint (2.25 acres). Green fodder cultivation may replace some existing vegetation.",
+          "waterResourceImpact": "Low. Water supply pipeline to be installed. Water required for animals and fodder cultivation. No specific details on source or potential impact on local water bodies provided.",
+          "soilAndLandImpact": "Low. Land is owned by the society (2.25 acres). Utilization of manure for fodder cultivation promotes organic practices and soil health.",
+          "airQualityImpact": "Low. Potential for localized odor from animal waste, but unlikely to cause significant air quality issues at this scale."
+        },
+        "inconsistencyDetection": {
+          "hasInconsistencies": true,
+          "totalInconsistenciesFound": 3,
+          "issues": [
+            {
+              "category": "Budget Mismatch",
+              "severity": "Critical",
+              "description": "The total project cost varies slightly between different sections of the DPR, and the sum of capital structure components initially presented on page 12 does not align with the stated percentages or total project cost.",
+              "location": "Financial Sections (Page 4, 5, 12)",
+              "detectedValues": "Page 4/5 Total Cost: 9.88 Lakh INR; Page 12 Total Cost: 9.8857 Lakh INR. Page 12 Loan (70%) + Member Contribution (10%) = 7.90856 Lakh INR, not 9.8857 Lakh INR.",
+              "impact": "Requires recalculation and normalization of financial figures to ensure accuracy and consistent funding structure, which has been done in this analysis. This could impact financial planning and lender confidence."
+            },
+            {
+              "category": "Data Inconsistency",
+              "severity": "Medium",
+              "description": "Detailed cost breakdowns on page 12 differ from the summarized 'Cost components for each member' on page 4, although the overall total cost is nearly consistent.",
+              "location": "Page 4 (Cost components for each member), Page 12 (UNIT COST FOR (100 + 4) GOATERY PROJECT)",
+              "detectedValues": "Equipment & machinery: 0.72 Lakh INR (P4) vs. 0.12 Lakh INR (P12). Vety. Aids & medicine, fodder cultivation, supplementary: 0.66 Lakh INR (P4) vs. 0.6637 Lakh INR (sum of components on P12).",
+              "impact": "While the total cost is closely aligned, the variance in specific component breakdowns requires clarification for precise budget allocation and expenditure tracking."
+            },
+            {
+              "category": "Data Inconsistency",
+              "severity": "Low",
+              "description": "The 'Sex ratio' for kids is inconsistently stated in different sections of the technical parameters.",
+              "location": "Page 9 (Techno-economic parameters), Page 11 (TECHNICAL PARAMETERS)",
+              "detectedValues": "Sex ratio: 50 50 (P9) vs. 01 01 (P11).",
+              "impact": "This minor inconsistency should be clarified for accurate population growth projections, though 50:50 is the standard assumption and has been used."
+            }
+          ]
+        },
+        "mdonerComplianceScoring": {
+          "overallComplianceScore": 61,
+          "scoringBreakdown": {
+            "northEasternFocus": {
+              "score": 20,
+              "weight": 0.25,
+              "findings": "Project is located in West Bengal, not one of the designated North Eastern states. No specific challenges or benefits for the NE region are addressed.",
+              "met": false
+            },
+            "beneficiaryAlignment": {
+              "score": 85,
+              "weight": 0.2,
+              "findings": "Project strongly aligns with beneficiary upliftment, targeting rural livelihoods and strengthening marginalized farmers through a cooperative model.",
+              "met": true
+            },
+            "environmentalCompliance": {
+              "score": 50,
+              "weight": 0.2,
+              "findings": "The DPR mentions green fodder cultivation and manure utilization, promoting sustainable practices. However, it lacks explicit mention of environmental clearances or a detailed EHS plan.",
+              "met": false
+            },
+            "landAcquisition": {
+              "score": 90,
+              "weight": 0.15,
+              "findings": "The society already owns the 2.25 acres of land, ensuring clear ownership and mitigating land acquisition risks. No tribal rights issues are indicated.",
+              "met": true
+            },
+            "documentationQuality": {
+              "score": 70,
+              "weight": 0.1,
+              "findings": "The DPR is comprehensive with financial projections and operational details, but contains minor inconsistencies in cost breakdowns and lacks some specific compliance details. The 'SAMPLE' watermark also affects its perceived quality.",
+              "met": false
+            },
+            "financialViability": {
+              "score": 85,
+              "weight": 0.1,
+              "findings": "The project demonstrates strong financial viability with an IRR of 43% and an average DSCR of 3.53, indicating robust returns and debt servicing capacity.",
+              "met": true
+            }
+          },
+          "complianceGaps": [
+            "Lack of explicit environmental clearances and detailed EHS plan.",
+            "Limited information on social security and welfare for project laborers.",
+            "Project not located in the North Eastern region, limiting MDoNER's direct mandate alignment."
+          ],
+          "complianceStrengths": [
+            "Strong alignment with beneficiary empowerment through a cooperative structure.",
+            "Clear and documented land ownership, simplifying project implementation.",
+            "Robust financial viability indicated by high IRR and DSCR.",
+            "Emphasis on sustainable practices like green fodder cultivation and manure recycling."
+          ]
+        },
+        "smartRecommendations": {
+          "criticalActions": [
+            "Reconcile and provide a single, consistent set of financial figures for total project cost and capital structure across all sections of the DPR, clearly stating the source (e.g., page 12) and explaining any adjustments made for validation.",
+            "Initiate and document all required environmental clearances, land-use permits, and animal husbandry licenses necessary for project establishment and operation, ensuring full regulatory compliance."
+          ],
+          "improvementSuggestions": [
+            "Develop and integrate a comprehensive Environmental, Health, and Safety (EHS) management plan, detailing waste disposal methods (especially for animal waste beyond fodder use), water conservation strategies, and emergency protocols.",
+            "Detail specific labor welfare policies, including social security benefits, fair wage practices, and safety measures, to ensure ethical treatment of workers.",
+            "Explore advanced marketing strategies, including brand development for 'organic chevon' and direct-to-consumer sales channels, to enhance market reach and premium pricing beyond traditional buyers."
+          ],
+          "bestPractices": [
+            "Implement a robust Management Information System (MIS) for real-time tracking of production, animal health, inventory, and financial performance to enable data-driven decision-making.",
+            "Formalize partnerships with agricultural universities or research institutions for ongoing technical support, breed improvement, and disease management best practices.",
+            "Establish a contingency fund within the cooperative's financial framework to address unforeseen market fluctuations or significant animal health emergencies."
+          ],
+          "nextSteps": [
+            "1st Priority: Conduct a thorough internal audit of all financial data to rectify inconsistencies and present a unified financial summary.",
+            "2nd Priority: Submit applications for all identified statutory and environmental clearances, with a clear timeline for receipt.",
+            "3rd Priority: Draft a comprehensive EHS manual and a detailed human resources policy addressing labor welfare and safety."
+          ]
+        }
+      },
+      "hi": {
+        "projectName": "बकरी पालन इकाई की स्थापना",
+        "projectLocation": {
+          "state": "पश्चिम बंगाल",
+          "districts": [
+            "एबीसी जिला"
+          ]
+        },
+        "projectSector": "पशुपालन / पशुधन",
+        "executiveSummary": "यह विस्तृत परियोजना रिपोर्ट पश्चिम बंगाल के एबीसी जिले में XYZ गोट रियरिंग कोऑपरेटिव सोसाइटी लिमिटेड द्वारा एक बकरी पालन इकाई की स्थापना की रूपरेखा प्रस्तुत करती है। परियोजना का उद्देश्य ग्रामीण आजीविका को ऊपर उठाना और सहकारी मॉडल के माध्यम से छोटे जुगाली करने वाले पशुओं के विकास को मजबूत करना है, जो शेवन की महत्वपूर्ण मांग को पूरा करता है। 20 सदस्यों में से प्रत्येक 100 बकरियों और 4 बकरियों वाली एक इकाई का प्रबंधन करेगा, जिसमें बुनियादी ढांचे, चारा और पशु चिकित्सा देखभाल के लिए वित्तीय और तकनीकी सहायता प्राप्त होगी। परियोजना वैज्ञानिक पालन, जैविक मांस उत्पादन और मजबूत विपणन रणनीति पर जोर देती है ताकि लाभप्रदता और स्थिरता सुनिश्चित की जा सके, जिसमें प्रति इकाई 9.8857 लाख रुपये का कुल प्रारंभिक निवेश शामिल है।",
+        "overallScore": 86,
+        "recommendation": "अनुमोदित",
+        "financialAnalysis": {
+          "projectCost": {
+            "capitalExpenditureLakhINR": 7.572,
+            "workingCapitalLakhINR": 2.3137,
+            "culturalCostLakhINR": 0,
+            "contingencyLakhINR": 0,
+            "marginMoneyLakhINR": 0,
+            "totalInitialInvestmentLakhINR": 9.8857
+          },
+          "capitalStructure": {
+            "ncdcLoanLakhINR": null,
+            "subsidyLakhINR": 1.97714,
+            "subsidyMIDH_NHB_LakhINR": null,
+            "equityOrOwnContributionLakhINR": null,
+            "loanLakhINR": 6.91999,
+            "memberContributionLakhINR": 0.98857,
+            "termLoanInterestRatePercent": 12,
+            "assumedInterestRatePercent": 12
+          },
+          "capacityAndRevenue": {
+            "unitCapacity": {
+              "bucks": 4,
+              "does": 100
+            },
+            "kiddingPercentage": 85,
+            "kiddingPerYear": 1.5,
+            "saleableAgeOfKidsMonths": "08-09",
+            "averageMaleKidsSoldPerYear": 68,
+            "averageFemaleKidsSoldPerYear": 68,
+            "maleKidsSalePriceINR": 4200,
+            "femaleKidsSalePriceINR": 3700,
+            "culledDoesSalePriceINR": 3500,
+            "culledBucksSalePriceINR": 4000,
+            "manureIncomePerYearINR": 30000
+          },
+          "costs": {
+            "greenFodderCultivationCostPerAcreINR": 4000,
+            "greenFodderAcres": 2,
+            "concentrateFeedCostPerKgINR": 11,
+            "labourWagesPerDayPerPersonINR": 200,
+            "labourPersons": 2,
+            "insurancePremiumPercentOfBreedingStockCost": 5,
+            "veterinaryAidPerAdultPerYearINR": 25,
+            "electricityAndMiscExpensesPerAdultINR": 20
+          },
+          "profitability": {
+            "grossProfitYear1LakhINR": -2.4867,
+            "netProfitYear1LakhINR": -3.3171,
+            "totalIncomeYear1LakhINR": 0.25,
+            "totalExpenditureYear1LakhINR": 2.7367
+          },
+          "returnsAndCoverage": {
+            "avgDSCR": 3.53,
+            "IRRPercent": 43
+          },
+          "repaymentScheduleSummary": {
+            "repaymentPeriodYears": 6,
+            "gracePeriodYears": 1,
+            "principalOutstandingYear1LakhINR": 6.91999,
+            "interestDueYear1LakhINR": 0.8304,
+            "principalRepaymentYear1LakhINR": 0
+          },
+          "assumptions": [
+            "INFERRED_REASON: परियोजना कार्यान्वयन की अवधि 3 महीने अनुमानित है, जो मील के पत्थर की अवधि को जोड़कर और कुछ ओवरलैप की अनुमति देकर निकाली गई है।",
+            "INFERRED_REASON: कुल स्कोर वित्तीय व्यवहार्यता (IRR 43%, औसत DSCR 3.53) को 45% भार देकर, बाजार और मांग को 15%, तकनीकी तत्परता को 15%, टीम/शासन को 10%, और जोखिम/अवशिष्ट को 15% भार देकर गणना की जाती है।",
+            "FINANCIAL_VALIDATION: कुल परियोजना लागत पृष्ठ 12 (सबसे विस्तृत विवरण) से 9.8857 लाख रुपये ली गई है, जबकि पृष्ठ 4/5 से 9.88 लाख रुपये के बजाय। पूंजी संरचना के घटक (ऋण, सब्सिडी, सदस्य योगदान) को मान्य कुल प्रारंभिक निवेश (9.8857 लाख रुपये) के प्रतिशत (क्रमशः 70%, 20%, 10%) के आधार पर पुनर्गणना की गई है ताकि संतुलन सुनिश्चित हो सके।",
+            "FINANCIAL_VALIDATION: पूंजीगत व्यय पृष्ठ 12 से नागरिक निर्माण, जल आपूर्ति, उपकरण और मशीनरी, और पशुओं की लागत (7.572 लाख रुपये) के योग से प्राप्त किया गया है। कार्यशील पूंजी बीमा, पशु चिकित्सा सहायता, चारा उत्पादन, पूरक चारा, और श्रम मजदूरी (2.3137 लाख रुपये) के योग से प्राप्त की गई है।",
+            "key_tables: वित्तीय डेटा मुख्य रूप से पृष्ठ 12 पर 'यूनिट कॉस्ट फॉर (100 + 4) गोटरी प्रोजेक्ट', पृष्ठ 14 पर 'इकोनॉमिक्स ऑफ गोट फार्मिंग', और पृष्ठ 15 पर 'रीपेमेंट शेड्यूल' से निकाला गया है। तकनीकी पैरामीटर पृष्ठ 9 और 11 से।"
+          ]
+        },
+        "timelineAnalysis": {
+          "implementationDurationMonths": 3,
+          "milestones": [
+            "निर्माण के लिए भूमि की पहचान: प्रारंभ का समय (स्वीकृति प्राप्त होने की तारीख से एक महीने के भीतर), पूरा होने का समय (15 दिन)",
+            "सिविल निर्माण: प्रारंभ का समय (धन प्राप्त होने की तारीख से 7 कार्य दिवसों के भीतर), पूरा होने का समय (एक महीना)",
+            "उपकरण और मशीनरी (चाफ कटर/चारा कुंड/पानी की आपूर्ति और अन्य): प्रारंभ का समय (सिविल कार्यों के पूरा होने से 7 कार्य दिवसों के भीतर), पूरा होने का समय (15 दिन)",
+            "जानवरों की खरीद: प्रारंभ का समय (सिविल कार्यों के पूरा होने से 15 कार्य दिवसों के भीतर), पूरा होने का समय (15 दिन)",
+            "चारे की खरीद: प्रारंभ का समय (जानवरों की खरीद से पहले)",
+            "पशु चिकित्सा सहायता और पूरक: प्रारंभ का समय (पशु संसाधन विभाग द्वारा समय पर)"
+          ],
+          "operationsCalendar": "परियोजना स्वीकृति के 3-4 महीने के भीतर, पशु खरीद और बुनियादी सुविधाओं के पूरा होने के तुरंत बाद संचालन शुरू होने की उम्मीद है।",
+          "timelineRisks": [
+            "NCDC से धन प्राप्त होने में देरी से सभी बाद के मील के पत्थर में देरी हो सकती है।",
+            "भूमि की पहचान या सिविल निर्माण में संभावित देरी से पशु खरीद और परियोजना की शुरुआत प्रभावित हो सकती है।",
+            "समय पर निष्पादन के लिए विभिन्न विभागों और सहकारी समितियों के बीच समन्वय की चुनौतियां।"
+          ]
+        },
+        "scopeAndObjectives": {
+          "vision": "ग्रामीण आजीविका को ऊपर उठाना और सहकारी समितियों के माध्यम से एक संगठित, टिकाऊ छोटे जुगाली करने वाले पशुओं का क्षेत्र स्थापित करना।",
+          "mission": "वैज्ञानिक बकरी पालन के लिए सहकारी सदस्यों को व्यापक वित्तीय सहायता, प्रशिक्षण और विपणन सहायता प्रदान करना, जैविक मांस को बढ़ावा देना और आर्थिक स्थिरता सुनिश्चित करना।",
+          "objectives": [
+            "ग्रामीण आजीविका का उत्थान",
+            "सहकारी के माध्यम से छोटे जुगाली करने वाले पशुओं के समग्र विकास के लिए मानव संसाधनों को मजबूत करना",
+            "छोटे जुगाली करने वाले पशुओं के विकास परियोजनाओं को शुरू करने के लिए सहकारी समितियों का एक कौशल-पूल विकसित करना",
+            "एक एकीकृत तरीके से संगठित छोटे जुगाली करने वाले पशुओं के क्षेत्र को विकसित करने के लिए भविष्य के विकास में फेडरेशन का अभिविन्यास"
+          ],
+          "processAndMachinery": [
+            "प्रति सदस्य इकाई 100 बकरियों और 4 बकरियों का पालन।",
+            "शेड निर्माण (पुआल की छत, कंक्रीट फर्श, नेट फेंसिंग) के लिए वित्तीय सहायता का प्रावधान।",
+            "सहकारी के माध्यम से केंद्रित चारा और दवाओं की आपूर्ति।",
+            "ब्लॉक पशु चिकित्सालय/क्लिनिक से पशु चिकित्सा सहायता तक पहुंच।",
+            "स्वस्थ बकरियों की खरीद और सदस्यों को वितरण।",
+            "सदस्यों को बकरी पालन पर हाथ से प्रशिक्षण देना।",
+            "परिपक्व होने पर जानवरों का सहकारी-प्रबंधित विपणन।",
+            "2 एकड़ भूमि पर हरे चारे की खेती।",
+            "चारा तैयार करने के लिए चाफ कटर का उपयोग, चारा कुंड, और पानी की आपूर्ति के लिए पाइपलाइन।"
+          ],
+          "packagingAndChannels": "स्थानीय बाजारों (एबीसी मुख्य बाजार, रेलवे स्टेशन बाजार), स्थानीय होटलों, रेस्तरां और कसाइयों के माध्यम से जीवित बकरियों की बिक्री। भविष्य की योजनाओं में स्वच्छ जैविक बकरी मांस के लिए एक खुदरा दुकान खोलना और बड़े पैमाने पर उत्पादन के लिए राज्य की राजधानी बाजार की खोज करना शामिल है।"
+        },
+        "riskAssessment": [
+          {
+            "riskCategory": "बाजार मूल्य अस्थिरता",
+            "severity": "मध्यम",
+            "description": "बकरियों और मांस के लिए विक्रय मूल्य स्थानीय बाजार ताकतों के प्रति संवेदनशील हैं, जो सहकारी की लाभप्रदता को संभावित रूप से प्रभावित कर सकते हैं।",
+            "evidence": "पृष्ठ 3 (मूल्य स्थानीय कसाइयों द्वारा तय किया जाता है); पृष्ठ 4 (बिक्री मूल्य बोर्ड द्वारा तय किया जाएगा); पृष्ठ 7 (स्थानीय होटलों से संबंध, राज्य की राजधानी बाजार योजना); पृष्ठ 10 (प्रीमियम मूल्य के लिए जैविक मांस)।"
+          },
+          {
+            "riskCategory": "पशु स्वास्थ्य और मृत्यु दर",
+            "severity": "मध्यम",
+            "description": "सामान्य स्वास्थ्य समस्याओं और बताई गई मृत्यु दर (5% वयस्क, 10% बच्चे) का जोखिम वित्तीय नुकसान का कारण बन सकता है।",
+            "evidence": "पृष्ठ 6 (सामान्य स्वास्थ्य मुद्दे, टीके, बीमा); पृष्ठ 7 (स्वास्थ्य के लिए हरे चारे की खेती); पृष्ठ 9 (मृत्यु दर)।"
+          },
+          {
+            "riskCategory": "परियोजना कार्यान्वयन में देरी",
+            "severity": "मध्यम",
+            "description": "भूमि की पहचान, धन के संवितरण, सिविल कार्यों या जानवरों की खरीद में संभावित देरी से लागत में वृद्धि और परिचालन में देरी हो सकती है।",
+            "evidence": "पृष्ठ 8 (कार्यान्वयन अनुसूची, लागत बढ़ने से बचने के लिए निर्दिष्ट समय-सीमा, पखवाड़े की रिपोर्टिंग)।"
+          },
+          {
+            "riskCategory": "चारा और फ़ीड की उपलब्धता/लागत",
+            "severity": "निम्न",
+            "description": "हरे चारे की खेती और केंद्रित फ़ीड पर निर्भरता। अप्रत्याशित कमी या मूल्य वृद्धि से परिचालन लागत प्रभावित हो सकती है।",
+            "evidence": "पृष्ठ 7 (2 एकड़ हरे चारे की खेती, आसपास के क्षेत्रों में कोई कमी नहीं, सूखे मौसम के लिए साइलेज); पृष्ठ 9 (हरे चारे की खेती की लागत)।"
+          },
+          {
+            "riskCategory": "परिचालन अनुभव/कौशल अंतर",
+            "severity": "निम्न",
+            "description": "सदस्यों को पालन का अनुभव है लेकिन वैज्ञानिक पालन विधियों के बारे में जागरूकता की कमी हो सकती है, जो संभावित रूप से उत्पादकता को प्रभावित कर सकती है।",
+            "evidence": "पृष्ठ 3 (उचित विपणन चैनलों और वैज्ञानिक पालन विधि के बारे में जागरूकता की कमी); पृष्ठ 4 (हाथ से प्रशिक्षण, कौशल-पूल विकास); पृष्ठ 5 (PQR सहकारी अनुसंधान और प्रशिक्षण केंद्र में प्रशिक्षण)।"
+          }
+        ],
+        "complianceCheck": {
+          "statutoryAndPermits": [
+            "डब्ल्यूबी राज्य सहकारी समिति अधिनियम के तहत पंजीकृत (पृष्ठ 3)"
+          ],
+          "EHS": [
+            "बकरियों के लिए स्वच्छता प्रथाओं और स्वच्छ आवास पर जोर (पृष्ठ 4, 5)",
+            "हरे चारे की खेती और खाद का उपयोग (पृष्ठ 7, 10)"
+          ],
+          "labour": "श्रम शुल्क परियोजना लागतों में शामिल हैं (पृष्ठ 4, 12)। कोई विशिष्ट श्रम कल्याण या अनुपालन विवरण नहीं है।",
+          "gapsOrUnknowns": [
+            "बकरी पालन इकाई और निर्माण के लिए विशिष्ट पर्यावरणीय अनुमतियां और स्थानीय भूमि-उपयोग अनुमतियां।",
+            "चारा उपयोग के अलावा खाद के लिए विस्तृत अपशिष्ट प्रबंधन योजना।",
+            "श्रम सामाजिक सुरक्षा लाभों या कल्याणकारी उपायों पर विशिष्ट विवरण।",
+            "जल स्रोत और उपयोग परमिट का विवरण।"
+          ]
+        },
+        "environmentalImpact": {
+          "overallRiskLevel": "निम्न",
+          "sensitiveAreaFlags": {
+            "isInProtectedForest": false,
+            "isNearWaterBody": false,
+            "isInTribalLand": false,
+            "isInWildlifeCorridor": false,
+            "isInEcologicallySensitiveZone": false
+          },
+          "clearancesRequired": [
+            "स्थानीय भूमि उपयोग परमिट (अनुमानित)",
+            "पशुपालन लाइसेंस (अनुमानित)",
+            "पर्यावरण मंजूरी (संभावित, विशिष्ट पैमाने/स्थान के लिए - अनुमानित)"
+          ],
+          "environmentalConcerns": [
+            "यदि पर्याप्त रूप से प्रबंधित नहीं किया जाता है तो बकरी पालन इकाई से स्थानीय गंध और अपशिष्ट प्रबंधन के मुद्दे की संभावना।",
+            "हरे चारे की खेती के लिए पानी का उपयोग, हालांकि पैमाना छोटा है।"
+          ],
+          "mitigationMeasures": [
+            "बाहरी चारे पर निर्भरता कम करने और प्राकृतिक आहार को बढ़ावा देने के लिए हरे चारे की खेती (2 एकड़)।",
+            "खाद का उपयोग चारा उत्पादन के लिए किया जाता है, और शेष बेचा जाता है, जो अपशिष्ट पुनर्चक्रण का संकेत देता है।",
+            "अपशिष्ट से पर्यावरणीय प्रभाव को कम करने के लिए बकरियों के लिए स्वच्छ आवास।"
+          ],
+          "impactOnBiodiversity": "निम्न। परियोजना में एक स्थानीय नस्ल (ब्लैक बंगाल बकरी) और एक छोटा भूमि पदचिह्न (2.25 एकड़) शामिल है। हरे चारे की खेती कुछ मौजूदा वनस्पति को प्रतिस्थापित कर सकती है।",
+          "waterResourceImpact": "निम्न। पानी की आपूर्ति के लिए पाइपलाइन लगाई जाएगी। जानवरों और चारा उत्पादन के लिए पानी की आवश्यकता होती है। स्रोत या स्थानीय जल निकायों पर संभावित प्रभाव का कोई विशिष्ट विवरण प्रदान नहीं किया गया है।",
+          "soilAndLandImpact": "निम्न। भूमि सोसायटी के स्वामित्व में है (2.25 एकड़)। चारा उत्पादन के लिए खाद का उपयोग जैविक प्रथाओं और मिट्टी के स्वास्थ्य को बढ़ावा देता है।",
+          "airQualityImpact": "निम्न। जानवरों के अपशिष्ट से स्थानीय गंध की संभावना, लेकिन इस पैमाने पर महत्वपूर्ण वायु गुणवत्ता के मुद्दे पैदा होने की संभावना नहीं है।"
+        },
+        "inconsistencyDetection": {
+          "hasInconsistencies": true,
+          "totalInconsistenciesFound": 3,
+          "issues": [
+            {
+              "category": "बजट बेमेल",
+              "severity": "महत्वपूर्ण",
+              "description": "डीपीआर के विभिन्न अनुभागों के बीच कुल परियोजना लागत थोड़ी भिन्न होती है, और पृष्ठ 12 पर शुरू में प्रस्तुत पूंजी संरचना घटकों का योग बताए गए प्रतिशत या कुल परियोजना लागत के साथ संरेखित नहीं होता है।",
+              "location": "वित्तीय अनुभाग (पृष्ठ 4, 5, 12)",
+              "detectedValues": "पृष्ठ 4/5 कुल लागत: 9.88 लाख रुपये; पृष्ठ 12 कुल लागत: 9.8857 लाख रुपये। पृष्ठ 12 ऋण (70%) + सदस्य योगदान (10%) = 7.90856 लाख रुपये, न कि 9.8857 लाख रुपये।",
+              "impact": "वित्तीय नियोजन और वित्त पोषण संरचना की सटीकता को प्रभावित करता है, जिसके लिए पुनर्गणना और स्पष्टीकरण की आवश्यकता होती है, जो इस विश्लेषण में किया गया है। यह वित्तीय नियोजन और ऋणदाता के विश्वास को प्रभावित कर सकता है।"
+            },
+            {
+              "category": "डेटा असंगति",
+              "severity": "मध्यम",
+              "description": "पृष्ठ 12 पर विस्तृत लागत विवरण पृष्ठ 4 पर 'प्रत्येक सदस्य के लिए लागत घटकों' से भिन्न हैं, हालांकि कुल लागत लगभग सुसंगत है।",
+              "location": "पृष्ठ 4 (लागत घटक), पृष्ठ 12 (100 + 4 इकाई के लिए इकाई लागत)",
+              "detectedValues": "उपकरण और मशीनरी: 0.72 लाख रुपये (P4) बनाम 0.12 लाख रुपये (P12)। पशु चिकित्सा सहायता और दवा, चारा उत्पादन, पूरक: 0.66 लाख रुपये (P4) बनाम 0.6637 लाख रुपये (P12 पर घटकों का योग)।",
+              "impact": "हालांकि कुल लागत काफी हद तक संरेखित है, परियोजना घटकों के लिए सटीक आवंटन के लिए विशिष्ट घटक विवरणों में भिन्नता स्पष्टीकरण की मांग करती है।"
+            },
+            {
+              "category": "डेटा असंगति",
+              "severity": "निम्न",
+              "description": "बच्चों के लिए 'लिंग अनुपात' तकनीकी मापदंडों के विभिन्न अनुभागों में असंगत रूप से बताया गया है।",
+              "location": "पृष्ठ 9 (तकनीकी-आर्थिक पैरामीटर), पृष्ठ 11 (तकनीकी पैरामीटर)",
+              "detectedValues": "लिंग अनुपात: 50 50 (P9) बनाम 01 01 (P11)।",
+              "impact": "सटीक जनसंख्या वृद्धि अनुमानों के लिए इस मामूली असंगति को स्पष्ट किया जाना चाहिए, हालांकि 50:50 मानक धारणा है और इसका उपयोग किया गया है।"
+            }
+          ]
+        },
+        "mdonerComplianceScoring": {
+          "overallComplianceScore": 61,
+          "scoringBreakdown": {
+            "northEasternFocus": {
+              "score": 20,
+              "weight": 0.25,
+              "findings": "परियोजना पश्चिम बंगाल में स्थित है, जो नामित उत्तर पूर्वी राज्यों में से एक नहीं है। उत्तर पूर्वी क्षेत्र के लिए कोई विशिष्ट चुनौतियां या लाभ संबोधित नहीं किए गए हैं।",
+              "met": false
+            },
+            "beneficiaryAlignment": {
+              "score": 85,
+              "weight": 0.2,
+              "findings": "परियोजना लाभार्थी उत्थान के साथ दृढ़ता से संरेखित है, ग्रामीण आजीविका को लक्षित करती है और सहकारी मॉडल के माध्यम से हाशिए के किसानों को मजबूत करती है।",
+              "met": true
+            },
+            "environmentalCompliance": {
+              "score": 50,
+              "weight": 0.2,
+              "findings": "डीपीआर में हरे चारे की खेती और खाद के उपयोग का उल्लेख है, जो टिकाऊ प्रथाओं को बढ़ावा देता है। हालांकि, इसमें पर्यावरणीय अनुमतियों या विस्तृत ईएचएस योजना का स्पष्ट उल्लेख नहीं है।",
+              "met": false
+            },
+            "landAcquisition": {
+              "score": 90,
+              "weight": 0.15,
+              "findings": "सोसायटी के पास पहले से ही 2.25 एकड़ भूमि का स्वामित्व है, जिससे स्पष्ट स्वामित्व सुनिश्चित होता है और भूमि अधिग्रहण के जोखिम कम होते हैं। कोई आदिवासी अधिकार मुद्दे इंगित नहीं किए गए हैं।",
+              "met": true
+            },
+            "documentationQuality": {
+              "score": 70,
+              "weight": 0.1,
+              "findings": "डीपीआर वित्तीय अनुमानों और परिचालन विवरणों के साथ व्यापक है, लेकिन लागत विवरणों में मामूली असंगतियां और कुछ विशिष्ट अनुपालन विवरणों की कमी है। 'नमूना' वाटरमार्क भी इसकी कथित गुणवत्ता को प्रभावित करता है।",
+              "met": false
+            },
+            "financialViability": {
+              "score": 85,
+              "weight": 0.1,
+              "findings": "परियोजना 43% के IRR और 3.53 के औसत DSCR के साथ मजबूत वित्तीय व्यवहार्यता प्रदर्शित करती है, जो मजबूत रिटर्न और ऋण सेवा क्षमता का संकेत देती है।",
+              "met": true
+            }
+          },
+          "complianceGaps": [
+            "पर्यावरणीय अनुमतियों और विस्तृत ईएचएस योजना का स्पष्ट अभाव।",
+            "परियोजना के मजदूरों के लिए सामाजिक सुरक्षा और कल्याण पर सीमित जानकारी।",
+            "परियोजना उत्तर पूर्वी क्षेत्र में स्थित नहीं है, जो एमडीओएनईआर के प्रत्यक्ष जनादेश संरेखण को सीमित करता है।"
+          ],
+          "complianceStrengths": [
+            "सहकारी संरचना के माध्यम से लाभार्थी सशक्तिकरण के साथ मजबूत संरेखण।",
+            "स्पष्ट और प्रलेखित भूमि स्वामित्व, परियोजना कार्यान्वयन को सरल बनाना।",
+            "उच्च IRR और DSCR द्वारा इंगित मजबूत वित्तीय व्यवहार्यता।",
+            "हरे चारे की खेती और खाद के पुनर्चक्रण जैसी टिकाऊ प्रथाओं पर जोर।"
+          ]
+        },
+        "smartRecommendations": {
+          "criticalActions": [
+            "डीपीआर के सभी अनुभागों में कुल परियोजना लागत और पूंजी संरचना के लिए वित्तीय आंकड़ों का एक एकल, सुसंगत सेट सुलझाना और प्रदान करना, स्रोत (जैसे, पृष्ठ 12) को स्पष्ट रूप से बताना और सत्यापन के लिए किए गए किसी भी समायोजन की व्याख्या करना।",
+            "परियोजना की स्थापना और संचालन के लिए आवश्यक सभी आवश्यक पर्यावरणीय अनुमतियों, भूमि-उपयोग परमिट और पशुपालन लाइसेंसों को शुरू करना और प्रलेखित करना, पूर्ण नियामक अनुपालन सुनिश्चित करना।"
+          ],
+          "improvementSuggestions": [
+            "एक व्यापक पर्यावरण, स्वास्थ्य और सुरक्षा (ईएचएस) प्रबंधन योजना विकसित और एकीकृत करना, जिसमें अपशिष्ट निपटान विधियों (चारा उपयोग से परे पशु अपशिष्ट के लिए), जल संरक्षण रणनीतियों और आपातकालीन प्रोटोकॉल का विवरण हो।",
+            "श्रमिकों के नैतिक उपचार को सुनिश्चित करने के लिए सामाजिक सुरक्षा लाभों, उचित मजदूरी प्रथाओं और सुरक्षा उपायों सहित विशिष्ट श्रम कल्याण नीतियों का विवरण दें।",
+            "पारंपरिक खरीदारों से परे बाजार पहुंच और प्रीमियम मूल्य निर्धारण को बढ़ाने के लिए 'जैविक शेवन' के लिए ब्रांड विकास और प्रत्यक्ष-से-उपभोक्ता बिक्री चैनलों सहित उन्नत विपणन रणनीतियों का अन्वेषण करें।"
+          ],
+          "bestPractices": [
+            "डेटा-संचालित निर्णय लेने और निरंतर सुधार की सुविधा के लिए उत्पादन, पशु स्वास्थ्य, सूची और वित्तीय प्रदर्शन की वास्तविक समय की ट्रैकिंग के लिए एक मजबूत प्रबंधन सूचना प्रणाली (एमआईएस) लागू करें।",
+            "सहकारी सदस्यों के लिए निरंतर तकनीकी सहायता और कौशल विकास सुनिश्चित करने के लिए पशु चिकित्सा विभागों और प्रशिक्षण केंद्रों के साथ औपचारिक समझौते या समझौता ज्ञापन स्थापित करें।",
+            "लचीलापन बढ़ाने के लिए अप्रत्याशित बाजार उतार-चढ़ाव या महत्वपूर्ण पशु स्वास्थ्य आपात स्थितियों को संबोधित करने के लिए सहकारी के वित्तीय ढांचे के भीतर एक आकस्मिक निधि स्थापित करने पर विचार करें।"
+          ],
+          "nextSteps": [
+            "1 प्राथमिकता: असंगतियों को ठीक करने और एक एकीकृत वित्तीय सारांश प्रस्तुत करने के लिए सभी वित्तीय डेटा का गहन आंतरिक ऑडिट करें।",
+            "2 प्राथमिकता: सभी पहचान की गई वैधानिक और पर्यावरणीय अनुमतियों के लिए आवेदन जमा करें, प्राप्त होने की स्पष्ट समय-सीमा के साथ।",
+            "3 प्राथमिकता: एक व्यापक ईएचएस मैनुअल और श्रम कल्याण और सुरक्षा को संबोधित करने वाली एक विस्तृत मानव संसाधन नीति का मसौदा तैयार करें।"
+          ]
+        }
+      }
+    },
+    "is_offline": 0,
+    "sync_status": "synced",
+    "processing_status": null
+  },
+  {
+    "id": 4,
+    "project_id": 2,
+    "filename": "20251127_110911_d115130a_211508052027.Sample-DPR_Upgradation_Distillery_effluent_treatment_system.pdf",
+    "original_filename": "211508052027.Sample-DPR_Upgradation_Distillery_effluent_treatment_system.pdf",
+    "filepath": "data\\20251127_110911_d115130a_211508052027.Sample-DPR_Upgradation_Distillery_effluent_treatment_system.pdf",
+    "uploaded_file_ref": "files/bw8xorb4lk96",
+    "upload_ts": "2025-11-27T11:09:16.363444",
+    "summary_json": {
+      "projectName": "Upgradation of Distillery Effluent Treatment System to Achieve Zero Liquid Discharge (ZLD)",
+      "projectLocation": {
+        "state": "India (unspecified)",
+        "districts": []
+      },
+      "projectSector": "Effluent Treatment (Distillery/Sugar Industry)",
+      "executiveSummary": "The ABC cooperative society proposes an upgrade to its distillery effluent treatment system to achieve Zero Liquid Discharge (ZLD), addressing Central Pollution Control Board (CPCB) norms that led to its closure. The project involves installing a Multiple Effect Evaporation system and Condensate Polishing Unit. This upgrade will allow the distillery to restart, reduce fresh water requirements, and enable the society to pay remunerative prices to sugarcane growers. With sound commercial viability and satisfactory financial returns, the project is recommended for lending by financial institutions.",
+      "overallScore": 85,
+      "recommendation": "Approved",
+      "financialAnalysis": {
+        "projectCost": {
+          "capitalExpenditureLakhINR": 1180,
+          "workingCapitalLakhINR": null,
+          "culturalCostLakhINR": null,
+          "contingencyLakhINR": 20,
+          "marginMoneyLakhINR": null,
+          "totalInitialInvestmentLakhINR": 1200
+        },
+        "capitalStructure": {
+          "ncdcLoanLakhINR": null,
+          "subsidyLakhINR": null,
+          "subsidyMIDH_NHB_LakhINR": null,
+          "equityOrOwnContributionLakhINR": 120,
+          "loanLakhINR": 1080,
+          "memberContributionLakhINR": null,
+          "termLoanInterestRatePercent": 11.1,
+          "assumedInterestRatePercent": 4.25
+        },
+        "capacityAndRevenue": {
+          "installedCapacityKLPD": 40,
+          "grossOperatingDays": 220,
+          "peakCapacityUtilizationPercent": 100,
+          "annualIncomeLakhINR": 3144,
+          "majorProducts": [
+            "Concentrated bio-methanated spent wash (30% solids)",
+            "Bio-compost",
+            "Rectified spirit"
+          ]
+        },
+        "costs": {
+          "annualExpenditureLakhINR": 2847.59,
+          "molassesCostPerMTINR": 5500,
+          "steamCostPerMTINR": 1100,
+          "electricityCostPerKWhINR": 6,
+          "repairAndMaintenanceNotes": "3% on Plant & Machinery, 2% on Building, increasing by 5% annually"
+        },
+        "profitability": {
+          "netProfitLakhINR": 296.41,
+          "cashAvailableForDebtServiceLakhINR": 450.08
+        },
+        "returnsAndCoverage": {
+          "avgDSCR": 2.59,
+          "IRRPercent": 28.7
+        },
+        "repaymentScheduleSummary": {
+          "termLoanRepaymentYears": 7,
+          "termLoanMoratoriumYears": 1,
+          "termLoanInstallmentDetails": "12 half-yearly installments of Rs. 50.00 lakh each",
+          "sdfLoanRepaymentYears": 4,
+          "sdfLoanMoratoriumYears": 1,
+          "sdfLoanInstallmentDetails": "8 half-yearly installments of Rs. 60.00 lakh each"
+        },
+        "assumptions": [
+          "INFERRED_REASON: Overall score calculated using the provided rubric, weighted components, and financial viability (IRR, DSCR) and project strengths. (Page 5, 24)",
+          "INFERRED_REASON: Financial values were reconciled to ensure total project cost matches the sum of its components and capital structure. (Page 4, 5, 21, 23)",
+          "INFERRED_REASON: Project location inferred as 'India (unspecified)' due to lack of specific location details in the DPR; no North-Eastern focus explicitly indicated. (Page 1)",
+          "FINANCIAL_VALIDATION: capitalExpenditureLakhINR includes all direct project costs (Civil Works, Plant & Machinery, GST, Preliminary & Pre-operative Expenses), with contingency separately stated, to sum to totalInitialInvestmentLakhINR. (Page 4, 21)",
+          "Sale realization from Rectified spirit: Rs. 34.00 per litre (Page 25)",
+          "Sale realization from Bio-compost: Rs. 350.00 per MT (Page 25)",
+          "Molasses cost: Rs. 5500.00 per MT (Page 25)",
+          "Steam cost: Rs. 1100.00 per MT (Page 25)",
+          "Electricity cost: Rs. 6.00 KWh (Page 25)",
+          "Yield of Alcohol: 270 Litres/MT of molasses (Page 25)",
+          "Repair & Maintenance: 3% on Plant & Machinery, 2% on Building, increased by 5% in each year (Page 25)",
+          "Insurance: 0.25% on the project cost (Page 25)",
+          "Depreciation: Civil - 10%, P&M - 15% (Page 25)",
+          "Term Loan Repayment: 7 years including 1 year moratorium, no moratorium on interest (Page 25)",
+          "Interest rate of Term loan: 11.10% (Page 25)",
+          "SDF Loan Repayment: 4 years including 1 year moratorium, no moratorium on interest (Page 25)",
+          "Interest rate of Working Capital: 12.00% (Page 25)",
+          "Salary and wages increase: 7.5% per year (Page 25)"
+        ]
+      },
+      "timelineAnalysis": {
+        "implementationDurationMonths": null,
+        "milestones": [
+          "Commissioning by November 2019 (Page 6)"
+        ],
+        "operationsCalendar": "Distillery to run for minimum 220 days/year (Page 5, 9)",
+        "timelineRisks": [
+          "Delay in project implementation may affect project viability (Page 26)"
+        ]
+      },
+      "scopeAndObjectives": {
+        "vision": "To achieve Zero Liquid Discharge (ZLD) for distillery effluent and ensure continuous operation of the sugar mill and distillery, thereby supporting sugarcane growers.",
+        "mission": "To upgrade the existing distillery effluent treatment system with advanced technologies to meet CPCB pollution norms, enable distillery restart, and minimize fresh water dependency.",
+        "objectives": [
+          "Upgrade Effluent Treatment Plant to achieve Zero Liquid Discharge (ZLD) (Page 1, 4)",
+          "Comply with Central Pollution Control Board (CPCB) pollution norms (Page 4, 6)",
+          "Restart the closed distillery unit (Page 6)",
+          "Reduce fresh water requirement for distillery operations (Page 4)",
+          "Enable the society to pay remunerative prices to sugarcane growers (Page 6)",
+          "Generate methane gas for fuel saving (Page 10)"
+        ],
+        "processAndMachinery": [
+          "Revamping existing UASB based bio-gas digesters (Page 10)",
+          "Installation of Multiple Effect Evaporation (MEE) system for spent wash concentration (Page 4, 11)",
+          "Installation of Condensate Polishing Unit (CPU) for treated water reuse (Page 4, 12)",
+          "Implementation of Scientific Bio-composting for concentrated spent wash (Page 14)"
+        ],
+        "packagingAndChannels": "Bio-compost can be sold to farmers (Page 15); Rectified spirit is a product of the distillery contributing to revenue (Page 28)."
+      },
+      "riskAssessment": [
+        {
+          "riskCategory": "Performance Risk",
+          "severity": "Medium",
+          "description": "Ensuring sustained availability of molasses for distillery operations.",
+          "evidence": "Mitigation includes availability from nearby sugar mills and experienced staff (Page 27)."
+        },
+        {
+          "riskCategory": "Marketing Risk",
+          "severity": "Medium",
+          "description": "Risk associated with ethanol sale/export and uptake of value-added products like bio-compost.",
+          "evidence": "Mitigation includes good marketing channels, proposed value-added products, and governmental agencies' willingness to purchase ethanol (Page 27)."
+        },
+        {
+          "riskCategory": "Regulatory Risk",
+          "severity": "Low",
+          "description": "Potential issues with conversion, clearance, or tariff orders.",
+          "evidence": "Mitigation states no problem as various governmental agencies have expressed their willingness (Page 27)."
+        },
+        {
+          "riskCategory": "Financial Risk",
+          "severity": "Low",
+          "description": "Overall financial viability of the project.",
+          "evidence": "Mitigation points to satisfactory DSCR and IRR (Page 27)."
+        },
+        {
+          "riskCategory": "Implementation Risk",
+          "severity": "High",
+          "description": "Delay in project implementation.",
+          "evidence": "Weakness identified: 'Delay in project implementation may affect the viability of the project.' (Page 26). Mitigation mentions effective project management (Page 27)."
+        }
+      ],
+      "complianceCheck": {
+        "statutoryAndPermits": [
+          "Meeting CPCB norms for effluent discharge (Page 4, 6, 9)",
+          "Securing all required balance permissions/NOCs/approvals quickly (Page 27)"
+        ],
+        "EHS": [
+          "Achieving Zero Liquid Discharge (ZLD) (Page 1, 4)",
+          "Reduction in fresh water requirement (Page 4, 9)",
+          "Production of bio-compost (Page 14, 15)",
+          "Methane gas utilization (Page 10)"
+        ],
+        "labour": "Provision for 4 evaporation plant operators and 4 unskilled workers; existing skilled staff from the mill will assist (Page 7, 20).",
+        "gapsOrUnknowns": [
+          "Lack of explicit detailed environmental clearances (e.g., EC, Forest Clearance) beyond CPCB compliance.",
+          "No specific details on land ownership or acquisition for any new structures."
+        ]
+      },
+      "environmentalImpact": {
+        "overallRiskLevel": "Low",
+        "sensitiveAreaFlags": {
+          "isInProtectedForest": false,
+          "isNearWaterBody": false,
+          "isInTribalLand": false,
+          "isInWildlifeCorridor": false,
+          "isInEcologicallySensitiveZone": false
+        },
+        "clearancesRequired": [
+          "CPCB norms compliance"
+        ],
+        "environmentalConcerns": [
+          "Historic distillery effluent discharge exceeding pollution norms (Page 4)"
+        ],
+        "mitigationMeasures": [
+          "Zero Liquid Discharge (ZLD) technology implementation (Page 1, 4)",
+          "Multiple Effect Evaporation (MEE) for spent wash concentration (Page 11)",
+          "Condensate Polishing Unit (CPU) for treated water reuse (Page 12)",
+          "Scientific Bio-composting for concentrated spent wash (Page 14)",
+          "Reuse of treated water for process and non-process applications (Page 4, 9)",
+          "Methane gas production and burning to save bagasse fuel (Page 10)"
+        ],
+        "impactOnBiodiversity": "Expected positive impact due to reduced pollution and improved effluent management.",
+        "waterResourceImpact": "Positive impact by reducing fresh water consumption through treated water reuse (Page 4, 9, 12).",
+        "soilAndLandImpact": "Positive impact through conversion of spent wash and press mud into bio-compost, improving soil quality (Page 14, 15).",
+        "airQualityImpact": "Neutral to positive impact by utilizing methane gas as fuel, potentially reducing reliance on other fuels like bagasse, though specific air pollutant reduction is not quantified (Page 10)."
+      },
+      "inconsistencyDetection": {
+        "hasInconsistencies": false,
+        "totalInconsistenciesFound": 0,
+        "issues": []
+      },
+      "mdonerComplianceScoring": {
+        "overallComplianceScore": 58,
+        "scoringBreakdown": {
+          "northEasternFocus": {
+            "score": 0,
+            "weight": 0.25,
+            "findings": "The DPR does not specify a location in the North Eastern states nor addresses any NE-specific challenges, leading to a low score for this criterion.",
+            "met": false
+          },
+          "beneficiaryAlignment": {
+            "score": 60,
+            "weight": 0.2,
+            "findings": "The project indirectly benefits sugarcane growers by enabling remunerative prices and contributes to environmental improvement for the community, but lacks specific targeting of marginalized communities or detailed beneficiary counts beyond cooperative members.",
+            "met": true
+          },
+          "environmentalCompliance": {
+            "score": 100,
+            "weight": 0.2,
+            "findings": "The core objective of the project is to achieve Zero Liquid Discharge (ZLD) and comply with CPCB norms, demonstrating strong environmental commitment and planned mitigation measures.",
+            "met": true
+          },
+          "landAcquisition": {
+            "score": 50,
+            "weight": 0.15,
+            "findings": "The DPR implies an upgrade to an existing plant, hence no major new land acquisition. However, details regarding land ownership, tribal rights, or consent for any new structures are not provided.",
+            "met": true
+          },
+          "documentationQuality": {
+            "score": 90,
+            "weight": 0.1,
+            "findings": "The DPR is well-structured, comprehensive, and provides consistent data across sections, including financial projections, technical details, and risk assessment.",
+            "met": true
+          },
+          "financialViability": {
+            "score": 95,
+            "weight": 0.1,
+            "findings": "The project demonstrates strong financial viability with a high IRR (28.70%) and a robust average DSCR (2.59), indicating satisfactory financial returns and repayment capacity.",
+            "met": true
+          }
+        },
+        "complianceGaps": [
+          "Lack of explicit mention of project location within North Eastern states or addressing NE-specific development challenges.",
+          "Absence of specific details on land ownership, tribal rights, or consent processes for any project-related new construction or expansion.",
+          "No specific environmental clearances (e.g., EC) explicitly detailed beyond general CPCB compliance."
+        ],
+        "complianceStrengths": [
+          "Strong focus on environmental compliance through Zero Liquid Discharge (ZLD) implementation.",
+          "Clear financial viability with strong IRR and DSCR values.",
+          "Comprehensive and consistent documentation quality."
+        ]
+      },
+      "smartRecommendations": {
+        "criticalActions": [
+          "If this project is intended for MDoNER funding, explicitly articulate its alignment with MDoNER's mandate and identify specific North Eastern challenges it addresses.",
+          "Provide clear documentation on land ownership and confirm that all necessary tribal rights or land acquisition procedures, if any, are complete and compliant."
+        ],
+        "improvementSuggestions": [
+          "Develop a comprehensive Environmental Management Plan (EMP) with key performance indicators (KPIs) to monitor the ZLD system's effectiveness and overall environmental impact.",
+          "Conduct a detailed market assessment for the bio-compost product to optimize pricing, distribution, and revenue generation.",
+          "Explore additional revenue streams from other by-products or waste heat recovery generated by the ZLD process."
+        ],
+        "bestPractices": [
+          "Implement a robust project monitoring and evaluation framework to ensure timely execution and adherence to budget and scope.",
+          "Adopt advanced digital tools for real-time monitoring and predictive maintenance of the ETP and ZLD systems.",
+          "Engage local communities and stakeholders in environmental awareness programs related to the project's benefits."
+        ],
+        "nextSteps": [
+          "1st Priority: Submit supplementary documentation confirming the project's specific location, MDoNER relevance, and complete land acquisition/ownership details.",
+          "2nd Priority: Finalize the detailed Environmental Management Plan (EMP) and secure all explicit environmental clearances required for the upgrade.",
+          "3rd Priority: Develop a comprehensive marketing and sales strategy for bio-compost, including potential partnerships with agricultural cooperatives."
+        ]
+      }
+    },
+    "summary_json_multilang": {
+      "en": {
+        "projectName": "Upgradation of Distillery Effluent Treatment System to Achieve Zero Liquid Discharge (ZLD)",
+        "projectLocation": {
+          "state": "India (unspecified)",
+          "districts": []
+        },
+        "projectSector": "Effluent Treatment (Distillery/Sugar Industry)",
+        "executiveSummary": "The ABC cooperative society proposes an upgrade to its distillery effluent treatment system to achieve Zero Liquid Discharge (ZLD), addressing Central Pollution Control Board (CPCB) norms that led to its closure. The project involves installing a Multiple Effect Evaporation system and Condensate Polishing Unit. This upgrade will allow the distillery to restart, reduce fresh water requirements, and enable the society to pay remunerative prices to sugarcane growers. With sound commercial viability and satisfactory financial returns, the project is recommended for lending by financial institutions.",
+        "overallScore": 85,
+        "recommendation": "Approved",
+        "financialAnalysis": {
+          "projectCost": {
+            "capitalExpenditureLakhINR": 1180,
+            "workingCapitalLakhINR": null,
+            "culturalCostLakhINR": null,
+            "contingencyLakhINR": 20,
+            "marginMoneyLakhINR": null,
+            "totalInitialInvestmentLakhINR": 1200
+          },
+          "capitalStructure": {
+            "ncdcLoanLakhINR": null,
+            "subsidyLakhINR": null,
+            "subsidyMIDH_NHB_LakhINR": null,
+            "equityOrOwnContributionLakhINR": 120,
+            "loanLakhINR": 1080,
+            "memberContributionLakhINR": null,
+            "termLoanInterestRatePercent": 11.1,
+            "assumedInterestRatePercent": 4.25
+          },
+          "capacityAndRevenue": {
+            "installedCapacityKLPD": 40,
+            "grossOperatingDays": 220,
+            "peakCapacityUtilizationPercent": 100,
+            "annualIncomeLakhINR": 3144,
+            "majorProducts": [
+              "Concentrated bio-methanated spent wash (30% solids)",
+              "Bio-compost",
+              "Rectified spirit"
+            ]
+          },
+          "costs": {
+            "annualExpenditureLakhINR": 2847.59,
+            "molassesCostPerMTINR": 5500,
+            "steamCostPerMTINR": 1100,
+            "electricityCostPerKWhINR": 6,
+            "repairAndMaintenanceNotes": "3% on Plant & Machinery, 2% on Building, increasing by 5% annually"
+          },
+          "profitability": {
+            "netProfitLakhINR": 296.41,
+            "cashAvailableForDebtServiceLakhINR": 450.08
+          },
+          "returnsAndCoverage": {
+            "avgDSCR": 2.59,
+            "IRRPercent": 28.7
+          },
+          "repaymentScheduleSummary": {
+            "termLoanRepaymentYears": 7,
+            "termLoanMoratoriumYears": 1,
+            "termLoanInstallmentDetails": "12 half-yearly installments of Rs. 50.00 lakh each",
+            "sdfLoanRepaymentYears": 4,
+            "sdfLoanMoratoriumYears": 1,
+            "sdfLoanInstallmentDetails": "8 half-yearly installments of Rs. 60.00 lakh each"
+          },
+          "assumptions": [
+            "INFERRED_REASON: Overall score calculated using the provided rubric, weighted components, and financial viability (IRR, DSCR) and project strengths. (Page 5, 24)",
+            "INFERRED_REASON: Financial values were reconciled to ensure total project cost matches the sum of its components and capital structure. (Page 4, 5, 21, 23)",
+            "INFERRED_REASON: Project location inferred as 'India (unspecified)' due to lack of specific location details in the DPR; no North-Eastern focus explicitly indicated. (Page 1)",
+            "FINANCIAL_VALIDATION: capitalExpenditureLakhINR includes all direct project costs (Civil Works, Plant & Machinery, GST, Preliminary & Pre-operative Expenses), with contingency separately stated, to sum to totalInitialInvestmentLakhINR. (Page 4, 21)",
+            "Sale realization from Rectified spirit: Rs. 34.00 per litre (Page 25)",
+            "Sale realization from Bio-compost: Rs. 350.00 per MT (Page 25)",
+            "Molasses cost: Rs. 5500.00 per MT (Page 25)",
+            "Steam cost: Rs. 1100.00 per MT (Page 25)",
+            "Electricity cost: Rs. 6.00 KWh (Page 25)",
+            "Yield of Alcohol: 270 Litres/MT of molasses (Page 25)",
+            "Repair & Maintenance: 3% on Plant & Machinery, 2% on Building, increased by 5% in each year (Page 25)",
+            "Insurance: 0.25% on the project cost (Page 25)",
+            "Depreciation: Civil - 10%, P&M - 15% (Page 25)",
+            "Term Loan Repayment: 7 years including 1 year moratorium, no moratorium on interest (Page 25)",
+            "Interest rate of Term loan: 11.10% (Page 25)",
+            "SDF Loan Repayment: 4 years including 1 year moratorium, no moratorium on interest (Page 25)",
+            "Interest rate of Working Capital: 12.00% (Page 25)",
+            "Salary and wages increase: 7.5% per year (Page 25)"
+          ]
+        },
+        "timelineAnalysis": {
+          "implementationDurationMonths": null,
+          "milestones": [
+            "Commissioning by November 2019 (Page 6)"
+          ],
+          "operationsCalendar": "Distillery to run for minimum 220 days/year (Page 5, 9)",
+          "timelineRisks": [
+            "Delay in project implementation may affect project viability (Page 26)"
+          ]
+        },
+        "scopeAndObjectives": {
+          "vision": "To achieve Zero Liquid Discharge (ZLD) for distillery effluent and ensure continuous operation of the sugar mill and distillery, thereby supporting sugarcane growers.",
+          "mission": "To upgrade the existing distillery effluent treatment system with advanced technologies to meet CPCB pollution norms, enable distillery restart, and minimize fresh water dependency.",
+          "objectives": [
+            "Upgrade Effluent Treatment Plant to achieve Zero Liquid Discharge (ZLD) (Page 1, 4)",
+            "Comply with Central Pollution Control Board (CPCB) pollution norms (Page 4, 6)",
+            "Restart the closed distillery unit (Page 6)",
+            "Reduce fresh water requirement for distillery operations (Page 4)",
+            "Enable the society to pay remunerative prices to sugarcane growers (Page 6)",
+            "Generate methane gas for fuel saving (Page 10)"
+          ],
+          "processAndMachinery": [
+            "Revamping existing UASB based bio-gas digesters (Page 10)",
+            "Installation of Multiple Effect Evaporation (MEE) system for spent wash concentration (Page 4, 11)",
+            "Installation of Condensate Polishing Unit (CPU) for treated water reuse (Page 4, 12)",
+            "Implementation of Scientific Bio-composting for concentrated spent wash (Page 14)"
+          ],
+          "packagingAndChannels": "Bio-compost can be sold to farmers (Page 15); Rectified spirit is a product of the distillery contributing to revenue (Page 28)."
+        },
+        "riskAssessment": [
+          {
+            "riskCategory": "Performance Risk",
+            "severity": "Medium",
+            "description": "Ensuring sustained availability of molasses for distillery operations.",
+            "evidence": "Mitigation includes availability from nearby sugar mills and experienced staff (Page 27)."
+          },
+          {
+            "riskCategory": "Marketing Risk",
+            "severity": "Medium",
+            "description": "Risk associated with ethanol sale/export and uptake of value-added products like bio-compost.",
+            "evidence": "Mitigation includes good marketing channels, proposed value-added products, and governmental agencies' willingness to purchase ethanol (Page 27)."
+          },
+          {
+            "riskCategory": "Regulatory Risk",
+            "severity": "Low",
+            "description": "Potential issues with conversion, clearance, or tariff orders.",
+            "evidence": "Mitigation states no problem as various governmental agencies have expressed their willingness (Page 27)."
+          },
+          {
+            "riskCategory": "Financial Risk",
+            "severity": "Low",
+            "description": "Overall financial viability of the project.",
+            "evidence": "Mitigation points to satisfactory DSCR and IRR (Page 27)."
+          },
+          {
+            "riskCategory": "Implementation Risk",
+            "severity": "High",
+            "description": "Delay in project implementation.",
+            "evidence": "Weakness identified: 'Delay in project implementation may affect the viability of the project.' (Page 26). Mitigation mentions effective project management (Page 27)."
+          }
+        ],
+        "complianceCheck": {
+          "statutoryAndPermits": [
+            "Meeting CPCB norms for effluent discharge (Page 4, 6, 9)",
+            "Securing all required balance permissions/NOCs/approvals quickly (Page 27)"
+          ],
+          "EHS": [
+            "Achieving Zero Liquid Discharge (ZLD) (Page 1, 4)",
+            "Reduction in fresh water requirement (Page 4, 9)",
+            "Production of bio-compost (Page 14, 15)",
+            "Methane gas utilization (Page 10)"
+          ],
+          "labour": "Provision for 4 evaporation plant operators and 4 unskilled workers; existing skilled staff from the mill will assist (Page 7, 20).",
+          "gapsOrUnknowns": [
+            "Lack of explicit detailed environmental clearances (e.g., EC, Forest Clearance) beyond CPCB compliance.",
+            "No specific details on land ownership or acquisition for any new structures."
+          ]
+        },
+        "environmentalImpact": {
+          "overallRiskLevel": "Low",
+          "sensitiveAreaFlags": {
+            "isInProtectedForest": false,
+            "isNearWaterBody": false,
+            "isInTribalLand": false,
+            "isInWildlifeCorridor": false,
+            "isInEcologicallySensitiveZone": false
+          },
+          "clearancesRequired": [
+            "CPCB norms compliance"
+          ],
+          "environmentalConcerns": [
+            "Historic distillery effluent discharge exceeding pollution norms (Page 4)"
+          ],
+          "mitigationMeasures": [
+            "Zero Liquid Discharge (ZLD) technology implementation (Page 1, 4)",
+            "Multiple Effect Evaporation (MEE) for spent wash concentration (Page 11)",
+            "Condensate Polishing Unit (CPU) for treated water reuse (Page 12)",
+            "Scientific Bio-composting for concentrated spent wash (Page 14)",
+            "Reuse of treated water for process and non-process applications (Page 4, 9)",
+            "Methane gas production and burning to save bagasse fuel (Page 10)"
+          ],
+          "impactOnBiodiversity": "Expected positive impact due to reduced pollution and improved effluent management.",
+          "waterResourceImpact": "Positive impact by reducing fresh water consumption through treated water reuse (Page 4, 9, 12).",
+          "soilAndLandImpact": "Positive impact through conversion of spent wash and press mud into bio-compost, improving soil quality (Page 14, 15).",
+          "airQualityImpact": "Neutral to positive impact by utilizing methane gas as fuel, potentially reducing reliance on other fuels like bagasse, though specific air pollutant reduction is not quantified (Page 10)."
+        },
+        "inconsistencyDetection": {
+          "hasInconsistencies": false,
+          "totalInconsistenciesFound": 0,
+          "issues": []
+        },
+        "mdonerComplianceScoring": {
+          "overallComplianceScore": 58,
+          "scoringBreakdown": {
+            "northEasternFocus": {
+              "score": 0,
+              "weight": 0.25,
+              "findings": "The DPR does not specify a location in the North Eastern states nor addresses any NE-specific challenges, leading to a low score for this criterion.",
+              "met": false
+            },
+            "beneficiaryAlignment": {
+              "score": 60,
+              "weight": 0.2,
+              "findings": "The project indirectly benefits sugarcane growers by enabling remunerative prices and contributes to environmental improvement for the community, but lacks specific targeting of marginalized communities or detailed beneficiary counts beyond cooperative members.",
+              "met": true
+            },
+            "environmentalCompliance": {
+              "score": 100,
+              "weight": 0.2,
+              "findings": "The core objective of the project is to achieve Zero Liquid Discharge (ZLD) and comply with CPCB norms, demonstrating strong environmental commitment and planned mitigation measures.",
+              "met": true
+            },
+            "landAcquisition": {
+              "score": 50,
+              "weight": 0.15,
+              "findings": "The DPR implies an upgrade to an existing plant, hence no major new land acquisition. However, details regarding land ownership, tribal rights, or consent for any new structures are not provided.",
+              "met": true
+            },
+            "documentationQuality": {
+              "score": 90,
+              "weight": 0.1,
+              "findings": "The DPR is well-structured, comprehensive, and provides consistent data across sections, including financial projections, technical details, and risk assessment.",
+              "met": true
+            },
+            "financialViability": {
+              "score": 95,
+              "weight": 0.1,
+              "findings": "The project demonstrates strong financial viability with a high IRR (28.70%) and a robust average DSCR (2.59), indicating satisfactory financial returns and repayment capacity.",
+              "met": true
+            }
+          },
+          "complianceGaps": [
+            "Lack of explicit mention of project location within North Eastern states or addressing NE-specific development challenges.",
+            "Absence of specific details on land ownership, tribal rights, or consent processes for any project-related new construction or expansion.",
+            "No specific environmental clearances (e.g., EC) explicitly detailed beyond general CPCB compliance."
+          ],
+          "complianceStrengths": [
+            "Strong focus on environmental compliance through Zero Liquid Discharge (ZLD) implementation.",
+            "Clear financial viability with strong IRR and DSCR values.",
+            "Comprehensive and consistent documentation quality."
+          ]
+        },
+        "smartRecommendations": {
+          "criticalActions": [
+            "If this project is intended for MDoNER funding, explicitly articulate its alignment with MDoNER's mandate and identify specific North Eastern challenges it addresses.",
+            "Provide clear documentation on land ownership and confirm that all necessary tribal rights or land acquisition procedures, if any, are complete and compliant."
+          ],
+          "improvementSuggestions": [
+            "Develop a comprehensive Environmental Management Plan (EMP) with key performance indicators (KPIs) to monitor the ZLD system's effectiveness and overall environmental impact.",
+            "Conduct a detailed market assessment for the bio-compost product to optimize pricing, distribution, and revenue generation.",
+            "Explore additional revenue streams from other by-products or waste heat recovery generated by the ZLD process."
+          ],
+          "bestPractices": [
+            "Implement a robust project monitoring and evaluation framework to ensure timely execution and adherence to budget and scope.",
+            "Adopt advanced digital tools for real-time monitoring and predictive maintenance of the ETP and ZLD systems.",
+            "Engage local communities and stakeholders in environmental awareness programs related to the project's benefits."
+          ],
+          "nextSteps": [
+            "1st Priority: Submit supplementary documentation confirming the project's specific location, MDoNER relevance, and complete land acquisition/ownership details.",
+            "2nd Priority: Finalize the detailed Environmental Management Plan (EMP) and secure all explicit environmental clearances required for the upgrade.",
+            "3rd Priority: Develop a comprehensive marketing and sales strategy for bio-compost, including potential partnerships with agricultural cooperatives."
+          ]
+        }
+      },
+      "hi": {
+        "projectName": "डिस्टिलरी एफ्लुएंट ट्रीटमेंट सिस्टम को अपग्रेड करके ज़ीरो लिक्विड डिस्चार्ज (ZLD) प्राप्त करना",
+        "projectLocation": {
+          "state": "भारत (अनिर्दिष्ट)",
+          "districts": []
+        },
+        "projectSector": "अपशिष्ट जल उपचार (डिस्टिलरी/चीनी उद्योग)",
+        "executiveSummary": "एबीसी सहकारी समिति ने सेंट्रल पॉल्यूशन कंट्रोल बोर्ड (CPCB) के मानदंडों के उल्लंघन के कारण बंद हुई अपनी डिस्टिलरी के अपशिष्ट जल उपचार प्रणाली को ज़ीरो लिक्विड डिस्चार्ज (ZLD) प्राप्त करने के लिए अपग्रेड करने का प्रस्ताव दिया है। परियोजना में मल्टीपल इफेक्ट इवेपोरेशन प्रणाली और कंडेनसेट पॉलिशिंग यूनिट की स्थापना शामिल है। यह अपग्रेड डिस्टिलरी को फिर से शुरू करने, ताजे पानी की आवश्यकता को कम करने और सोसायटी को गन्ना किसानों को उचित मूल्य देने में सक्षम करेगा। ध्वनि वाणिज्यिक व्यवहार्यता और संतोषजनक वित्तीय रिटर्न के साथ, परियोजना को वित्तीय संस्थानों द्वारा ऋण के लिए अनुशंसित किया गया है।",
+        "overallScore": 85,
+        "recommendation": "अनुमोदित",
+        "financialAnalysis": {
+          "projectCost": {
+            "capitalExpenditureLakhINR": 1180,
+            "workingCapitalLakhINR": null,
+            "culturalCostLakhINR": null,
+            "contingencyLakhINR": 20,
+            "marginMoneyLakhINR": null,
+            "totalInitialInvestmentLakhINR": 1200
+          },
+          "capitalStructure": {
+            "ncdcLoanLakhINR": null,
+            "subsidyLakhINR": null,
+            "subsidyMIDH_NHB_LakhINR": null,
+            "equityOrOwnContributionLakhINR": 120,
+            "loanLakhINR": 1080,
+            "memberContributionLakhINR": null,
+            "termLoanInterestRatePercent": 11.1,
+            "assumedInterestRatePercent": 4.25
+          },
+          "capacityAndRevenue": {
+            "installedCapacityKLPD": 40,
+            "grossOperatingDays": 220,
+            "peakCapacityUtilizationPercent": 100,
+            "annualIncomeLakhINR": 3144,
+            "majorProducts": [
+              "सांद्रित बायो-मेथेनेटेड स्पेंट वॉश (30% ठोस)",
+              "जैव-खाद",
+              "रेक्टिफाइड स्पिरिट"
+            ]
+          },
+          "costs": {
+            "annualExpenditureLakhINR": 2847.59,
+            "molassesCostPerMTINR": 5500,
+            "steamCostPerMTINR": 1100,
+            "electricityCostPerKWhINR": 6,
+            "repairAndMaintenanceNotes": "प्लांट और मशीनरी पर 3%, भवन पर 2%, प्रति वर्ष 5% की वृद्धि के साथ"
+          },
+          "profitability": {
+            "netProfitLakhINR": 296.41,
+            "cashAvailableForDebtServiceLakhINR": 450.08
+          },
+          "returnsAndCoverage": {
+            "avgDSCR": 2.59,
+            "IRRPercent": 28.7
+          },
+          "repaymentScheduleSummary": {
+            "termLoanRepaymentYears": 7,
+            "termLoanMoratoriumYears": 1,
+            "termLoanInstallmentDetails": "50.00 लाख रुपये की 12 अर्ध-वार्षिक किस्तें",
+            "sdfLoanRepaymentYears": 4,
+            "sdfLoanMoratoriumYears": 1,
+            "sdfLoanInstallmentDetails": "60.00 लाख रुपये की 8 अर्ध-वार्षिक किस्तें"
+          },
+          "assumptions": [
+            "INFERRED_REASON: Overall score calculated using the provided rubric, weighted components, and financial viability (IRR, DSCR) and project strengths. (Page 5, 24)",
+            "INFERRED_REASON: Financial values were reconciled to ensure total project cost matches the sum of its components and capital structure. (Page 4, 5, 21, 23)",
+            "INFERRED_REASON: Project location inferred as 'India (unspecified)' due to lack of specific location details in the DPR; no North-Eastern focus explicitly indicated. (Page 1)",
+            "FINANCIAL_VALIDATION: capitalExpenditureLakhINR includes all direct project costs (Civil Works, Plant & Machinery, GST, Preliminary & Pre-operative Expenses), with contingency separately stated, to sum to totalInitialInvestmentLakhINR. (Page 4, 21)",
+            "Sale realization from Rectified spirit: Rs. 34.00 per litre (Page 25)",
+            "Sale realization from Bio-compost: Rs. 350.00 per MT (Page 25)",
+            "Molasses cost: Rs. 5500.00 per MT (Page 25)",
+            "Steam cost: Rs. 1100.00 per MT (Page 25)",
+            "Electricity cost: Rs. 6.00 KWh (Page 25)",
+            "Yield of Alcohol: 270 Litres/MT of molasses (Page 25)",
+            "Repair & Maintenance: 3% on Plant & Machinery, 2% on Building, increased by 5% in each year (Page 25)",
+            "Insurance: 0.25% on the project cost (Page 25)",
+            "Depreciation: Civil - 10%, P&M - 15% (Page 25)",
+            "Term Loan Repayment: 7 years including 1 year moratorium, no moratorium on interest (Page 25)",
+            "Interest rate of Term loan: 11.10% (Page 25)",
+            "SDF Loan Repayment: 4 years including 1 year moratorium, no moratorium on interest (Page 25)",
+            "Interest rate of Working Capital: 12.00% (Page 25)",
+            "Salary and wages increase: 7.5% per year (Page 25)"
+          ]
+        },
+        "timelineAnalysis": {
+          "implementationDurationMonths": null,
+          "milestones": [
+            "नवंबर 2019 तक कमीशनिंग (पेज 6)"
+          ],
+          "operationsCalendar": "डिस्टिलरी न्यूनतम 220 दिन/वर्ष चलेगी (पेज 5, 9)",
+          "timelineRisks": [
+            "परियोजना के कार्यान्वयन में देरी से परियोजना की व्यवहार्यता प्रभावित हो सकती है (पेज 26)"
+          ]
+        },
+        "scopeAndObjectives": {
+          "vision": "डिस्टिलरी के अपशिष्ट जल के लिए ज़ीरो लिक्विड डिस्चार्ज (ZLD) प्राप्त करना और चीनी मिल और डिस्टिलरी के निरंतर संचालन को सुनिश्चित करना, जिससे गन्ना किसानों का समर्थन हो सके।",
+          "mission": "मौजूदा डिस्टिलरी अपशिष्ट जल उपचार प्रणाली को उन्नत तकनीकों के साथ अपग्रेड करना ताकि CPCB प्रदूषण मानदंडों को पूरा किया जा सके, डिस्टिलरी को फिर से शुरू किया जा सके और ताजे पानी पर निर्भरता को कम किया जा सके।",
+          "objectives": [
+            "ज़ीरो लिक्विड डिस्चार्ज (ZLD) प्राप्त करने के लिए अपशिष्ट जल उपचार संयंत्र को अपग्रेड करना (पेज 1, 4)",
+            "केंद्रीय प्रदूषण नियंत्रण बोर्ड (CPCB) के प्रदूषण मानदंडों का अनुपालन करना (पेज 4, 6)",
+            "बंद डिस्टिलरी इकाई को फिर से शुरू करना (पेज 6)",
+            "डिस्टिलरी संचालन के लिए ताजे पानी की आवश्यकता को कम करना (पेज 4)",
+            "सोसायटी को गन्ना किसानों को उचित मूल्य देने में सक्षम बनाना (पेज 6)",
+            "ईंधन बचाने के लिए मीथेन गैस उत्पन्न करना (पेज 10)"
+          ],
+          "processAndMachinery": [
+            "मौजूदा UASB आधारित बायोगैस डाइजेस्टर का नवीनीकरण (पेज 10)",
+            "स्पेंट वॉश सांद्रण के लिए मल्टीपल इफेक्ट इवेपोरेशन (MEE) प्रणाली की स्थापना (पेज 4, 11)",
+            "उपचारित जल के पुन: उपयोग के लिए कंडेनसेट पॉलिशिंग यूनिट (CPU) की स्थापना (पेज 4, 12)",
+            "सांद्रित स्पेंट वॉश के लिए वैज्ञानिक बायो-कम्पोस्टिंग का कार्यान्वयन (पेज 14)"
+          ],
+          "packagingAndChannels": "जैव-खाद किसानों को बेची जा सकती है (पेज 15); रेक्टिफाइड स्पिरिट डिस्टिलरी का एक उत्पाद है जो राजस्व में योगदान देता है (पेज 28)।"
+        },
+        "riskAssessment": [
+          {
+            "riskCategory": "प्रदर्शन जोखिम",
+            "severity": "Medium",
+            "description": "डिस्टिलरी संचालन के लिए गुड़ की निरंतर उपलब्धता सुनिश्चित करना।",
+            "evidence": "शमन में पास की चीनी मिलों से उपलब्धता और अनुभवी कर्मचारी शामिल हैं (पेज 27)।"
+          },
+          {
+            "riskCategory": "विपणन जोखिम",
+            "severity": "Medium",
+            "description": "एथेनॉल की बिक्री/निर्यात और जैव-खाद जैसे मूल्य वर्धित उत्पादों की खपत से जुड़ा जोखिम।",
+            "evidence": "शमन में अच्छे विपणन चैनल, प्रस्तावित मूल्य वर्धित उत्पाद और एथेनॉल खरीदने की सरकारी एजेंसियों की इच्छा शामिल है (पेज 27)।"
+          },
+          {
+            "riskCategory": "नियामक जोखिम",
+            "severity": "Low",
+            "description": "रूपांतरण, मंजूरी या टैरिफ आदेशों से संभावित मुद्दे।",
+            "evidence": "शमन में कहा गया है कि विभिन्न सरकारी एजेंसियों ने अपनी इच्छा व्यक्त की है, इसलिए कोई समस्या नहीं है (पेज 27)।"
+          },
+          {
+            "riskCategory": "वित्तीय जोखिम",
+            "severity": "Low",
+            "description": "परियोजना की समग्र वित्तीय व्यवहार्यता।",
+            "evidence": "शमन संतोषजनक DSCR और IRR को इंगित करता है (पेज 27)।"
+          },
+          {
+            "riskCategory": "कार्यान्वयन जोखिम",
+            "severity": "High",
+            "description": "परियोजना के कार्यान्वयन में देरी।",
+            "evidence": "पहचानी गई कमजोरी: 'परियोजना के कार्यान्वयन में देरी से परियोजना की व्यवहार्यता प्रभावित हो सकती है।' (पेज 26)। शमन में प्रभावी परियोजना प्रबंधन का उल्लेख है (पेज 27)।"
+          }
+        ],
+        "complianceCheck": {
+          "statutoryAndPermits": [
+            "अपशिष्ट निर्वहन के लिए CPCB मानदंडों को पूरा करना (पेज 4, 6, 9)",
+            "सभी आवश्यक शेष अनुमतियों/NOCs/अनुमोदनों को शीघ्रता से प्राप्त करना (पेज 27)"
+          ],
+          "EHS": [
+            "ज़ीरो लिक्विड डिस्चार्ज (ZLD) प्राप्त करना (पेज 1, 4)",
+            "ताजे पानी की आवश्यकता में कमी (पेज 4, 9)",
+            "जैव-खाद का उत्पादन (पेज 14, 15)",
+            "मीथेन गैस का उपयोग (पेज 10)"
+          ],
+          "labour": "4 वाष्पीकरण संयंत्र ऑपरेटरों और 4 अकुशल श्रमिकों का प्रावधान; मिल से मौजूदा कुशल कर्मचारी सहायता करेंगे (पेज 7, 20)।",
+          "gapsOrUnknowns": [
+            "CPCB अनुपालन से परे स्पष्ट विस्तृत पर्यावरणीय मंजूरी (जैसे, EC, वन मंजूरी) का अभाव।",
+            "किसी भी नई संरचना के लिए भूमि स्वामित्व या अधिग्रहण पर कोई विशिष्ट विवरण नहीं।"
+          ]
+        },
+        "environmentalImpact": {
+          "overallRiskLevel": "Low",
+          "sensitiveAreaFlags": {
+            "isInProtectedForest": false,
+            "isNearWaterBody": false,
+            "isInTribalLand": false,
+            "isInWildlifeCorridor": false,
+            "isInEcologicallySensitiveZone": false
+          },
+          "clearancesRequired": [
+            "CPCB मानदंडों का अनुपालन"
+          ],
+          "environmentalConcerns": [
+            "ऐतिहासिक डिस्टिलरी अपशिष्ट निर्वहन प्रदूषण मानदंडों से अधिक (पेज 4)"
+          ],
+          "mitigationMeasures": [
+            "ज़ीरो लिक्विड डिस्चार्ज (ZLD) प्रौद्योगिकी कार्यान्वयन (पेज 1, 4)",
+            "स्पेंट वॉश सांद्रण के लिए मल्टीपल इफेक्ट इवेपोरेशन (MEE) (पेज 11)",
+            "उपचारित जल के पुन: उपयोग के लिए कंडेनसेट पॉलिशिंग यूनिट (CPU) (पेज 12)",
+            "सांद्रित स्पेंट वॉश के लिए वैज्ञानिक बायो-कम्पोस्टिंग (पेज 14)",
+            "उपचारित जल का प्रक्रिया और गैर-प्रक्रिया अनुप्रयोगों के लिए पुन: उपयोग (पेज 4, 9)",
+            "मीथेन गैस का उत्पादन और बैगास ईंधन बचाने के लिए जलाना (पेज 10)"
+          ],
+          "impactOnBiodiversity": "कम प्रदूषण और बेहतर अपशिष्ट जल प्रबंधन के कारण सकारात्मक प्रभाव अपेक्षित है।",
+          "waterResourceImpact": "उपचारित जल के पुन: उपयोग के माध्यम से ताजे पानी की खपत को कम करके सकारात्मक प्रभाव (पेज 4, 9, 12)।",
+          "soilAndLandImpact": "स्पेंट वॉश और प्रेस मड को जैव-खाद में परिवर्तित करके मिट्टी की गुणवत्ता में सुधार के माध्यम से सकारात्मक प्रभाव (पेज 14, 15)।",
+          "airQualityImpact": "मीथेन गैस को ईंधन के रूप में उपयोग करके तटस्थ से सकारात्मक प्रभाव, बैगास जैसे अन्य ईंधनों पर निर्भरता को संभावित रूप से कम करना, हालांकि विशिष्ट वायु प्रदूषक कमी का परिमाण निर्धारित नहीं किया गया है (पेज 10)।"
+        },
+        "inconsistencyDetection": {
+          "hasInconsistencies": false,
+          "totalInconsistenciesFound": 0,
+          "issues": []
+        },
+        "mdonerComplianceScoring": {
+          "overallComplianceScore": 58,
+          "scoringBreakdown": {
+            "northEasternFocus": {
+              "score": 0,
+              "weight": 0.25,
+              "findings": "DPR उत्तर पूर्वी राज्यों में किसी स्थान को निर्दिष्ट नहीं करता है और न ही किसी NE-विशिष्ट चुनौतियों का समाधान करता है, जिससे इस मानदंड के लिए कम स्कोर मिलता है।",
+              "met": false
+            },
+            "beneficiaryAlignment": {
+              "score": 60,
+              "weight": 0.2,
+              "findings": "यह परियोजना अप्रत्यक्ष रूप से गन्ना किसानों को उचित मूल्य सक्षम करके लाभ पहुंचाती है और समुदाय के लिए पर्यावरणीय सुधार में योगदान करती है, लेकिन सहकारी सदस्यों से परे हाशिए पर पड़े समुदायों को लक्षित करने या विस्तृत लाभार्थी संख्या का अभाव है।",
+              "met": true
+            },
+            "environmentalCompliance": {
+              "score": 100,
+              "weight": 0.2,
+              "findings": "परियोजना का मुख्य उद्देश्य ज़ीरो लिक्विड डिस्चार्ज (ZLD) प्राप्त करना और CPCB मानदंडों का अनुपालन करना है, जो मजबूत पर्यावरणीय प्रतिबद्धता और नियोजित शमन उपायों को दर्शाता है।",
+              "met": true
+            },
+            "landAcquisition": {
+              "score": 50,
+              "weight": 0.15,
+              "findings": "DPR एक मौजूदा संयंत्र के उन्नयन का तात्पर्य है, इसलिए कोई बड़ा नया भूमि अधिग्रहण नहीं है। हालांकि, किसी भी नई संरचना के लिए भूमि स्वामित्व, आदिवासी अधिकारों या सहमति के बारे में विवरण प्रदान नहीं किए गए हैं।",
+              "met": true
+            },
+            "documentationQuality": {
+              "score": 90,
+              "weight": 0.1,
+              "findings": "DPR अच्छी तरह से संरचित, व्यापक है, और वित्तीय अनुमानों, तकनीकी विवरणों और जोखिम मूल्यांकन सहित सभी अनुभागों में सुसंगत डेटा प्रदान करता है।",
+              "met": true
+            },
+            "financialViability": {
+              "score": 95,
+              "weight": 0.1,
+              "findings": "परियोजना उच्च IRR (28.70%) और एक मजबूत औसत DSCR (2.59) के साथ मजबूत वित्तीय व्यवहार्यता दर्शाती है, जो संतोषजनक वित्तीय रिटर्न और चुकौती क्षमता का संकेत देती है।",
+              "met": true
+            }
+          },
+          "complianceGaps": [
+            "उत्तर पूर्वी राज्यों के भीतर परियोजना स्थान का स्पष्ट उल्लेख या NE-विशिष्ट विकास चुनौतियों का समाधान न करना।",
+            "किसी भी परियोजना-संबंधी नए निर्माण या विस्तार के लिए भूमि स्वामित्व, आदिवासी अधिकारों या सहमति प्रक्रियाओं पर विशिष्ट विवरणों का अभाव।",
+            "सामान्य CPCB अनुपालन से परे कोई विशिष्ट पर्यावरणीय मंजूरी (जैसे, EC) स्पष्ट रूप से विस्तृत नहीं है।"
+          ],
+          "complianceStrengths": [
+            "ज़ीरो लिक्विड डिस्चार्ज (ZLD) कार्यान्वयन के माध्यम से पर्यावरणीय अनुपालन पर मजबूत ध्यान।",
+            "मजबूत IRR और DSCR मूल्यों के साथ स्पष्ट वित्तीय व्यवहार्यता।",
+            "व्यापक और सुसंगत दस्तावेज़ गुणवत्ता।"
+          ]
+        },
+        "smartRecommendations": {
+          "criticalActions": [
+            "यदि यह परियोजना MDoNER फंडिंग के लिए है, तो MDoNER के जनादेश के साथ इसके संरेखण को स्पष्ट रूप से व्यक्त करें और उन विशिष्ट उत्तर पूर्वी चुनौतियों की पहचान करें जिन्हें यह संबोधित करता है।",
+            "भूमि स्वामित्व पर स्पष्ट दस्तावेज़ीकरण प्रदान करें और पुष्टि करें कि यदि कोई हो, तो सभी आवश्यक आदिवासी अधिकार या भूमि अधिग्रहण प्रक्रियाएं पूरी और अनुपालन योग्य हैं।"
+          ],
+          "improvementSuggestions": [
+            "ZLD प्रणाली की प्रभावशीलता और समग्र पर्यावरणीय प्रभाव की निगरानी के लिए प्रमुख प्रदर्शन संकेतक (KPI) के साथ एक व्यापक पर्यावरण प्रबंधन योजना (EMP) विकसित करें।",
+            "जैव-खाद उत्पाद के लिए मूल्य निर्धारण, वितरण और राजस्व सृजन को अनुकूलित करने के लिए विस्तृत बाजार मूल्यांकन करें।",
+            "ZLD प्रक्रिया द्वारा उत्पन्न अन्य उप-उत्पादों या अपशिष्ट गर्मी वसूली से अतिरिक्त राजस्व धाराओं का पता लगाएं।"
+          ],
+          "bestPractices": [
+            "समय पर निष्पादन और बजट और दायरे का पालन सुनिश्चित करने के लिए एक मजबूत परियोजना निगरानी और मूल्यांकन ढांचा लागू करें।",
+            "ETP और ZLD प्रणालियों की वास्तविक समय की निगरानी और भविष्य कहनेवाला रखरखाव के लिए उन्नत डिजिटल उपकरणों को अपनाएं।",
+            "परियोजना के लाभों से संबंधित पर्यावरणीय जागरूकता कार्यक्रमों में स्थानीय समुदायों और हितधारकों को शामिल करें।"
+          ],
+          "nextSteps": [
+            "1st Priority: परियोजना के विशिष्ट स्थान, MDoNER प्रासंगिकता और भूमि अधिग्रहण/स्वामित्व के पूर्ण विवरण की पुष्टि करने वाले पूरक दस्तावेज़ प्रस्तुत करें।",
+            "2nd Priority: विस्तृत पर्यावरण प्रबंधन योजना (EMP) को अंतिम रूप दें और उन्नयन के लिए आवश्यक सभी स्पष्ट पर्यावरणीय मंजूरियां प्राप्त करें।",
+            "3rd Priority: कृषि सहकारी समितियों के साथ संभावित साझेदारी सहित जैव-खाद के लिए एक व्यापक विपणन और बिक्री रणनीति विकसित करें।"
+          ]
+        }
+      }
+    },
+    "is_offline": 0,
+    "sync_status": "synced",
+    "processing_status": null
+  }
+]
