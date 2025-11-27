@@ -2,33 +2,65 @@
 # .env is explicitly allowed by user request
 # .env
 # .env.local
-test_output.txt
 
 # --- Python & ML Junk ---
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.Python
 
-# --- Virtual Environments (If you create them) ---
+# --- Virtual Environments ---
 venv/
 .venv/
 env/
+ENV/
 
-# --- Large Data ---
+# --- Large Data & Database Files ---
 # I am assuming 'data/' has large datasets. 
 # If 'data/' contains code, remove this line!
 data/
 backend/db_exports/
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Logs & Temporary Files ---
+*.log
+*.tmp
+*.temp
+test_output.txt
+error_diagnostic.txt
+*.bak
 
 # --- IDE & OS Settings ---
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
 
 # --- Node.js ---
 node_modules/
 frontend/node_modules/
 npm-debug.log
 yarn-error.log
+.pnp.*
+.yarn/
+
+# --- Coverage & Testing ---
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints/
+*.ipynb_checkpoints
