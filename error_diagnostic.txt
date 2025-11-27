@@ -1,0 +1,6 @@
+Error Type: ServerNotFoundError
+Error Module: httplib2.error
+Error Message: Unable to find the server at generativelanguage.googleapis.com
+Error Message (lowercase): unable to find the server at generativelanguage.googleapis.com
+
+Matching Keywords: ['unable to find the server']

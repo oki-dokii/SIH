@@ -57,6 +57,20 @@ def init_db(db_path: str = "data/dpr.db"):
         cursor.execute("PRAGMA foreign_keys=on;")
         print("✓ Database migration complete (project_id)")
     
+    # MIGRATION: Add offline analysis columns
+    if 'local_json' not in columns:
+        print("⏳ Migrating database: adding offline analysis columns...")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN local_json TEXT")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN local_summary INTEGER DEFAULT 0")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN gemini_summary INTEGER DEFAULT 0")
+        # Update existing rows: if summary_json exists, mark gemini_summary as 1
+        cursor.execute("""
+            UPDATE dprs 
+            SET gemini_summary = 1 
+            WHERE summary_json IS NOT NULL AND summary_json != ''
+        """)
+        print("✓ Database migration complete (offline analysis columns)")
+    
     # Create index on original_filename for faster lookups
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_original_filename 
@@ -145,10 +159,13 @@ def insert_dpr(filename: str, original_filename: str, filepath: str, file_ref: s
     json_str = json.dumps(summary_json, indent=2)
     multilang_str = json.dumps(summary_json_multilang, indent=2) if summary_json_multilang else None
     
+    # Set gemini_summary=1 if summary_json is provided (initial upload with gemini analysis)
+    gemini_summary = 1 if summary_json else 0
+    
     cursor.execute("""
-        INSERT INTO dprs (filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang, project_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (filename, original_filename, filepath, file_ref, timestamp, json_str, multilang_str, project_id))
+        INSERT INTO dprs (filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang, project_id, gemini_summary)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (filename, original_filename, filepath, file_ref, timestamp, json_str, multilang_str, project_id, gemini_summary))
     
     dpr_id = cursor.lastrowid
     conn.commit()
@@ -159,7 +176,7 @@ def insert_dpr(filename: str, original_filename: str, filepath: str, file_ref: s
 
 
 def update_dpr(dpr_id: int, summary_json: dict, summary_json_multilang: dict = None, db_path: str = "data/dpr.db"):
-    """Update an existing DPR record with analysis results."""
+    """Update an existing DPR record with analysis results from Gemini."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
@@ -168,13 +185,31 @@ def update_dpr(dpr_id: int, summary_json: dict, summary_json_multilang: dict = N
     
     cursor.execute("""
         UPDATE dprs 
-        SET summary_json = ?, summary_json_multilang = ?
+        SET summary_json = ?, summary_json_multilang = ?, gemini_summary = 1
         WHERE id = ?
     """, (json_str, multilang_str, dpr_id))
     
     conn.commit()
     conn.close()
-    print(f"✓ DPR {dpr_id} updated with analysis results")
+    print(f"✓ DPR {dpr_id} updated with Gemini analysis results")
+
+
+def update_dpr_local(dpr_id: int, local_json: dict, db_path: str = "data/dpr.db"):
+    """Update an existing DPR record with local analysis results."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    json_str = json.dumps(local_json, indent=2)
+    
+    cursor.execute("""
+        UPDATE dprs 
+        SET local_json = ?, local_summary = 1
+        WHERE id = ?
+    """, (json_str, dpr_id))
+    
+    conn.commit()
+    conn.close()
+    print(f"✓ DPR {dpr_id} updated with local analysis results")
 
 
 def update_dpr_file_ref(dpr_id: int, file_ref: str, db_path: str = "data/dpr.db"):
@@ -229,7 +264,8 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang
+        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, 
+               summary_json, summary_json_multilang, local_json, local_summary, gemini_summary
         FROM dprs WHERE id = ?
     """, (dpr_id,))
     
@@ -244,8 +280,11 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
             "filepath": row["filepath"],
             "uploaded_file_ref": row["uploaded_file_ref"],
             "upload_ts": row["upload_ts"],
-            "summary_json": json.loads(row["summary_json"]),
-            "summary_json_multilang": row["summary_json_multilang"]
+            "summary_json": json.loads(row["summary_json"]) if row["summary_json"] else None,
+            "summary_json_multilang": row["summary_json_multilang"],
+            "local_json": json.loads(row["local_json"]) if row["local_json"] else None,
+            "local_summary": row["local_summary"],
+            "gemini_summary": row["gemini_summary"]
         }
     return None
 

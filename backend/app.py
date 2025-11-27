@@ -1,5 +1,8 @@
+import sys
 import os
+import json
 import uuid
+import asyncio
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -155,6 +158,79 @@ class CreateProjectRequest(BaseModel):
     scheme: str
     sector: str
 
+class CreateProjectRequest(BaseModel):
+    name: str
+    state: str
+    scheme: str
+    sector: str
+
+
+async def generate_local_analysis(dpr_id: int, filepath: str) -> dict:
+    """
+    Generate analysis using local RAG pipeline when Gemini is unavailable.
+    Runs as subprocess to avoid DLL conflicts.
+    
+    Args:
+        dpr_id: The DPR ID
+        filepath: Path to the PDF file
+        
+    Returns:
+        Dictionary containing local analysis results
+    """
+    print(f"🔄 Switching to offline analysis for DPR {dpr_id}...")
+    
+    try:
+        import subprocess
+        import tempfile
+        
+        # Create temporary file for output
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp:
+            output_file = tmp.name
+        
+        # Run analysis as subprocess
+        cmd = [
+            sys.executable,  # Use same Python interpreter
+            "backend/run_offline_analysis.py",
+            str(dpr_id),
+            filepath,
+            output_file
+        ]
+        
+        print(f"📝 Running subprocess: {' '.join(cmd)}")
+        
+        # Run in thread pool to avoid blocking
+        result = await asyncio.to_thread(
+            subprocess.run,
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300,  # 5 minute timeout
+            encoding='utf-8',  # ADD THIS LINE
+            errors='replace'   # ADD THIS LINE
+        )
+        
+        if result.returncode != 0:
+            print(f"✗ Subprocess failed with code {result.returncode}")
+            print(f"STDOUT: {result.stdout}")
+            print(f"STDERR: {result.stderr}")
+            raise Exception(f"Offline analysis subprocess failed: {result.stderr}")
+        
+        # Read result
+        with open(output_file, 'r') as f:
+            local_json = json.load(f)
+        
+        # Clean up temp file
+        os.unlink(output_file)
+        
+        # Store in database
+        await asyncio.to_thread(db.update_dpr_local, dpr_id, local_json)
+        
+        print(f"✓ Offline analysis complete for DPR {dpr_id}")
+        return local_json
+        
+    except Exception as e:
+        print(f"✗ Offline analysis failed for DPR {dpr_id}: {str(e)}")
+        raise
 
 # ===== PROJECT API ROUTES =====
 
@@ -328,13 +404,107 @@ async def upload_dpr(
                 "summary": parsed_json,
                 "existing": False
             })
-        except Exception as e:
-            print(f"✗ Analysis failed: {str(e)}")
-            raise e
+        except (ConnectionError, TimeoutError, Exception) as e:
+            # Check if it's a network/connection error
+            error_str = str(e).lower()
+            
+            # Check for various network error patterns
+            network_keywords = [
+                'connection',
+                'network', 
+                'timeout',
+                'unreachable',
+                'offline',
+                'unable to find the server',  # Gemini API DNS error
+                'name resolution failed',
+                'dns',
+                'no internet',
+                'host not found',
+                'network is unreachable'
+            ]
+            
+            is_network_error = any(keyword in error_str for keyword in network_keywords)
+            
+            if is_network_error:
+                print(f"⚠ Network error detected: {str(e)}")
+                print(f"🔄 Falling back to offline analysis...")
+                
+                # Generate local analysis
+                local_json = await generate_local_analysis(dpr_id, str(filepath))
+                
+                return JSONResponse({
+                    "id": dpr_id,
+                    "dpr_id": dpr_id,
+                    "summary": local_json,
+                    "existing": False,
+                    "offline_mode": True
+                })
+            else:
+                # For other errors, raise
+                print(f"✗ Analysis failed: {str(e)}")
+                raise e
         
     except Exception as e:
-        print(f"✗ Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to process DPR: {str(e)}")
+        # Check if it's a network error (could happen during upload or analysis)
+        error_str = str(e).lower()
+        
+        network_keywords = [
+            'connection',
+            'network', 
+            'timeout',
+            'unreachable',
+            'offline',
+            'unable to find the server',
+            'name resolution failed',
+            'dns',
+            'no internet',
+            'host not found',
+            'network is unreachable'
+        ]
+        
+        is_network_error = any(keyword in error_str for keyword in network_keywords)
+        
+        if is_network_error:
+            print(f"⚠ Network error detected during upload: {str(e)}")
+            print(f"🔄 Falling back to offline analysis...")
+            
+            # File is already saved, use it for offline analysis
+            # We need the dpr_id - it should have been created before upload failed
+            # If upload failed, we need to create the DPR record first
+            try:
+                # Try to get existing DPR by filename
+                existing = db.get_dpr_by_filename(original_filename)
+                if existing:
+                    dpr_id = existing['id']
+                else:
+                    # Create a new DPR record without file_ref
+                    dpr_id = db.insert_dpr(
+                        filename=filename,
+                        original_filename=original_filename,
+                        filepath=str(filepath),
+                        file_ref="",  # Empty file ref for offline
+                        summary_json=None,
+                        summary_json_multilang=None,
+                        project_id=project_id if 'project_id' in locals() else None
+                    )
+                
+                # Generate local analysis
+                local_json = await generate_local_analysis(dpr_id, str(filepath))
+                
+                return JSONResponse({
+                    "id": dpr_id,
+                    "dpr_id": dpr_id,
+                    "summary": local_json,
+                    "existing": False,
+                    "offline_mode": True
+                })
+            except Exception as offline_error:
+                # Error already printed by generate_local_analysis, just raise
+                raise HTTPException(status_code=500, detail=f"Offline processing failed. Check server logs for details.")
+        else:
+            # Not a network error, raise as normal
+            print(f"✗ Unexpected error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to process DPR: {str(e)}")
 
 
 @app.post("/upload-dpr")
@@ -446,16 +616,23 @@ async def get_dpr(dpr_id: int, language: str = "en"):
     if not dpr:
         raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
     
-    # If multilang data exists, use the requested language version
-    if dpr.get("summary_json_multilang"):
-        import json
-        multilang_data = json.loads(dpr["summary_json_multilang"]) if isinstance(dpr["summary_json_multilang"], str) else dpr["summary_json_multilang"]
-        
-        # Get the requested language version, fallback to English if not available
-        if language in multilang_data:
-            dpr["summary_json"] = multilang_data[language]
-        elif "en" in multilang_data:
-            dpr["summary_json"] = multilang_data["en"]
+    # Determine which data to serve: Gemini or Local
+    if dpr.get("gemini_summary") == 1:
+        # Serve Gemini data (existing logic)
+        if dpr.get("summary_json_multilang"):
+            import json
+            multilang_data = json.loads(dpr["summary_json_multilang"]) if isinstance(dpr["summary_json_multilang"], str) else dpr["summary_json_multilang"]
+            
+            # Get the requested language version, fallback to English if not available
+            if language in multilang_data:
+                dpr["summary_json"] = multilang_data[language]
+            elif "en" in multilang_data:
+                dpr["summary_json"] = multilang_data["en"]
+    
+    elif dpr.get("local_summary") == 1:
+        # Serve local data
+        dpr["summary_json"] = dpr.get("local_json")
+        dpr["offline_mode"] = True
     
     return JSONResponse(dpr)
 
