@@ -243,7 +243,7 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
             "projectName", "projectLocation", "projectSector", 
             "executiveSummary", "overallScore", "recommendation",
             "financialAnalysis", "timelineAnalysis", "scopeAndObjectives",
-            "riskAssessment", "complianceCheck", "environmentalImpact",
+            "riskAssessment", "environmentalImpact",
             "inconsistencyDetection", "mdonerComplianceScoring", "smartRecommendations"
         ]
         

@@ -146,6 +146,7 @@ export default function DocumentDetailPage() {
     { id: 'overview', label: t('documentDetail.overview') },
     { id: 'analysis', label: t('documentDetail.analysis') },
     { id: 'timeline', label: t('documentDetail.timeline') },
+    { id: 'risks', label: 'Risk Assessment' },
     { id: 'inconsistencies', label: t('documentDetail.inconsistencies') },
     { id: 'compliance', label: t('documentDetail.compliance') },
     { id: 'recommendations', label: t('documentDetail.recommendations') },
@@ -307,6 +308,10 @@ export default function DocumentDetailPage() {
 
                 {activeTab === 'timeline' && (
                   <TimelineTab data={data} />
+                )}
+
+                {activeTab === 'risks' && (
+                  <RiskAssessmentTab data={data} />
                 )}
 
                 {activeTab === 'inconsistencies' && (
@@ -577,7 +582,21 @@ function AnalysisTab({ data }: { data: any }) {
       <h3 className="text-xl font-bold mb-4">Financial Analysis</h3>
 
       <FinancialCharts data={data} />
+    </div>
+  )
+}
 
+function RiskAssessmentTab({ data }: { data: any }) {
+  if (!data) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">No risk assessment data available</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
       {data.riskAssessment && data.riskAssessment.length > 0 && (
         <div>
           <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -611,34 +630,6 @@ function AnalysisTab({ data }: { data: any }) {
                 </div>
               </Card>
             ))}
-          </div>
-        </div>
-      )}
-
-      {data.complianceCheck && (
-        <div>
-          <h4 className="font-semibold mb-3">Compliance Check</h4>
-          <div className="space-y-3">
-            {data.complianceCheck.statutoryAndPermits && data.complianceCheck.statutoryAndPermits.length > 0 && (
-              <div>
-                <h5 className="text-sm font-medium mb-2">Statutory & Permits</h5>
-                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                  {data.complianceCheck.statutoryAndPermits.map((item: string, idx: number) => (
-                    <li key={idx}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {data.complianceCheck.EHS && data.complianceCheck.EHS.length > 0 && (
-              <div>
-                <h5 className="text-sm font-medium mb-2">Environment, Health & Safety</h5>
-                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                  {data.complianceCheck.EHS.map((item: string, idx: number) => (
-                    <li key={idx}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
         </div>
       )}
