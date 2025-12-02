@@ -172,7 +172,7 @@ ADDITIONAL INSTRUCTIONS (repeat of key rules):
 - **OUTPUT**: {{ "en": {{...}}, "hi": {{...}} }}
 - **FINANCIAL VALIDATION (MANDATORY)**: Sum(projectCost components) = totalInitialInvestment AND Sum(capitalStructure components) = totalInitialInvestment. Adjust/normalize values if needed and document in assumptions with `FINANCIAL_VALIDATION:` prefix.
 - overallScore: compute a number 0-100 using document evidence and the rubric in the system instruction.
-- recommendation: one of ["Approved","Approved with Conditions","Rejected","Needs Review"].
+- recommendation: one of ["Approve","Approve with Conditions","Reject","Review"].
 - financialAnalysis: populate numeric fields. If a numeric value is missing, infer conservatively and explain with `INFERRED_REASON:` in assumptions.
 - riskAssessment: list top 3-6 risks; for each risk include a one-line mitigation and include page/table evidence in the evidence field.
 - projectLocation.districts may be [], null, or list; other required fields above must be non-null.
@@ -243,7 +243,7 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
             "projectName", "projectLocation", "projectSector", 
             "executiveSummary", "overallScore", "recommendation",
             "financialAnalysis", "timelineAnalysis", "scopeAndObjectives",
-            "riskAssessment", "complianceCheck", "environmentalImpact",
+            "riskAssessment", "environmentalImpact",
             "inconsistencyDetection", "mdonerComplianceScoring", "smartRecommendations"
         ]
         

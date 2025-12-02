@@ -2,12 +2,14 @@
   "projectName": "string",
   "projectLocation": {
     "state": "string",
-    "districts": ["array of strings"]
+    "districts": [
+      "array of strings"
+    ]
   },
   "projectSector": "string",
   "executiveSummary": "string (3-5 sentences)",
   "overallScore": "number (0-100)",
-  "recommendation": "string (e.g., 'Approved with Conditions', 'Approved', 'Rejected', 'Needs Review')",
+  "recommendation": "string (e.g., 'Approve with Conditions', 'Approve', 'Reject', 'Review')",
   "financialAnalysis": {
     "projectCost": {
       "capitalExpenditureLakhINR": "number or null",
@@ -35,19 +37,29 @@
       "IRRPercent": "number"
     },
     "repaymentScheduleSummary": "object",
-    "assumptions": ["array of strings"]
+    "assumptions": [
+      "array of strings"
+    ]
   },
   "timelineAnalysis": {
     "implementationDurationMonths": "number",
-    "milestones": ["array of strings"],
+    "milestones": [
+      "array of strings"
+    ],
     "operationsCalendar": "string",
-    "timelineRisks": ["array of strings"]
+    "timelineRisks": [
+      "array of strings"
+    ]
   },
   "scopeAndObjectives": {
     "vision": "string",
     "mission": "string",
-    "objectives": ["array of strings"],
-    "processAndMachinery": ["array of strings"],
+    "objectives": [
+      "array of strings"
+    ],
+    "processAndMachinery": [
+      "array of strings"
+    ],
     "packagingAndChannels": "string"
   },
   "riskAssessment": [
@@ -58,12 +70,6 @@
       "evidence": "string"
     }
   ],
-  "complianceCheck": {
-    "statutoryAndPermits": ["array of strings"],
-    "EHS": ["array of strings"],
-    "labour": "string",
-    "gapsOrUnknowns": ["array of strings"]
-  },
   "environmentalImpact": {
     "overallRiskLevel": "string (High/Medium/Low)",
     "sensitiveAreaFlags": {
@@ -73,9 +79,15 @@
       "isInWildlifeCorridor": "boolean",
       "isInEcologicallySensitiveZone": "boolean"
     },
-    "clearancesRequired": ["array of strings, e.g., 'Forest Clearance', 'Environmental Clearance', 'Wildlife Clearance'"],
-    "environmentalConcerns": ["array of strings describing specific environmental issues"],
-    "mitigationMeasures": ["array of strings describing planned mitigation"],
+    "clearancesRequired": [
+      "array of strings, e.g., 'Forest Clearance', 'Environmental Clearance', 'Wildlife Clearance'"
+    ],
+    "environmentalConcerns": [
+      "array of strings describing specific environmental issues"
+    ],
+    "mitigationMeasures": [
+      "array of strings describing planned mitigation"
+    ],
     "impactOnBiodiversity": "string or null",
     "waterResourceImpact": "string or null",
     "soilAndLandImpact": "string or null",
@@ -135,13 +147,25 @@
         "met": "boolean"
       }
     },
-    "complianceGaps": ["array of strings describing specific compliance gaps"],
-    "complianceStrengths": ["array of strings describing what the project does well"]
+    "complianceGaps": [
+      "array of strings describing specific compliance gaps"
+    ],
+    "complianceStrengths": [
+      "array of strings describing what the project does well"
+    ]
   },
   "smartRecommendations": {
-    "criticalActions": ["array of strings - must-fix items before approval"],
-    "improvementSuggestions": ["array of strings - recommended enhancements"],
-    "bestPractices": ["array of strings - industry/MDoNER best practices to adopt"],
-    "nextSteps": ["array of strings - specific actionable next steps in priority order"]
+    "criticalActions": [
+      "array of strings - must-fix items before approval"
+    ],
+    "improvementSuggestions": [
+      "array of strings - recommended enhancements"
+    ],
+    "bestPractices": [
+      "array of strings - industry/MDoNER best practices to adopt"
+    ],
+    "nextSteps": [
+      "array of strings - specific actionable next steps in priority order"
+    ]
   }
 }

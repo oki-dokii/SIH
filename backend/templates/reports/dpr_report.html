@@ -394,30 +394,7 @@
     </div>
     {% endif %}
 
-    <!-- COMPLIANCE CHECK SECTION -->
-    {% if dpr.complianceCheck %}
-    <div class="section">
-        <div class="section-title">✓ Compliance Check</div>
-        
-        {% if dpr.complianceCheck.statutoryAndPermits %}
-        <div class="subsection-title">Statutory & Permits</div>
-        <ul>
-            {% for item in dpr.complianceCheck.statutoryAndPermits %}
-            <li>{{ item }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        
-        {% if dpr.complianceCheck.environmentalCompliance %}
-        <div class="subsection-title">Environmental Compliance</div>
-        <ul>
-            {% for item in dpr.complianceCheck.environmentalCompliance %}
-            <li>{{ item }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-    </div>
-    {% endif %}
+
 
     <div class="footer">
         <p><strong>DPR Analyzer</strong> - Comprehensive Project Report Analysis</p>
