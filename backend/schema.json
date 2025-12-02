@@ -9,7 +9,7 @@
   "projectSector": "string",
   "executiveSummary": "string (3-5 sentences)",
   "overallScore": "number (0-100)",
-  "recommendation": "string (e.g., 'Approved with Conditions', 'Approved', 'Rejected', 'Needs Review')",
+  "recommendation": "string (e.g., 'Approve with Conditions', 'Approve', 'Reject', 'Review')",
   "financialAnalysis": {
     "projectCost": {
       "capitalExpenditureLakhINR": "number or null",

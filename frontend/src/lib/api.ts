@@ -7,6 +7,9 @@ export interface DPR {
   filepath: string
   upload_ts: string
   summary_json: any | null
+  gemini_summary?: number  // 0 or 1
+  local_summary?: number   // 0 or 1
+  local_json?: any | null  // Local offline analysis JSON
 }
 
 export interface Message {

@@ -634,7 +634,12 @@ async def get_dpr(dpr_id: int, language: str = "en"):
         dpr["summary_json"] = dpr.get("local_json")
         dpr["offline_mode"] = True
     
-    return JSONResponse(dpr)
+    # Explicitly include flags in response for frontend
+    return JSONResponse({
+        **dpr,
+        "local_summary": dpr.get("local_summary", 0),
+        "gemini_summary": dpr.get("gemini_summary", 0)
+    })
 
 
 @app.delete("/dpr/{dpr_id}")

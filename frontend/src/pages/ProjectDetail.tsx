@@ -289,7 +289,7 @@ export default function ProjectDetailPage() {
                                         size="sm"
                                         className="flex-1 md:flex-none"
                                         onClick={() => navigate(`/documents/${doc.id}`)}
-                                        disabled={!doc.summary_json}
+                                        disabled={!doc.summary_json && !doc.local_json}
                                     >
                                         <Eye className="h-4 w-4 mr-2" />
                                         View Analysis

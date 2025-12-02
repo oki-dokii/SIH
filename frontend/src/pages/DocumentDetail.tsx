@@ -183,7 +183,67 @@ export default function DocumentDetailPage() {
     )
   }
 
-  const data = document.summary_json
+  // Determine which data to display: Gemini or Local
+  const isGemini = document.gemini_summary === 1
+  const isLocal = document.local_summary === 1
+
+  // Transform local schema to match Gemini schema for display
+  const transformLocalToDisplay = (localData: any) => {
+    if (!localData) return null
+
+    // Map local schema to Gemini-compatible structure for existing components
+    return {
+      // Header maps to top-level fields
+      projectName: localData.header?.projectName || '',
+      recommendation: localData.header?.recommendation || '',
+      projectSector: localData.header?.sector || '',
+      overallScore: localData.mdonerComplianceScoring?.overallComplianceScore || null,
+
+      // Overview section
+      executiveSummary: localData.overview?.executiveSummary || '',
+      projectLocation: {
+        state: localData.header?.location || localData.overview?.projectLocation?.state || '',
+        districts: localData.overview?.projectLocation?.districts || []
+      },
+
+      // Financial (from header)
+      financialAnalysis: {
+        projectCost: {
+          totalInitialInvestmentLakhINR: localData.header?.totalProjectCostLakhINR || null
+        }
+      },
+
+      // Timeline (from header/overview)
+      timelineAnalysis: {
+        implementationDurationMonths: localData.header?.implementationDurationMonths || localData.overview?.implementationDurationMonths || null
+      },
+
+      // Pass through local data for new sections
+      _localData: {
+        overview: localData.overview,
+        riskAssessment: localData.riskAssessment,
+        inconsistencies: localData.inconsistencies,
+        mdonerComplianceScoring: localData.mdonerComplianceScoring
+      },
+
+      // Flag for frontend to know this is local data
+      _isLocalAnalysis: true
+    }
+  }
+
+  // Select data source with fallback logic
+  let data: any = null
+  let analysisMode: 'gemini' | 'local' | 'none' = 'none'
+
+  if (isGemini && document.summary_json) {
+    data = document.summary_json
+    analysisMode = 'gemini'
+    console.log('📊 Displaying Gemini analysis')
+  } else if (isLocal && document.local_json) {
+    data = transformLocalToDisplay(document.local_json)
+    analysisMode = 'local'
+    console.log('📊 Displaying Local (offline) analysis')
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -196,9 +256,23 @@ export default function DocumentDetailPage() {
           </Button>
           <div className="flex-1">
             <h1 className="text-3xl font-bold">{document.original_filename}</h1>
-            <p className="text-muted-foreground">
-              Uploaded on {new Date(document.upload_ts).toLocaleDateString()}
-            </p>
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <p>
+                Uploaded on {new Date(document.upload_ts).toLocaleDateString()}
+              </p>
+              {analysisMode !== 'none' && (
+                <span 
+                  className={cn(
+                    "px-2 py-0.5 text-xs font-medium rounded-full",
+                    analysisMode === 'gemini' 
+                      ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                      : "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                  )}
+                >
+                  {analysisMode === 'gemini' ? '🌐 Gemini Analysis' : '💻 Offline Analysis'}
+                </span>
+              )}
+            </div>
           </div>
           <Button variant="outline" onClick={handleShare}>
             {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}

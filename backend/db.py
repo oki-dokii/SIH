@@ -829,7 +829,8 @@ def get_dprs_by_project(project_id: int, db_path: str = "data/dpr.db") -> List[D
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, original_filename, upload_ts, summary_json, project_id
+        SELECT id, filename, original_filename, upload_ts, summary_json, project_id,
+               local_json, local_summary, gemini_summary
         FROM dprs
         WHERE project_id = ?
         ORDER BY upload_ts DESC
@@ -841,11 +842,25 @@ def get_dprs_by_project(project_id: int, db_path: str = "data/dpr.db") -> List[D
     dprs = []
     for row in rows:
         dpr = dict(row)
+        
+        # Parse summary_json if it's a string
         if dpr['summary_json']:
             try:
                 dpr['summary_json'] = json.loads(dpr['summary_json'])
             except:
                 dpr['summary_json'] = None
+        
+        # Parse local_json if it's a string
+        if dpr.get('local_json'):
+            try:
+                dpr['local_json'] = json.loads(dpr['local_json'])
+            except:
+                dpr['local_json'] = None
+        
+        # Ensure flags are integers, not None
+        dpr['local_summary'] = dpr.get('local_summary') or 0
+        dpr['gemini_summary'] = dpr.get('gemini_summary') or 0
+        
         dprs.append(dpr)
         
     return dprs

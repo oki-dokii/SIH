@@ -1,6 +1,103 @@
 {
-    "section1": {},
-    "section2": {},
-    "section3": {},
-    "section4": {}
+    "header": {
+        "projectName": "string",
+        "totalProjectCostLakhINR": "number",
+        "implementationDurationMonths": "number",
+        "location": "string (e.g., 'West Bengal')",
+        "sector": "string (e.g., 'Livestock Rearing (Goatery)')",
+        "recommendation": "string (e.g., 'Approved with Conditions', 'Approved', 'Needs Review', 'Rejected')"
+    },
+    "overview": {
+        "projectName": "string",
+        "projectLocation": {
+            "state": "string",
+            "districts": [
+                "array of strings"
+            ]
+        },
+        "projectSector": "string",
+        "implementationDurationMonths": "number",
+        "totalProjectCostLakhINR": "number",
+        "executiveSummary": "string (3-5 sentences summary)",
+        "vision": "string",
+        "mission": "string",
+        "objectives": [
+            "array of strings"
+        ],
+        "keyMetrics": {
+            "beneficiaryCount": "number or null",
+            "employmentGenerated": "number or null",
+            "landRequiredAcres": "number or null"
+        }
+    },
+    "riskAssessment": [
+        {
+            "riskCategory": "string (Financial/Technical/Environmental/Governance/Market/Operational)",
+            "severity": "string (High/Medium/Low)",
+            "description": "string (detailed description of the risk)",
+            "evidence": "string (page numbers and source from document)",
+            "mitigation": "string (one-line mitigation strategy if mentioned)"
+        }
+    ],
+    "inconsistencies": {
+        "hasInconsistencies": "boolean",
+        "totalInconsistenciesFound": "number",
+        "issues": [
+            {
+                "category": "string (Budget Mismatch/Timeline Conflict/Beneficiary Discrepancy/Data Inconsistency)",
+                "severity": "string (Critical/High/Medium/Low)",
+                "description": "string (detailed description of the inconsistency)",
+                "location": "string (where in the DPR this was found, e.g., page numbers, section names)",
+                "detectedValues": "string (the conflicting values or data found)",
+                "impact": "string (how this affects project evaluation)"
+            }
+        ]
+    },
+    "mdonerComplianceScoring": {
+    "overallComplianceScore": "number (0-100, weighted average)",
+    "scoringBreakdown": {
+      "northEasternFocus": {
+        "score": "number (0-100)",
+        "weight": "number (e.g., 0.25 for 25%)",
+        "findings": "string (evaluation details)",
+        "met": "boolean"
+      },
+      "beneficiaryAlignment": {
+        "score": "number (0-100)",
+        "weight": "number (e.g., 0.20 for 20%)",
+        "findings": "string (evaluation details)",
+        "met": "boolean"
+      },
+      "environmentalCompliance": {
+        "score": "number (0-100)",
+        "weight": "number (e.g., 0.20 for 20%)",
+        "findings": "string (evaluation details)",
+        "met": "boolean"
+      },
+      "landAcquisition": {
+        "score": "number (0-100)",
+        "weight": "number (e.g., 0.15 for 15%)",
+        "findings": "string (evaluation details)",
+        "met": "boolean"
+      },
+      "documentationQuality": {
+        "score": "number (0-100)",
+        "weight": "number (e.g., 0.10 for 10%)",
+        "findings": "string (evaluation details)",
+        "met": "boolean"
+      },
+      "financialViability": {
+        "score": "number (0-100)",
+        "weight": "number (e.g., 0.10 for 10%)",
+        "findings": "string (evaluation details)",
+        "met": "boolean"
+      }
+    },
+    "complianceGaps": [
+      "array of strings describing specific compliance gaps"
+    ],
+    "complianceStrengths": [
+      "array of strings describing what the project does well"
+    ]
+  }
 }
