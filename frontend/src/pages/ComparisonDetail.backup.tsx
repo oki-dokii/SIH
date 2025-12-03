@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { FileText, Send, Loader2, ArrowLeft, Calendar, Trash2, X, Plus, Search, MessageSquare } from 'lucide-react'
+import { FileText, Send, Loader2, ArrowLeft, Calendar, Trash2, X, Plus, Search } from 'lucide-react'
 import { api, Comparison, ComparisonMessage, DPR } from '../lib/api'
 import { Header } from '../components/Header'
 import { Button } from '../components/ui/Button'
@@ -23,7 +23,6 @@ export default function ComparisonDetailPage() {
   const [removingDPRId, setRemovingDPRId] = useState<number | null>(null)
   const [showRemoveConfirm, setShowRemoveConfirm] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [isChatOpen, setIsChatOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -212,13 +211,11 @@ export default function ComparisonDetailPage() {
           </div>
         </div>
 
-        {/* Three-column layout: Sidebar | Table | Chat */}
-        <div className="grid grid-cols-12 gap-6">
-          {/* Left Sidebar - DPR Selection List */}
-          <div className="col-span-3">
-            <Card className="p-6 sticky top-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <Card className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('comparisons.documentsInComparison')}</h3>
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              <div className="space-y-3">
                 {comparison.dprs?.map((dpr) => (
                   <div
                     key={dpr.id}
@@ -261,192 +258,75 @@ export default function ComparisonDetailPage() {
 
               <div className="mt-6 p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg border border-cyan-200 dark:border-cyan-800">
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                  <strong>💡 Tips:</strong>
+                  <strong>💡 Tips for comparison:</strong>
                   <br />
-                  Compare DPRs using the table or ask AI questions
+                  Ask questions like "Which project has better ROI?" or "Compare the implementation timelines"
                 </p>
               </div>
             </Card>
           </div>
 
-          {/* Center - Comparison Table */}
-          <div className={`transition-all duration-300 ${isChatOpen ? 'col-span-5' : 'col-span-9'}`}>
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">DPR Comparison</h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsChatOpen(!isChatOpen)}
-                  className="flex items-center gap-2"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  {isChatOpen ? 'Hide Chat' : 'Show Chat'}
-                </Button>
+          <div className="lg:col-span-2">
+            <Card className="flex flex-col h-[calc(100vh-280px)]">
+              <div className="p-4 border-b dark:border-gray-700 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('comparisons.aiChat')}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t('comparisons.askAboutDocuments')}</p>
+                </div>
+                {messages.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearChat}
+                    className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                    title={t('common.clearChat')}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b-2 border-gray-200 dark:border-gray-700">
-                      <th className="text-left p-3 font-semibold text-gray-900 dark:text-white">DPR Name</th>
-                      <th className="text-center p-3 font-semibold text-gray-900 dark:text-white">Quality Score</th>
-                      <th className="text-center p-3 font-semibold text-gray-900 dark:text-white">Compliance</th>
-                      <th className="text-center p-3 font-semibold text-gray-900 dark:text-white">Timeline</th>
-                      <th className="text-center p-3 font-semibold text-gray-900 dark:text-white">Cost</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {comparison.dprs?.map((dpr, index) => {
-                      const data = dpr.summary_json
-                      const qualityScore = data?.overallScore ?? null
-                      const complianceScore = data?.mdonerComplianceScoring?.overallComplianceScore ?? null
-                      const timeline = data?.timelineAnalysis?.implementationDurationMonths ?? null
-                      const cost = data?.financialAnalysis?.projectCost?.totalInitialInvestmentLakhINR ?? null
-
-                      const getScoreColor = (score: number | null) => {
-                        if (score === null) return 'text-gray-400'
-                        if (score >= 80) return 'text-green-600 dark:text-green-400'
-                        if (score >= 60) return 'text-yellow-600 dark:text-yellow-400'
-                        return 'text-red-600 dark:text-red-400'
-                      }
-
-                      return (
-                        <tr
-                          key={dpr.id}
-                          className={`border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50/50 dark:bg-gray-800/50'
-                            }`}
-                        >
-                          <td className="p-3">
-                            <div>
-                              <p className="font-medium text-gray-900 dark:text-white text-sm">
-                                {data?.projectName || dpr.original_filename}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{dpr.original_filename}</p>
-                            </div>
-                          </td>
-                          <td className="p-3 text-center">
-                            <span className={`font-semibold ${getScoreColor(qualityScore)}`}>
-                              {qualityScore !== null ? `${qualityScore}/100` : '-'}
-                            </span>
-                          </td>
-                          <td className="p-3 text-center">
-                            <span className={`font-semibold ${getScoreColor(complianceScore)}`}>
-                              {complianceScore !== null ? `${complianceScore}/100` : '-'}
-                            </span>
-                          </td>
-                          <td className="p-3 text-center">
-                            <span className="text-gray-900 dark:text-white font-medium">
-                              {timeline !== null ? `${timeline} months` : '-'}
-                            </span>
-                          </td>
-                          <td className="p-3 text-center">
-                            <span className="text-gray-900 dark:text-white font-medium">
-                              {cost !== null ? `₹${cost}L` : '-'}
-                            </span>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-
-                {(!comparison.dprs || comparison.dprs.length === 0) && (
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {messages.length === 0 ? (
                   <div className="text-center py-12">
-                    <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-600 dark:text-gray-400">No DPRs in this comparison yet</p>
-                    <Button
-                      variant="outline"
-                      className="mt-4"
-                      onClick={() => {
-                        loadAvailableDPRs()
-                        setShowAddPDFModal(true)
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Your First DPR
-                    </Button>
+                    <div className="w-16 h-16 bg-cyan-100 dark:bg-cyan-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="w-8 h-8 text-cyan-600 dark:text-cyan-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Start comparing documents</h3>
+                    <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                      Ask questions to compare these documents, find differences, or get insights across all of them.
+                    </p>
                   </div>
+                ) : (
+                  messages.map((message, index) => (
+                    <ChatMessageFormatter key={index} text={message.text} isUser={message.role === 'user'} />
+                  ))
                 )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="p-4 border-t dark:border-gray-700">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder={t('documentDetail.askQuestion')}
+                    disabled={sending}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-gray-100 dark:disabled:bg-gray-800 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                  />
+                  <Button onClick={handleSend} disabled={!inputMessage.trim() || sending}>
+                    {sending ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Send className="w-5 h-5" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </Card>
           </div>
-
-          {/* Right - Toggleable Chat Pane */}
-          {isChatOpen && (
-            <div className="col-span-4 animate-in slide-in-from-right duration-300">
-              <Card className="flex flex-col h-[calc(100vh-200px)] sticky top-6">
-                <div className="p-4 border-b dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{t('comparisons.aiChat')}</h3>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {messages.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleClearChat}
-                        className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
-                        title={t('common.clearChat')}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsChatOpen(false)}
-                      className="h-8 w-8 p-0"
-                      title="Close chat"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {messages.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-cyan-100 dark:bg-cyan-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <FileText className="w-8 h-8 text-cyan-600 dark:text-cyan-400" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Start comparing documents</h3>
-                      <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto text-sm">
-                        Ask questions to compare these documents, find differences, or get insights across all of them.
-                      </p>
-                    </div>
-                  ) : (
-                    messages.map((message, index) => (
-                      <ChatMessageFormatter key={index} text={message.text} isUser={message.role === 'user'} />
-                    ))
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                <div className="p-4 border-t dark:border-gray-700 flex-shrink-0">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder={t('documentDetail.askQuestion')}
-                      disabled={sending}
-                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 disabled:bg-gray-100 dark:disabled:bg-gray-800 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                    />
-                    <Button onClick={handleSend} disabled={!inputMessage.trim() || sending}>
-                      {sending ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Send className="w-5 h-5" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          )}
         </div>
 
         {/* Clear Chat Confirmation Modal */}
