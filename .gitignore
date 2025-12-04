@@ -31,4 +31,6 @@ Thumbs.db
 node_modules/
 frontend/node_modules/
 npm-debug.log
-yarn-error.log
+yarn-error.log.local/
+frontend/frontend.log
+.env
