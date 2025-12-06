@@ -14,7 +14,7 @@ export function Header() {
   const location = useLocation()
   const navigate = useNavigate()
   const { language, setLanguage, t } = useLanguage()
-  const { setRole } = useRole()
+  const { logout } = useRole()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Project Selection & Upload State
@@ -95,6 +95,11 @@ export function Header() {
     }
   }
 
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -158,11 +163,11 @@ export function Header() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => setRole(null)}
+              onClick={handleLogout}
               className="text-muted-foreground"
             >
               <LogOut className="h-4 w-4" />
-              Switch Role
+              Logout
             </Button>
             <input
               ref={fileInputRef}

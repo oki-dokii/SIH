@@ -10,9 +10,11 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from weasyprint import HTML
+from passlib.context import CryptContext
 
 import backend.db as db
 import backend.gemini_client as gemini_client
@@ -21,6 +23,9 @@ import backend.report_generator as report_generator
 # Load environment variables
 load_dotenv()
 
+# Password hashing context
+# Password hashing context with automatic truncation for bcrypt's 72-byte limit
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__truncate_error=False)
 # Paths
 DATA_DIR = Path("data")
 SCHEMA_PATH = Path("backend/schema.json")
@@ -120,6 +125,15 @@ async def lifespan(app: FastAPI):
 # Initialize FastAPI app with lifespan
 app = FastAPI(title="DPR Analyzer", version="1.0.0", lifespan=lifespan)
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5000", "http://127.0.0.1:5000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 DATA_DIR.mkdir(exist_ok=True)
 
 # Initialize database
@@ -154,6 +168,153 @@ class CreateProjectRequest(BaseModel):
     state: str
     scheme: str
     sector: str
+
+
+
+class AdminLoginRequest(BaseModel):
+    admin_id: str
+    password: str
+
+
+class AdminLoginResponse(BaseModel):
+    success: bool
+    message: str
+
+
+class UserRegisterRequest(BaseModel):
+    name: str
+    username: str
+    email: str
+    password: str
+    confirm_password: str
+
+
+class UserLoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class UserAuthResponse(BaseModel):
+    success: bool
+    message: str
+    user: dict = None
+
+
+# ===== ADMIN AUTH API ROUTES =====
+
+@app.post("/api/admin/login")
+async def admin_login(request: AdminLoginRequest):
+    """Authenticate admin user with credentials from environment variables."""
+    admin_id = os.getenv("ADMIN_ID")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+    
+    if not admin_id or not admin_password:
+        raise HTTPException(status_code=500, detail="Admin credentials not configured")
+    
+    if request.admin_id == admin_id and request.password == admin_password:
+        return JSONResponse({
+            "success": True,
+            "message": "Login successful"
+        })
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+
+# ===== USER AUTH API ROUTES =====
+
+@app.post("/api/user/register")
+async def user_register(request: UserRegisterRequest):
+    """Register a new user account."""
+    # Validate password match
+    if request.password != request.confirm_password:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+    
+    # Validate password length
+    if len(request.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+    
+    # Validate username (alphanumeric)
+    if not request.username.isalnum():
+        raise HTTPException(status_code=400, detail="Username must be alphanumeric")
+    
+    # Validate email format (basic check)
+    if '@' not in request.email or '.' not in request.email:
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    
+    try:
+        # Truncate password to 72 bytes (bcrypt requirement)
+        # Encode to UTF-8, truncate bytes, then decode back
+        password_bytes = request.password.encode('utf-8')
+        if len(password_bytes) > 72:
+            # Truncate and try to decode, handling potential UTF-8 boundary issues
+            password_bytes = password_bytes[:72]
+            # Decode with error handling for incomplete multibyte characters
+            password_truncated = password_bytes.decode('utf-8', errors='ignore')
+        else:
+            password_truncated = request.password
+        
+        # Hash the password
+        password_hash = pwd_context.hash(password_truncated)
+        
+        # Create user in database
+        user_id = db.create_user(request.username, request.email, password_hash, request.name)
+        
+        return JSONResponse({
+            "success": True,
+            "message": "Registration successful",
+            "user": {
+                "id": user_id,
+                "name": request.name,
+                "username": request.username,
+                "email": request.email
+            }
+        })
+    except ValueError as e:
+        # Handle duplicate username/email
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"✗ Registration error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+
+@app.post("/api/user/login")
+async def user_login(request: UserLoginRequest):
+    """Authenticate user with username/email and password."""
+    try:
+        # Get user by username
+        user = db.get_user_by_username(request.username)
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        # Truncate password to 72 bytes (bcrypt requirement)
+        password_bytes = request.password.encode('utf-8')
+        if len(password_bytes) > 72:
+            password_bytes = password_bytes[:72]
+            password_truncated = password_bytes.decode('utf-8', errors='ignore')
+        else:
+            password_truncated = request.password
+        
+        # Verify password
+        if not pwd_context.verify(password_truncated, user["password_hash"]):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        # Return success with user info (excluding password hash)
+        return JSONResponse({
+            "success": True,
+            "message": "Login successful",
+            "user": {
+                "id": user["id"],
+                "name": user["name"],
+                "username": user["username"],
+                "email": user["email"]
+            }
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Login error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Login failed")
 
 
 # ===== PROJECT API ROUTES =====

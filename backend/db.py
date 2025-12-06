@@ -130,6 +130,24 @@ def init_db(db_path: str = "data/dpr.db"):
         )
     """)
     
+    # Create users table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            name TEXT,
+            created_at TEXT NOT NULL
+        )
+    """)
+    
+    # Create unique index for username
+    cursor.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username 
+        ON users(username)
+    """)
+    
     conn.commit()
     conn.close()
     print(f"✓ Database initialized at {db_path}")
@@ -810,3 +828,108 @@ def get_dprs_by_project(project_id: int, db_path: str = "data/dpr.db") -> List[D
         dprs.append(dpr)
         
     return dprs
+
+
+# ===== USER AUTHENTICATION FUNCTIONS =====
+
+def create_user(username: str, email: str, password_hash: str, name: str = None, db_path: str = "data/dpr.db") -> int:
+    """Create a new user and return the user ID."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    timestamp = datetime.now().isoformat()
+    
+    try:
+        cursor.execute("""
+            INSERT INTO users (username, email, password_hash, name, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        """, (username, email, password_hash, name, timestamp))
+        
+        user_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        print(f"✓ User created with ID: {user_id}")
+        return user_id
+    except sqlite3.IntegrityError as e:
+        conn.close()
+        if 'username' in str(e):
+            raise ValueError("Username already exists")
+        else:
+            raise ValueError("User creation failed")
+
+
+def get_user_by_username(username: str, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Retrieve a user by username."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, username, email, password_hash, name, created_at
+        FROM users WHERE username = ?
+    """, (username,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            "id": row["id"],
+            "username": row["username"],
+            "email": row["email"],
+            "password_hash": row["password_hash"],
+            "name": row["name"],
+            "created_at": row["created_at"]
+        }
+    return None
+
+
+def get_user_by_email(email: str, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Retrieve a user by email."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, username, email, password_hash, created_at
+        FROM users WHERE email = ?
+    """, (email,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            "id": row["id"],
+            "username": row["username"],
+            "email": row["email"],
+            "password_hash": row["password_hash"],
+            "created_at": row["created_at"]
+        }
+    return None
+
+
+def get_user_by_username_or_email(identifier: str, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Retrieve a user by username or email."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, username, email, password_hash, created_at
+        FROM users WHERE username = ? OR email = ?
+    """, (identifier, identifier))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            "id": row["id"],
+            "username": row["username"],
+            "email": row["email"],
+            "password_hash": row["password_hash"],
+            "created_at": row["created_at"]
+        }
+    return None

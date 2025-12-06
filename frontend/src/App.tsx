@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from
 import { LanguageProvider } from './contexts/LanguageContext'
 import { RoleProvider, useRole } from './contexts/RoleContext'
 import RoleSelectionPage from './pages/RoleSelection'
+import AdminLogin from './pages/AdminLogin'
+import UserAuth from './pages/UserAuth'
 import IndexPage from './pages/Index'
 import ProjectsPage from './pages/Projects'
 import ProjectDetailPage from './pages/ProjectDetail'
@@ -17,9 +19,9 @@ function RoleSelectionWithNav() {
   const handleRoleSelect = (newRole: 'admin' | 'user') => {
     setRole(newRole)
     if (newRole === 'admin') {
-      navigate('/admin')
+      navigate('/admin/login')
     } else {
-      navigate('/user')
+      navigate('/user/auth')
     }
   }
 
@@ -27,7 +29,12 @@ function RoleSelectionWithNav() {
 }
 
 function UserComingSoon() {
-  const { setRole } = useRole()
+  const { setRole, logout } = useRole()
+
+  const handleSwitchRole = () => {
+    logout()
+    setRole(null)
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -43,7 +50,7 @@ function UserComingSoon() {
             <span className="text-xl font-bold text-primary">DPR Analyzer</span>
           </div>
           <button
-            onClick={() => setRole(null)}
+            onClick={handleSwitchRole}
             className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,33 +79,51 @@ function UserComingSoon() {
   )
 }
 
-function AppRoutes() {
-  const { role, setRole } = useRole()
+// Protected Route Component
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useRole()
   const location = useLocation()
-  const navigate = useNavigate()
+
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />
+  }
+
+  return <>{children}</>
+}
+
+function AppRoutes() {
+  const { setRole, logout } = useRole()
+  const location = useLocation()
 
   // Auto-reset role if navigating to root
   useEffect(() => {
     if (location.pathname === '/') {
+      logout()
       setRole(null)
     }
-  }, [location.pathname, setRole])
+  }, [location.pathname, setRole, logout])
 
   return (
     <Routes>
       {/* Role Selection at root */}
       <Route path="/" element={<RoleSelectionWithNav />} />
 
+      {/* Admin Login */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+
+      {/* User Auth */}
+      <Route path="/user/auth" element={<UserAuth />} />
+
       {/* User Routes */}
       <Route path="/user/*" element={<UserComingSoon />} />
 
-      {/* Admin Routes */}
-      <Route path="/admin" element={<IndexPage />} />
-      <Route path="/admin/projects" element={<ProjectsPage />} />
-      <Route path="/admin/projects/:id" element={<ProjectDetailPage />} />
-      <Route path="/admin/documents/:id" element={<DocumentDetailPage />} />
-      <Route path="/admin/comparisons" element={<ComparisonsPage />} />
-      <Route path="/admin/comparison-chat/:id/detail" element={<ComparisonDetailPage />} />
+      {/* Protected Admin Routes */}
+      <Route path="/admin" element={<ProtectedRoute><IndexPage /></ProtectedRoute>} />
+      <Route path="/admin/projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
+      <Route path="/admin/projects/:id" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
+      <Route path="/admin/documents/:id" element={<ProtectedRoute><DocumentDetailPage /></ProtectedRoute>} />
+      <Route path="/admin/comparisons" element={<ProtectedRoute><ComparisonsPage /></ProtectedRoute>} />
+      <Route path="/admin/comparison-chat/:id/detail" element={<ProtectedRoute><ComparisonDetailPage /></ProtectedRoute>} />
 
       {/* Fallback - redirect to home */}
       <Route path="*" element={<Navigate to="/" replace />} />

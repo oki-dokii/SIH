@@ -7,3 +7,4 @@ jinja2==3.1.2
 kaleido
 plotly
 weasyprint
+passlib[bcrypt]>=1.7.4
