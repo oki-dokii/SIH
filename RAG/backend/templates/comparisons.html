@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparisons - DPR Analyzer</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🔀 DPR Comparisons</h1>
+            <p class="subtitle">View and manage your comparison chats</p>
+        </header>
+
+        <div class="nav-actions">
+            <a href="/dprs/list" class="btn btn-secondary">
+                <span class="btn-text">← Back to DPRs</span>
+            </a>
+            <button class="btn btn-primary" id="createNewBtn">
+                ➕ Create New Comparison
+            </button>
+        </div>
+
+        <div class="loading" id="loadingSection">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading comparisons...</div>
+        </div>
+
+        <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+        <!-- Comparison List -->
+        <div id="comparisonListSection" style="display: none;">
+            <h2 style="color: #00d4ff; margin: 30px 0 20px;">Your Comparison Chats</h2>
+            <div id="comparisonList" class="dpr-grid"></div>
+            <div id="emptyComparisons" style="display: none; text-align: center; padding: 60px 20px;">
+                <div style="font-size: 4em; margin-bottom: 20px; opacity: 0.5;">📊</div>
+                <h3 style="color: #00d4ff;">No Comparisons Yet</h3>
+                <p style="color: #b0b0b0; margin: 15px 0 25px;">Create your first comparison to analyze multiple DPRs
+                    together</p>
+                <button class="btn btn-primary" onclick="document.getElementById('createNewBtn').click()">
+                    ➕ Create Your First Comparison
+                </button>
+            </div>
+        </div>
+
+        <!-- PDF Selection Section -->
+        <div id="selectionSection" style="display: none;">
+            <div
+                style="background: rgba(15, 52, 96, 0.3); border: 1px solid #0f3460; border-radius: 12px; padding: 25px; margin: 30px 0;">
+                <h2 style="color: #00d4ff; margin-bottom: 20px;">Select DPRs to Compare</h2>
+                <p style="color: #b0b0b0; margin-bottom: 20px;">Choose at least 2 DPRs to compare</p>
+
+                <div style="margin: 20px 0; text-align: center;">
+                    <span style="color: #00ff88; font-size: 1.2em; font-weight: 600;">
+                        <span id="selectedCount">0</span> DPRs selected
+                    </span>
+                </div>
+
+                <div id="dprList" class="dpr-grid"></div>
+
+                <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #0f3460;">
+                    <button class="btn btn-success" id="confirmSelectionBtn" disabled>
+                        ✓ Create Comparison
+                    </button>
+                    <button class="btn btn-secondary" id="cancelSelectionBtn">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/comparisons.js"></script>
+</body>
+
+</html>

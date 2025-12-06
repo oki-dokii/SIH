@@ -1,0 +1,21 @@
+# Core Dependencies
+streamlit
+langchain-community
+langchain-huggingface
+langchain-ollama
+chromadb
+pymupdf
+sentence-transformers
+
+# Web Server Dependencies
+fastapi
+uvicorn[standard]
+python-multipart
+
+# PyTorch with CUDA 11.8 (for GPU acceleration)
+# Install separately with:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# (Already installed if you followed setup instructions)
+
+# Docling for advanced PDF parsing
+# Install with: pip install docling

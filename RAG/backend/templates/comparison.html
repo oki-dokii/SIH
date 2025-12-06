@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare DPRs - DPR Analyzer</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1 id="comparisonTitle">🔀 DPR Comparison</h1>
+            <p class="subtitle" id="comparisonSubtitle">Compare Multiple Project Reports</p>
+        </header>
+
+        <div class="nav-actions">
+            <a href="/dprs/list" class="btn btn-secondary">
+                <span class="btn-text">← Back to List</span>
+            </a>
+            <a href="/" class="btn btn-secondary">
+                <span class="btn-text">🏠 Home</span>
+            </a>
+        </div>
+
+        <div class="loading" id="loadingSection">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading comparison...</div>
+        </div>
+
+        <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+        <div class="result-section" id="resultSection">
+            <div class="json-display">
+                <h2>📑 PDFs in Comparison</h2>
+                <div id="pdfList" style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <!-- PDF list will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-section" id="chatSection">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2 style="color: #00d4ff;">💬 Comparison Chat</h2>
+                    <div class="chat-actions">
+                        <button class="btn btn-secondary btn-sm" id="clearChatBtn">🗑️ Clear Chat</button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages"></div>
+
+                <div class="chat-input-container">
+                    <input type="text" class="chat-input" id="chatInput"
+                        placeholder="Ask questions to compare the documents..." autocomplete="off">
+                    <button class="btn btn-primary" id="sendChatBtn">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/comparison.js"></script>
+</body>
+
+</html>
