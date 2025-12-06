@@ -160,30 +160,30 @@ const DPRAnalyzerLanding: React.FC = () => {
                             loop
                             muted
                             playsInline
-                            className={`w-full h-full object-cover ${isDarkMode ? 'opacity-80' : 'opacity-50'}`}
+                            className={`w-full h-full object-cover ${isDarkMode ? 'opacity-80' : 'opacity-70'}`}
                             poster={state1} // Fallback
                         >
                             <source src={videoPath} type="video/mp4" />
                         </video>
                         {/* Gradient Overlay */}
-                        <div className={`absolute inset-0 bg-gradient-to-b ${isDarkMode ? 'from-slate-900/80 via-slate-900/40 to-slate-900' : 'from-slate-900/60 via-slate-800/40 to-slate-700/50'}`}></div>
-                        <div className={`absolute inset-0 bg-gradient-to-r ${isDarkMode ? 'from-blue-900/20 to-indigo-900/20' : 'from-blue-900/30 to-indigo-900/30'} mix-blend-overlay`}></div>
+                        <div className={`absolute inset-0 bg-gradient-to-b ${isDarkMode ? 'from-slate-900/80 via-slate-900/40 to-slate-900' : 'from-white/50 via-slate-100/30 to-white/60'}`}></div>
+                        <div className={`absolute inset-0 bg-gradient-to-r ${isDarkMode ? 'from-blue-900/20 to-indigo-900/20' : 'from-blue-900/20 to-indigo-900/20'} mix-blend-overlay`}></div>
                     </div>
 
                     <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium mb-6 animate-fade-in-up">
+                        <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full ${isDarkMode ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : 'bg-blue-600/15 border-blue-600/30 text-blue-700'} border text-xs font-medium mb-6 animate-fade-in-up`}>
                             <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isDarkMode ? 'bg-blue-400' : 'bg-blue-600'} opacity-75`}></span>
+                                <span className={`relative inline-flex rounded-full h-2 w-2 ${isDarkMode ? 'bg-blue-500' : 'bg-blue-600'}`}></span>
                             </span>
                             <span>AI-Powered Governance</span>
                         </div>
 
-                        <h1 className={`text-5xl md:text-7xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent drop-shadow-lg ${isDarkMode ? 'bg-gradient-to-r from-blue-500 via-green-400 to-purple-600' : 'bg-gradient-to-r from-indigo-500 via-violet-400 to-blue-400'}`}>
+                        <h1 className={`text-5xl md:text-7xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent drop-shadow-lg ${isDarkMode ? 'bg-gradient-to-r from-blue-500 via-green-400 to-purple-600' : 'bg-gradient-to-r from-indigo-600 via-violet-600 to-blue-500'}`}>
                             DPR Analyzer
                         </h1>
 
-                        <p className={`text-xl md:text-2xl max-w-3xl mx-auto mb-10 font-medium bg-clip-text text-transparent ${isDarkMode ? 'bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600' : 'bg-gradient-to-r from-blue-300 via-blue-200 to-white'}`}>
+                        <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-10 font-medium text-white">
                             AI-powered DPR analysis for the North Eastern States. <br className="hidden md:block" />
                             Accelerating development through intelligent automation.
                         </p>
@@ -195,11 +195,11 @@ const DPRAnalyzerLanding: React.FC = () => {
                                 <div className="text-xs uppercase tracking-wider text-white opacity-80">PDFs Processed</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-3xl font-bold text-blue-400">{ACCURACY}</div>
+                                <div className={`text-3xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{ACCURACY}</div>
                                 <div className="text-xs uppercase tracking-wider text-white opacity-80">Accuracy</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-3xl font-bold text-indigo-400">{STATES_COVERED}</div>
+                                <div className={`text-3xl font-bold ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{STATES_COVERED}</div>
                                 <div className="text-xs uppercase tracking-wider text-white opacity-80">States Covered</div>
                             </div>
                         </div>
@@ -213,13 +213,13 @@ const DPRAnalyzerLanding: React.FC = () => {
                             </a>
                             <a
                                 href={LOGIN_PATH}
-                                className={`w-full sm:w-auto px-8 py-4 rounded-2xl border ${isDarkMode ? 'border-slate-600 hover:bg-slate-800' : 'border-slate-300 hover:bg-white'} font-bold text-lg transition-all duration-300`}
+                                className={`w-full sm:w-auto px-8 py-4 rounded-2xl border font-bold text-lg transition-all duration-300 ${isDarkMode ? 'border-slate-600 hover:bg-slate-800 text-white' : 'bg-white/50 border-white/50 text-slate-900 hover:bg-white/60'}`}
                             >
                                 Login
                             </a>
                         </div>
 
-                        <p className="mt-8 text-sm text-white opacity-60">Built for MoDoNER — Government of India</p>
+                        <p className={`mt-8 text-sm ${isDarkMode ? 'text-white opacity-60' : 'text-black opacity-80'}`}>Built for MoDoNER — Government of India</p>
                     </div>
                 </section>
 
