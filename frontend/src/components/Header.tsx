@@ -84,7 +84,7 @@ export function Header() {
       // Small delay to show success message before redirect
       setTimeout(() => {
         setUploading(false)
-        navigate(`/documents/${result.id}`)
+        navigate(`/admin/documents/${result.id}`)
       }, 1500)
     } catch (err) {
       console.error('Upload error:', err)
@@ -99,7 +99,7 @@ export function Header() {
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/admin" className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
               <FileText className="h-6 w-6 text-white" />
             </div>
@@ -108,28 +108,28 @@ export function Header() {
 
           <nav className="hidden md:flex items-center gap-6">
             <Link
-              to="/"
+              to="/admin"
               className={cn(
                 'text-sm font-medium transition-colors hover:text-primary',
-                isActive('/') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
+                isActive('/admin') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
               )}
             >
               {t('common.home')}
             </Link>
             <Link
-              to="/projects"
+              to="/admin/projects"
               className={cn(
                 'text-sm font-medium transition-colors hover:text-primary',
-                isActive('/projects') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
+                isActive('/admin/projects') || location.pathname.startsWith('/admin/projects/') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
               )}
             >
               {t('common.projects')}
             </Link>
             <Link
-              to="/comparisons"
+              to="/admin/comparisons"
               className={cn(
                 'text-sm font-medium transition-colors hover:text-primary',
-                isActive('/comparisons') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
+                isActive('/admin/comparisons') || location.pathname.startsWith('/admin/comparison-chat/') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
               )}
             >
               {t('common.comparisons')}

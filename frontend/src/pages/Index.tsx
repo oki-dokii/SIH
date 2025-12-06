@@ -49,7 +49,7 @@ export default function IndexPage() {
       setUploadSuccess(true)
       // Small delay to show success message before redirect
       setTimeout(() => {
-        navigate(`/documents/${result.id}`)
+        navigate(`/admin/documents/${result.id}`)
       }, 1500)
     } catch (err) {
       setError('Failed to upload file. Please try again.')
@@ -84,7 +84,7 @@ export default function IndexPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" onClick={() => navigate('/documents')}>
+                <Button size="lg" onClick={() => navigate('/admin/projects')}>
                   {t('landing.getStarted')} <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button size="lg" variant="outline">
@@ -205,7 +205,7 @@ export default function IndexPage() {
             <Button
               size="lg"
               variant="secondary"
-              onClick={() => navigate('/documents')}
+              onClick={() => navigate('/admin/projects')}
             >
               {t('landing.ctaButton')} <ArrowRight className="h-4 w-4" />
             </Button>

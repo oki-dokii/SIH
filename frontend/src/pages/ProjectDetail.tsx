@@ -157,7 +157,7 @@ export default function ProjectDetailPage() {
                         <p className="text-muted-foreground mb-6">
                             {error || t('projectDetail.projectNotFoundDesc')}
                         </p>
-                        <Button onClick={() => navigate('/projects')}>
+                        <Button onClick={() => navigate(-1)}>
                             <ArrowLeft className="h-4 w-4 mr-2" />
                             Back to Projects
                         </Button>
@@ -173,7 +173,7 @@ export default function ProjectDetailPage() {
 
             <main className="flex-1 container mx-auto px-4 py-8">
                 <div className="mb-8">
-                    <Button variant="ghost" className="mb-4 pl-0 hover:pl-2 transition-all" onClick={() => navigate('/projects')}>
+                    <Button variant="ghost" className="mb-4 pl-0 hover:pl-2 transition-all" onClick={() => navigate(-1)}>
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Projects
                     </Button>
@@ -288,7 +288,7 @@ export default function ProjectDetailPage() {
                                     <Button
                                         size="sm"
                                         className="flex-1 md:flex-none"
-                                        onClick={() => navigate(`/documents/${doc.id}`)}
+                                        onClick={() => navigate(`/admin/documents/${doc.id}`)}
                                         disabled={!doc.summary_json}
                                     >
                                         <Eye className="h-4 w-4 mr-2" />

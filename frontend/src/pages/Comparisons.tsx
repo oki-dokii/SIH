@@ -98,7 +98,7 @@ export default function ComparisonsPage() {
               <Card
                 key={comparison.id}
                 className="p-6 hover:shadow-lg transition-all cursor-pointer border-l-4 border-cyan-500 group"
-                onClick={() => navigate(`/comparison-chat/${comparison.id}/detail`)}
+                onClick={() => navigate(`/admin/comparison-chat/${comparison.id}/detail`)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -139,7 +139,7 @@ export default function ComparisonsPage() {
           onClose={() => setShowCreateModal(false)}
           onSuccess={(id) => {
             setShowCreateModal(false)
-            navigate(`/comparison-chat/${id}/detail`)
+            navigate(`/admin/comparison-chat/${id}/detail`)
           }}
         />
       )}

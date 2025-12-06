@@ -312,7 +312,7 @@ export default function ProjectsPage() {
                         <Card
                             key={project.id}
                             className="p-6 hover:border-primary/40 transition-all cursor-pointer group relative"
-                            onClick={() => navigate(`/projects/${project.id}`)}
+                            onClick={() => navigate(`/admin/projects/${project.id}`)}
                         >
                             <div className="absolute top-4 right-4 z-10">
                                 <button

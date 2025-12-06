@@ -174,7 +174,7 @@ export default function DocumentDetailPage() {
             <p className="text-muted-foreground mb-6">
               {error || 'The requested document could not be found.'}
             </p>
-            <Button onClick={() => navigate('/documents')}>
+            <Button onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4" />
               Back to Documents
             </Button>
@@ -192,7 +192,7 @@ export default function DocumentDetailPage() {
 
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="outline" onClick={() => navigate('/documents')}>
+          <Button variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">

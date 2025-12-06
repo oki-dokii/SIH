@@ -2,8 +2,13 @@ import { useRole } from '@/contexts/RoleContext'
 import { Card } from '@/components/ui/Card'
 import { FileText, Shield, User, Sparkles } from 'lucide-react'
 
-export default function RoleSelectionPage() {
+export default function RoleSelectionPage({ onRoleSelect }: { onRoleSelect?: (role: 'admin' | 'user') => void }) {
     const { setRole } = useRole()
+
+    const handleRoleClick = (role: 'admin' | 'user') => {
+        setRole(role)
+        onRoleSelect?.(role)
+    }
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
@@ -41,7 +46,7 @@ export default function RoleSelectionPage() {
                         {/* Admin Card */}
                         <Card
                             className="p-8 cursor-pointer group hover:border-primary/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-                            onClick={() => setRole('admin')}
+                            onClick={() => handleRoleClick('admin')}
                         >
                             <div className="space-y-4">
                                 <div className="h-16 w-16 mx-auto rounded-2xl bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
@@ -62,7 +67,7 @@ export default function RoleSelectionPage() {
                         {/* User Card */}
                         <Card
                             className="p-8 cursor-pointer group hover:border-primary/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-                            onClick={() => setRole('user')}
+                            onClick={() => handleRoleClick('user')}
                         >
                             <div className="space-y-4">
                                 <div className="h-16 w-16 mx-auto rounded-2xl bg-gradient-to-br from-slate-500 to-slate-700 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
