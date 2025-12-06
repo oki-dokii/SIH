@@ -1,9 +1,10 @@
-import { FileText, Moon, Sun, Languages, CheckCircle2 } from 'lucide-react'
+import { FileText, Moon, Sun, Languages, CheckCircle2, LogOut } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from './ui/Button'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '../contexts/LanguageContext'
+import { useRole } from '../contexts/RoleContext'
 import { api } from '@/lib/api'
 import { ProjectSelectionModal } from './ProjectSelectionModal'
 import { Card } from './ui/Card'
@@ -13,6 +14,7 @@ export function Header() {
   const location = useLocation()
   const navigate = useNavigate()
   const { language, setLanguage, t } = useLanguage()
+  const { setRole } = useRole()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Project Selection & Upload State
@@ -153,6 +155,14 @@ export function Header() {
             <Button onClick={handleUploadClick}>
               <FileText className="h-4 w-4" />
               {t('common.upload')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setRole(null)}
+              className="text-muted-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+              Switch Role
             </Button>
             <input
               ref={fileInputRef}

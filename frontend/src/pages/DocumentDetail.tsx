@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card'
 import { EnvironmentalImpact } from '@/components/EnvironmentalImpact'
 import { FinancialCharts } from '@/components/FinancialCharts'
 import { ChatMessageFormatter } from '@/components/ChatMessageFormatter'
+import { LocationMap } from '@/components/LocationMap'
 import {
   ArrowLeft,
   Download,
@@ -438,12 +439,17 @@ function OverviewTab({ data }: { data: any }) {
             <MapPin className="h-4 w-4" />
             {t('documentDetail.location')}
           </h4>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-3">
             {data.projectLocation.state}
             {data.projectLocation.districts && data.projectLocation.districts.length > 0 && (
               <> - {data.projectLocation.districts.join(', ')}</>
             )}
           </p>
+          <LocationMap
+            state={data.projectLocation.state}
+            districts={data.projectLocation.districts}
+            height="250px"
+          />
         </div>
       )}
 
