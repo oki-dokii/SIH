@@ -1,0 +1,7 @@
+# Cloud backend specific ignores
+data/
+*.db
+uploads/
+__pycache__/
+*.pyc
+.env

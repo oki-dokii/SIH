@@ -1,5 +1,8 @@
 import os
 import uuid
+import json
+import threading
+from queue import Queue
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -11,6 +14,7 @@ from pydantic import BaseModel
 
 import db
 from rag_engine import RAGEngine
+from sync_manager import SyncManager
 
 # Paths
 DATA_DIR = Path("data")
@@ -23,6 +27,30 @@ db.init_db(str(DATA_DIR / "chat.db"))
 print("🤖 Initializing RAG Engine...")
 rag_engine = RAGEngine()
 print("✓ RAG Engine ready")
+
+# Initialize Sync Manager (optional - only if cloud URL is configured)
+CLOUD_BACKEND_URL = os.getenv("CLOUD_BACKEND_URL")
+sync_manager = None
+
+if CLOUD_BACKEND_URL:
+    try:
+        sync_manager = SyncManager(
+            cloud_url=CLOUD_BACKEND_URL,
+            db_path=str(DATA_DIR / "chat.db")
+        )
+        # Start auto-sync worker
+        sync_manager.start_auto_sync()
+        print(f"✅ Sync enabled with cloud: {CLOUD_BACKEND_URL}")
+    except Exception as e:
+        print(f"⚠️  Failed to initialize sync manager: {e}")
+        sync_manager = None
+else:
+    print("ℹ️  Sync disabled (CLOUD_BACKEND_URL not set)")
+
+# Global queue for sequential PDF processing
+processing_queue = Queue()
+processing_active = False
+processing_lock = threading.Lock()
 
 # Initialize FastAPI app
 app = FastAPI(title="Offline PDF Chat", version="1.0.0")
@@ -49,7 +77,62 @@ class ChatResponse(BaseModel):
 
 class ProjectCreate(BaseModel):
     name: str
-    description: Optional[str] = ""
+    state: str
+    scheme: str
+    sector: str
+
+
+# ===== BACKGROUND PROCESSING WORKER =====
+
+def start_processing_worker():
+    """Start the background worker thread if not already running"""
+    global processing_active
+    with processing_lock:
+        if not processing_active:
+            processing_active = True
+            thread = threading.Thread(target=process_queue_worker, daemon=True)
+            thread.start()
+            print("🚀 Started background processing worker")
+
+
+def process_queue_worker():
+    """
+    Worker thread that processes PDFs sequentially from the queue.
+    Only parses and stores chunks - analysis is triggered manually.
+    """
+    global processing_active
+    
+    while not processing_queue.empty():
+        pdf_id, filepath = processing_queue.get()
+        
+        try:
+            print(f"⏳ Processing PDF {pdf_id} from queue...")
+            
+            # Update status to 'processing'
+            db.update_pdf_status(pdf_id, 'processing', db_path=str(DATA_DIR / "chat.db"))
+            
+            # Clear vector database for new PDF
+            rag_engine.clear_database()
+            
+            # Process chunks with RAG engine (PARSING ONLY - NO ANALYSIS)
+            num_chunks = rag_engine.process_and_store_chunks(pdf_id, filepath, str(DATA_DIR / "chat.db"))
+            print(f"✓ PDF {pdf_id}: {num_chunks} chunks processed and stored")
+            
+            # Update status to 'ready' (chunks stored, ready for analysis)
+            db.update_pdf_status(pdf_id, 'ready', db_path=str(DATA_DIR / "chat.db"))
+            print(f"✅ PDF {pdf_id}: Parsing completed - ready for analysis")
+            
+        except Exception as e:
+            print(f"✗ PDF {pdf_id}: Processing failed - {str(e)}")
+            db.update_pdf_status(pdf_id, 'failed', error_message=str(e), db_path=str(DATA_DIR / "chat.db"))
+        
+        finally:
+            processing_queue.task_done()
+    
+    # All done
+    with processing_lock:
+        processing_active = False
+    print("✓ Background worker finished - all PDFs processed")
 
 
 # ===== API ROUTES =====
@@ -68,12 +151,20 @@ async def create_project(project: ProjectCreate):
     Create a new project.
     """
     try:
-        project_id = db.create_project(project.name, project.description, str(DATA_DIR / "chat.db"))
+        project_id = db.create_project(
+            project.name, 
+            project.state,
+            project.scheme,
+            project.sector,
+            str(DATA_DIR / "chat.db")
+        )
         
         return JSONResponse({
             "id": project_id,
             "name": project.name,
-            "description": project.description,
+            "state": project.state,
+            "scheme": project.scheme,
+            "sector": project.sector,
             "message": "Project created successfully"
         })
     except Exception as e:
@@ -148,6 +239,68 @@ async def delete_project(project_id: int):
         raise HTTPException(status_code=500, detail=f"Failed to delete project: {str(e)}")
 
 
+# ===== SYNC ENDPOINTS (ADMIN ONLY) =====
+
+@app.post("/api/admin/sync")
+async def manual_sync():
+    """
+    Manually trigger a full sync with cloud backend.
+    Returns sync status and statistics.
+    """
+    if not sync_manager:
+        raise HTTPException(
+            status_code=503, 
+            detail="Sync not configured. Set CLOUD_BACKEND_URL environment variable."
+        )
+    
+    try:
+        # Check connectivity
+        is_online = sync_manager.check_connection()
+        
+        if not is_online:
+            return JSONResponse({
+                "success": False,
+                "message": "Cloud backend is offline",
+                "is_online": False
+            })
+        
+        # Perform sync
+        sync_manager.full_sync()
+        
+        return JSONResponse({
+            "success": True,
+            "message": "Sync completed successfully",
+            "is_online": True,
+            "cloud_url": sync_manager.cloud_url
+        })
+        
+    except Exception as e:
+        print(f"✗ Manual sync error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Sync failed: {str(e)}")
+
+
+@app.get("/api/admin/sync/status")
+async def sync_status():
+    """
+    Get current sync status and configuration.
+    """
+    if not sync_manager:
+        return JSONResponse({
+            "enabled": False,
+            "message": "Sync not configured"
+        })
+    
+    is_online = sync_manager.check_connection()
+    
+    return JSONResponse({
+        "enabled": True,
+        "is_online": is_online,
+        "cloud_url": sync_manager.cloud_url,
+        "sync_interval": sync_manager.sync_interval,
+        "auto_sync_running": sync_manager.running
+    })
+
+
 # ===== PDF ENDPOINTS =====
 
 @app.post("/api/upload-pdf")
@@ -156,14 +309,15 @@ async def upload_pdf(
     project_id: Optional[int] = Form(None)
 ):
     """
-    Upload a PDF file, process it with RAG engine, and store chunks in database.
+    Upload a PDF file and queue it for background processing.
+    Returns immediately with status='pending'.
     
     Flow:
     1. Save PDF to disk
-    2. Process with RAG engine (Docling + ChromaDB)
-    3. Store chunks in database
-    4. Store metadata in SQLite
-    5. Return PDF ID and chunk count
+    2. Insert record with status='pending'
+    3. Add to processing queue
+    4. Start worker if needed
+    5. Return immediately (non-blocking)
     """
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are accepted")
@@ -193,7 +347,8 @@ async def upload_pdf(
             f.write(content)
         print(f"✓ File saved: {filepath} ({len(content)} bytes)")
         
-        # Insert into database first to get PDF ID
+        # Insert into database with status='pending'
+        # Note: New PDFs are automatically marked as dirty=1 for sync
         pdf_id = db.insert_pdf(
             filename=filename,
             original_filename=original_filename,
@@ -203,30 +358,25 @@ async def upload_pdf(
             db_path=str(DATA_DIR / "chat.db")
         )
         
-        # Process PDF with RAG engine and store chunks
-        print(f"⏳ Processing PDF with RAG engine...")
-        try:
-            # Clear previous database to ensure clean state for new PDF
-            rag_engine.clear_database()
-            
-            # Process the PDF and store chunks in database
-            num_chunks = rag_engine.process_and_store_chunks(pdf_id, str(filepath), str(DATA_DIR / "chat.db"))
-            print(f"✓ PDF processed: {num_chunks} chunks created and stored")
-            
-        except Exception as e:
-            # If processing fails, delete the saved file and database entry
-            if filepath.exists():
-                os.unlink(filepath)
-            db.delete_pdf(pdf_id, str(DATA_DIR / "chat.db"))
-            raise HTTPException(status_code=500, detail=f"Failed to process PDF: {str(e)}")
+        # Set initial status to 'pending'
+        db.update_pdf_status(pdf_id, 'pending', db_path=str(DATA_DIR / "chat.db"))
         
-        print(f"✓ PDF uploaded successfully (ID: {pdf_id}, Project: {project_id})")
+        # Add to processing queue
+        processing_queue.put((pdf_id, str(filepath)))
+        print(f"✓ PDF {pdf_id} added to processing queue")
+        
+        # Start background worker if not running
+        start_processing_worker()
+        
+        # Return immediately - processing happens in background
+        print(f"✓ PDF uploaded successfully (ID: {pdf_id}, Status: pending)")
         
         return JSONResponse({
             "id": pdf_id,
             "filename": original_filename,
-            "num_chunks": num_chunks,
-            "project_id": project_id
+            "project_id": project_id,
+            "status": "pending",
+            "message": "PDF uploaded successfully and queued for processing"
         })
         
     except HTTPException:
@@ -246,6 +396,56 @@ async def list_pdfs(project_id: Optional[int] = None):
     return JSONResponse({"pdfs": pdfs, "count": len(pdfs)})
 
 
+@app.post("/api/pdf/{pdf_id}/analyze")
+async def analyze_pdf(pdf_id: int):
+    """
+    Trigger offline analysis for a PDF that has been parsed and has chunks stored.
+    This is called manually by the user via the "Analyze DPR Offline" button.
+    """
+    # Get PDF info
+    pdf = db.get_pdf(pdf_id, str(DATA_DIR / "chat.db"))
+    if not pdf:
+        raise HTTPException(status_code=404, detail=f"PDF {pdf_id} not found")
+    
+    # Check if chunks are stored
+    if not pdf.get('chunks_stored'):
+        raise HTTPException(status_code=400, detail="PDF has not been parsed yet. Please wait for parsing to complete.")
+    
+    # Check if already analyzed
+    if pdf.get('sectional_analysis'):
+        raise HTTPException(status_code=400, detail="PDF has already been analyzed")
+    
+    try:
+        print(f"⏳ Starting offline analysis for PDF {pdf_id}...")
+        
+        # Update status to 'analyzing'
+        db.update_pdf_status(pdf_id, 'analyzing', db_path=str(DATA_DIR / "chat.db"))
+        
+        # Run sectional analysis
+        analysis_result = rag_engine.generate_sectional_analysis(pdf_id, str(DATA_DIR / "chat.db"))
+        
+        # Store analysis
+        analysis_json = json.dumps(analysis_result)
+        db.update_pdf_analysis(pdf_id, analysis_json, str(DATA_DIR / "chat.db"))
+        
+        # Update status to 'completed'
+        db.update_pdf_status(pdf_id, 'completed', db_path=str(DATA_DIR / "chat.db"))
+        
+        print(f"✅ PDF {pdf_id}: Analysis completed successfully")
+        
+        return JSONResponse({
+            "id": pdf_id,
+            "status": "completed",
+            "message": "Analysis completed successfully",
+            "analysis": analysis_result
+        })
+        
+    except Exception as e:
+        print(f"✗ PDF {pdf_id}: Analysis failed - {str(e)}")
+        db.update_pdf_status(pdf_id, 'analysis_failed', error_message=str(e), db_path=str(DATA_DIR / "chat.db"))
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
 @app.get("/api/pdf/{pdf_id}")
 async def get_pdf_details(pdf_id: int):
     """
@@ -259,6 +459,26 @@ async def get_pdf_details(pdf_id: int):
     return JSONResponse(pdf)
 
 
+@app.get("/api/pdf/{pdf_id}/analysis")
+async def get_pdf_analysis(pdf_id: int):
+    """
+    Get the sectional analysis for a PDF.
+    Returns the complete analysis JSON ready for frontend display.
+    """
+    # Verify PDF exists
+    pdf = db.get_pdf(pdf_id, str(DATA_DIR / "chat.db"))
+    if not pdf:
+        raise HTTPException(status_code=404, detail=f"PDF {pdf_id} not found")
+    
+    # Get analysis
+    analysis = db.get_pdf_analysis(pdf_id, str(DATA_DIR / "chat.db"))
+    
+    if not analysis:
+        raise HTTPException(status_code=404, detail=f"Analysis not found for PDF {pdf_id}")
+    
+    return JSONResponse(analysis)
+
+
 @app.post("/api/pdf/{pdf_id}/chat")
 async def chat_with_pdf(pdf_id: int, chat_message: ChatMessage):
     """
@@ -268,7 +488,7 @@ async def chat_with_pdf(pdf_id: int, chat_message: ChatMessage):
     1. Verify PDF exists
     2. Load chunks from DB if available (avoid reprocessing)
     3. Store user message
-    4. Get response from RAG engine
+    4. Get response from RAG engine (conversational mode)
     5. Store assistant message
     6. Return response
     """
@@ -294,14 +514,14 @@ async def chat_with_pdf(pdf_id: int, chat_message: ChatMessage):
         # Store user message
         db.insert_message(pdf_id, "user", chat_message.message, str(DATA_DIR / "chat.db"))
         
-        # Get response from RAG engine
+        # Get response from RAG engine in CONVERSATIONAL mode (not JSON)
         print(f"⏳ Processing chat message for PDF {pdf_id}")
-        answer, sources = rag_engine.chat(chat_message.message)
+        answer, sources = rag_engine.chat(chat_message.message, json_mode=False)
         
         # Store assistant message
         db.insert_message(pdf_id, "assistant", answer, str(DATA_DIR / "chat.db"))
         
-        print(f"✓ Chat response generated")
+        print(f"✓ Chat response generated for PDF {pdf_id} successfully")
         
         return JSONResponse({
             "reply": answer,

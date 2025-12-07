@@ -3,17 +3,51 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import {
     Search,
+    Filter,
+    ChevronDown,
     Folder,
     Plus,
     Calendar,
     Loader2,
-    FileText,
+    MapPin,
+    Briefcase,
+    Layers,
     X
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, type Project } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
+
+// Dropdown Options - Exact Match from online_project
+const STATE_OPTIONS = [
+    'Arunachal Pradesh', 'Assam', 'Delhi', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura'
+]
+
+const SCHEME_OPTIONS = [
+    'NESIDS-OTRI', 'NESIDS-ROADS', 'PM-DevINE', 'Schemes of NEC', 'Special Packages'
+]
+
+const SECTOR_OPTIONS: Record<string, string[]> = {
+    'All': ['Agriculture and Allied', 'Chose...', 'Education', 'Evaluation and Monitoring', 'Health', 'Industries',
+        'Information and Public Relation', 'Infrastructure', 'Irrigation and Flood Control', 'Miscellaneous', 'Power',
+        'Roads and Bridges', 'Science and Technology', 'Sports', 'Tourism and Culture', 'Transport and Communication', 'Water Supply'
+    ],
+    'NESIDS-OTRI': ['Agriculture and Allied', 'Chose...', 'Education', 'Health', 'Irrigation and Flood Control', 'Miscellaneous',
+        'Power', 'Roads and Bridges', 'Sports', 'Tourism and Culture', 'Transport and Communication', 'Water Supply'
+    ],
+    'NESIDS-ROADS': ['Roads and Bridges', 'Transport and Communication'
+    ],
+    'PM-DevINE': ['Agriculture and Allied', 'Education', 'Health', 'Infrastructure', 'Miscellaneous', 'Power',
+        'Roads and Bridges', 'Sports', 'Tourism and Culture'
+    ],
+    'Schemes of NEC': ['Agriculture and Allied', 'Education', 'Health', 'Infrastructure', 'Miscellaneous', 'Power',
+        'Roads and Bridges', 'Sports', 'Tourism and Culture'
+    ],
+    'Special Packages': ['Agriculture and Allied', 'Education', 'Health', 'Infrastructure', 'Miscellaneous', 'Power',
+        'Roads and Bridges', 'Sports', 'Tourism and Culture'
+    ]
+}
 
 export default function ProjectsPage() {
     const navigate = useNavigate()
@@ -23,11 +57,21 @@ export default function ProjectsPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
+    // Filter State
+    const [showFilters, setShowFilters] = useState(false)
+    const [filters, setFilters] = useState({
+        state: 'ALL',
+        scheme: 'ALL',
+        sector: 'ALL'
+    })
+
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [newProject, setNewProject] = useState({
         name: '',
-        description: ''
+        state: STATE_OPTIONS[0],
+        scheme: SCHEME_OPTIONS[0],
+        sector: SECTOR_OPTIONS[SCHEME_OPTIONS[0]][0]
     })
     const [creating, setCreating] = useState(false)
     const [validationError, setValidationError] = useState<string | null>(null)
@@ -38,6 +82,16 @@ export default function ProjectsPage() {
     useEffect(() => {
         loadProjects()
     }, [])
+
+    // Update sector when scheme changes (Forward Dependency)
+    useEffect(() => {
+        if (newProject.scheme) {
+            const validSectors = SECTOR_OPTIONS[newProject.scheme] || SECTOR_OPTIONS['All']
+            if (!validSectors.includes(newProject.sector)) {
+                setNewProject(prev => ({ ...prev, sector: validSectors[0] }))
+            }
+        }
+    }, [newProject.scheme])
 
     const loadProjects = async () => {
         try {
@@ -60,18 +114,34 @@ export default function ProjectsPage() {
             setValidationError('Project name is required')
             return
         }
+        if (!newProject.state) {
+            setValidationError('State is required')
+            return
+        }
+        if (!newProject.scheme) {
+            setValidationError('Scheme is required')
+            return
+        }
+        if (!newProject.sector) {
+            setValidationError('Sector is required')
+            return
+        }
 
         try {
             setCreating(true)
             setValidationError(null)
             await api.createProject({
                 name: newProject.name,
-                description: newProject.description
+                state: newProject.state,
+                scheme: newProject.scheme,
+                sector: newProject.sector
             })
             setIsModalOpen(false)
             setNewProject({
                 name: '',
-                description: ''
+                state: STATE_OPTIONS[0],
+                scheme: SCHEME_OPTIONS[0],
+                sector: SECTOR_OPTIONS[SCHEME_OPTIONS[0]][0]
             })
             setValidationError(null)
             loadProjects()
@@ -101,9 +171,18 @@ export default function ProjectsPage() {
         setProjectToDelete(projectId)
     }
 
-    const filteredProjects = projects.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    // Get valid sectors based on selected scheme
+    const getValidSectors = () => {
+        return SECTOR_OPTIONS[newProject.scheme] || SECTOR_OPTIONS['All']
+    }
+
+    const filteredProjects = projects.filter(p => {
+        const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesState = filters.state === 'ALL' || p.state === filters.state
+        const matchesScheme = filters.scheme === 'ALL' || p.scheme === filters.scheme
+        const matchesSector = filters.sector === 'ALL' || p.sector === filters.sector
+        return matchesSearch && matchesState && matchesScheme && matchesSector
+    })
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -121,17 +200,71 @@ export default function ProjectsPage() {
                     </Button>
                 </div>
 
-                <div className="mb-8">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <input
-                            type="text"
-                            placeholder={t('projects.searchPlaceholder')}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                <div className="flex flex-col gap-4 mb-8">
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <input
+                                type="text"
+                                placeholder={t('projects.searchPlaceholder')}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                        </div>
+                        <Button
+                            variant={showFilters ? "primary" : "outline"}
+                            onClick={() => setShowFilters(!showFilters)}
+                        >
+                            <Filter className="h-4 w-4 mr-2" />
+                            {t('projects.filter')}
+                            <ChevronDown className={`h-4 w-4 ml-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                        </Button>
                     </div>
+
+                    {showFilters && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-lg animate-in slide-in-from-top-2">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">{t('projects.state')}</label>
+                                <select
+                                    value={filters.state}
+                                    onChange={(e) => setFilters({ ...filters, state: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                                >
+                                    <option value="ALL">ALL</option>
+                                    {STATE_OPTIONS.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">{t('projects.scheme')}</label>
+                                <select
+                                    value={filters.scheme}
+                                    onChange={(e) => setFilters({ ...filters, scheme: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                                >
+                                    <option value="ALL">ALL</option>
+                                    {SCHEME_OPTIONS.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">{t('projects.sector')}</label>
+                                <select
+                                    value={filters.sector}
+                                    onChange={(e) => setFilters({ ...filters, sector: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                                >
+                                    <option value="ALL">ALL</option>
+                                    {SECTOR_OPTIONS['All'].map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {loading && (
@@ -151,7 +284,7 @@ export default function ProjectsPage() {
                         <Folder className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-semibold mb-2">{t('projects.noProjects')}</h3>
                         <p className="text-muted-foreground mb-4">
-                            {searchQuery ? t('projects.tryAdjusting') : t('projects.noProjectsDesc')}
+                            {searchQuery || showFilters ? 'No projects match your search or filters' : t('projects.noProjectsDesc')}
                         </p>
                         <Button onClick={() => setIsModalOpen(true)}>
                             <Plus className="h-4 w-4 mr-2" />
@@ -183,21 +316,32 @@ export default function ProjectsPage() {
                                 </div>
                                 <div className="flex-1 pr-8">
                                     <h3 className="font-semibold mb-1 line-clamp-2 text-lg">{project.name}</h3>
-                                    {project.description && (
-                                        <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
-                                    )}
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        <span className="inline-flex items-center text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
+                                            <MapPin className="h-3 w-3 mr-1" />
+                                            {project.state}
+                                        </span>
+                                        <span className="inline-flex items-center text-xs px-2 py-1 rounded-full bg-purple-50 text-purple-700 font-medium">
+                                            <Layers className="h-3 w-3 mr-1" />
+                                            {project.scheme}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="flex items-center justify-between text-sm text-muted-foreground mt-4 pt-4 border-t">
                                 <div className="flex items-center gap-1">
+                                    <Briefcase className="h-4 w-4" />
+                                    {project.sector}
+                                </div>
+                                <div className="flex items-center gap-1">
                                     <Calendar className="h-4 w-4" />
                                     {new Date(project.created_ts).toLocaleDateString()}
                                 </div>
-                                <div className="flex items-center gap-1">
-                                    <FileText className="h-4 w-4" />
-                                    {project.pdf_count || 0} PDFs
-                                </div>
+                            </div>
+
+                            <div className="mt-4 text-sm font-medium text-primary">
+                                {project.pdf_count || 0} Documents
                             </div>
                         </Card>
                     ))}
@@ -229,14 +373,43 @@ export default function ProjectsPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium mb-1">Description (Optional)</label>
-                                <textarea
-                                    value={newProject.description}
-                                    onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                                <label className="block text-sm font-medium mb-1">State <span className="text-red-500">*</span></label>
+                                <select
+                                    value={newProject.state}
+                                    onChange={(e) => setNewProject({ ...newProject, state: e.target.value })}
                                     className="w-full px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                                    placeholder="Enter project description"
-                                    rows={3}
-                                />
+                                >
+                                    {STATE_OPTIONS.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Scheme <span className="text-red-500">*</span></label>
+                                <select
+                                    value={newProject.scheme}
+                                    onChange={(e) => setNewProject({ ...newProject, scheme: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                                >
+                                    {SCHEME_OPTIONS.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Sector <span className="text-red-500">*</span></label>
+                                <select
+                                    value={newProject.sector}
+                                    onChange={(e) => setNewProject({ ...newProject, sector: e.target.value })}
+                                    className="w-full px-3 py-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                                >
+                                    {getValidSectors().map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-muted-foreground mt-1">Sectors change based on selected scheme</p>
                             </div>
 
                             {validationError && (

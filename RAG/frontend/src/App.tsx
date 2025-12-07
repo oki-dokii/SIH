@@ -4,6 +4,7 @@ import IndexPage from './pages/Index'
 import ProjectsPage from './pages/Projects'
 import ProjectDetailPage from './pages/ProjectDetail'
 import DocumentDetailPage from './pages/DocumentDetail'
+import PDFAnalysis from './pages/PDFAnalysis'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/projects/:id" element={<ProjectDetailPage />} />
           <Route path="/documents" element={<Navigate to="/projects" replace />} />
           <Route path="/documents/:id" element={<DocumentDetailPage />} />
+          <Route path="/pdf/:id/analysis" element={<PDFAnalysis />} />
         </Routes>
       </BrowserRouter>
     </LanguageProvider>

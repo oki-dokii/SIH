@@ -497,16 +497,23 @@ class RAGEngine:
         return len(docs)
 
 
-    def chat(self, query):
-        """Answers a query using the RAG pipeline."""
+    def chat(self, query, json_mode=False):
+        """
+        Answers a query using the RAG pipeline.
+        
+        Args:
+            query: User's question
+            json_mode: If True, returns JSON format. If False, returns conversational text.
+        """
         if not self.retriever:
             return "Please upload a PDF first.", []
 
         log_time(f"💬 Processing query: {query[:50]}...")
         query_start = time.time()
 
-        # Define prompt
-        template = """You are a data extraction assistant. You MUST respond ONLY with valid JSON. Do not include any explanations before or after the JSON.
+        # Define prompt based on mode
+        if json_mode:
+            template = """You are a data extraction assistant. You MUST respond ONLY with valid JSON. Do not include any explanations before or after the JSON.
 
 Context:
 {context}
@@ -514,6 +521,24 @@ Context:
 Task: {question}
 
 Output ONLY the JSON object, nothing else."""
+        else:
+            # Conversational mode for natural chat
+            template = """You are a helpful PDF analysis assistant. Use the provided context to answer the user's question in a clear, conversational way.
+
+Context from the PDF:
+{context}
+
+User Question: {question}
+
+Instructions:
+- Answer in a natural, conversational tone
+- Be concise but comprehensive
+- Use bullet points or numbered lists when appropriate  
+- If the context doesn't contain the answer, say so politely
+- Cite specific details from the document when relevant
+
+Answer:"""
+        
         prompt = ChatPromptTemplate.from_template(template)
 
         # Custom retrieval logic to combine first 30 chunks + vector search
@@ -553,6 +578,281 @@ Output ONLY the JSON object, nothing else."""
         log_time(f"✅ Query complete in {query_elapsed:.2f}s")
         
         return answer, list(set(sources))
+    
+    def generate_sectional_analysis(self, pdf_id: int, db_path: str = "data/chat.db") -> dict:
+        """
+        Generate sectional analysis for a PDF using its stored chunks.
+        Reuses existing LLM infrastructure for 5-section analysis.
+        
+        Args:
+            pdf_id: ID of the PDF to analyze
+            db_path: Path to database
+            
+        Returns:
+            Complete analysis JSON with all 5 sections merged
+        """
+        import db as db_module
+        
+        log_time(f"📊 Starting sectional analysis for PDF {pdf_id}")
+        
+        # Load all chunks from database
+        chunks = db_module.get_pdf_chunks(pdf_id, db_path)
+        if not chunks:
+            raise ValueError(f"No chunks found for PDF {pdf_id}")
+        
+        log_time(f"✓ Loaded {len(chunks)} chunks")
+        
+        # Define sections with search queries for semantic similarity
+        sections = {
+            "header": {
+                "search_query": "What is the project name, location, state, district, sector, scheme name, total cost, investment, budget, project duration, timeline, implementation period?",
+                "query": """Extract header information from the document.
+
+Return EXACTLY this JSON structure:
+{
+  "projectName": "<extracted project name>",
+  "projectLocation": {
+    "state": "<state name>",
+    "districts": "<comma separated districts or empty string>"
+  },
+  "projectSector": "<sector like Agriculture, Banking, Infrastructure>",
+  "schemeName": "<scheme name or empty string>",
+  "totalInvestment": "<total project cost with currency symbol, e.g., ₹40.60 cr or ₹28.75L>",
+  "implementationDuration": "<project duration/timeline, e.g., 1 year, 2 months, 6 months>"
+}
+
+Instructions:
+- For totalInvestment: Extract the total project cost/budget with proper formatting (₹ symbol, cr/L suffix)
+- For implementationDuration: Extract the project implementation period/timeline
+- If information is not found, use empty string ""
+
+Return ONLY the JSON, no other text.""",
+                "system_prompt": "You are a data extraction assistant. Extract project header information including financial and timeline details, and return ONLY valid JSON matching the exact structure provided."
+            },
+            
+            "overview": {
+                "search_query": "What is the executive summary, project overview, objectives, purpose, scope, and deliverables?",
+                "query": """Extract project overview information.
+
+Return EXACTLY this JSON structure:
+{
+  "executiveSummary": "<2-3 sentence summary>",
+  "objectives": ["<objective 1>", "<objective 2>"],
+  "scope": ["<scope item 1>", "<scope item 2>"],
+  "stakeholders": ["<stakeholder 1>", "<stakeholder 2>"]
+}
+
+Return ONLY the JSON, no other text.""",
+                "system_prompt": "You are a data extraction assistant. Summarize project overview and return ONLY valid JSON matching the exact structure provided."
+            },
+            
+            "riskAssessment": {
+                "search_query": "What are the project risks, challenges, threats, mitigation strategies, and risk management plans?",
+                "query": """Identify and analyze project risks.
+
+Return EXACTLY this JSON structure:
+{
+  "risks": [
+    {
+      "name": "<risk name>",
+      "severity": "HIGH",
+      "mitigation": "<mitigation strategy>",
+      "evidence": "<evidence from document>"
+    }
+  ]
+}
+
+Severity must be: HIGH, MEDIUM, or LOW.
+Return ONLY the JSON, no other text.""",
+                "system_prompt": "You are a risk assessment expert. Analyze risks and return ONLY valid JSON matching the exact structure provided."
+            },
+            
+            "inconsistencies": {
+                "search_query": "Are there any budget errors, cost calculation mistakes, timeline conflicts, or data inconsistencies?",
+                "query": """Detect inconsistencies in the document.
+
+Return EXACTLY this JSON structure:
+{
+  "hasInconsistencies": true,
+  "issues": [
+    {
+      "category": "<Budget/Timeline/Data/Missing info>",
+      "severity": "High",
+      "description": "<what is inconsistent>",
+      "location": "<where found>",
+      "impact": "<potential impact>"
+    }
+  ]
+}
+
+If no inconsistencies found, set hasInconsistencies to false and issues to [].
+Return ONLY the JSON, no other text.""",
+                "system_prompt": "You are a quality assurance expert. Detect errors and return ONLY valid JSON matching the exact structure provided."
+            },
+            
+            "mdonerCompliance": {
+                "search_query": "How does the project comply with MDoNER guidelines for North Eastern region, tribal communities, environmental clearance, and land acquisition?",
+                "query": """Assess MDoNER compliance scores (0-100 for each criterion).
+
+Return EXACTLY this JSON structure:
+{
+  "scores": {
+    "North Eastern focus": 80,
+    "Beneficiary alignment": 70,
+    "Environmental compliance": 60,
+    "Land acquisition clarity": 50,
+    "Documentation quality": 90
+  },
+  "overallComplianceScore": 70,
+  "gaps": ["<gap 1>", "<gap 2>"],
+  "strengths": ["<strength 1>", "<strength 2>"]
+}
+
+Scores must be 0-100. OverallComplianceScore should be average of all scores.
+Return ONLY the JSON, no other text.""",
+                "system_prompt": "You are a compliance expert. Assess compliance and return ONLY valid JSON matching the exact structure provided with numeric scores 0-100."
+            }
+        }
+        
+        # Analyze each section
+        results = {}
+        for section_name, config in sections.items():
+            log_time(f"📝 Analyzing: {section_name}")
+            
+            # Filter chunks using semantic search
+            filtered_chunks = self._filter_chunks_for_section(chunks, config["search_query"])
+            log_time(f"  → Using {len(filtered_chunks)} chunks")
+            
+            # Analyze with LLM
+            section_result = self._analyze_section_with_llm(
+                filtered_chunks, config["query"], config["system_prompt"]
+            )
+            results[section_name] = section_result
+        
+        # Merge results
+        final_json = self._merge_section_results(results)
+        log_time(f"✅ Sectional analysis complete")
+        
+        return final_json
+    
+    def _filter_chunks_for_section(self, chunks: list, search_query: str, first_n: int = 20, top_k: int = 20) -> list:
+        """
+        Filter chunks using existing RAG engine vector similarity search.
+        Reuses self.retriever for semantic search.
+        
+        Args:
+            chunks: All chunks
+            search_query: Query string for similarity search
+            first_n: Number of first chunks to include
+            top_k: Number of semantically similar chunks to retrieve
+        """
+        # First N chunks for project context
+        first_chunks = chunks[:first_n]
+        
+        # Use existing retriever for semantic search
+        if self.retriever:
+            try:
+                log_time(f"  🔍 Using semantic similarity search (retriever)")
+                
+                # Semantic search using existing vector store (request more to ensure we get top_k)
+                similar_docs = self.retriever.invoke(search_query)
+                
+                log_time(f"  ✓ Retrieved {len(similar_docs)} similar documents from vector store")
+                
+                # Convert back to chunk format by matching content
+                semantic_chunks = []
+                for doc in similar_docs:
+                    # Find matching chunk by content
+                    for chunk in chunks:
+                        if chunk.get('content', '') == doc.page_content:
+                            semantic_chunks.append(chunk)
+                            if len(semantic_chunks) >= top_k:
+                                break
+                    if len(semantic_chunks) >= top_k:
+                        break
+                
+                log_time(f"  ✓ Matched {len(semantic_chunks)} semantic chunks")
+                
+                # Combine and deduplicate
+                all_chunks = first_chunks + semantic_chunks
+                seen = set()
+                unique = []
+                for chunk in all_chunks:
+                    content = chunk.get('content', '')
+                    if content not in seen:
+                        seen.add(content)
+                        unique.append(chunk)
+                
+                log_time(f"  ✓ Total unique chunks: {len(unique)} (first {first_n} + semantic {len(semantic_chunks)})")
+                return unique
+            except Exception as e:
+                log_time(f"⚠️  Similarity search failed: {str(e)}, using fallback (first {first_n} chunks)")
+                return first_chunks
+        else:
+            log_time(f"  ⚠️  Retriever not available, using fallback (first {first_n} chunks)")
+            return first_chunks
+    
+    def _analyze_section_with_llm(self, chunks: list, query: str, system_prompt: str) -> dict:
+        """Analyze section using LLM"""
+        context = "\n\n".join([
+            f"[Chunk {i+1}]\n{chunk.get('content', '')}"
+            for i, chunk in enumerate(chunks)
+        ])
+        
+        template = f"""{system_prompt}
+
+Context: {{context}}
+
+Task: {{query}}
+
+Respond ONLY with valid JSON."""
+        
+        prompt = ChatPromptTemplate.from_template(template)
+        chain = prompt | self.llm | StrOutputParser()
+        response = chain.invoke({"context": context, "query": query})
+        
+        try:
+            response_text = response.strip()
+            if response_text.startswith('```'):
+                response_text = response_text.split('```')[1]
+                if response_text.startswith('json'):
+                    response_text = response_text[4:]
+            response_text = response_text.strip()
+            return json.loads(response_text)
+        except:
+            return {}
+    
+    def _merge_section_results(self, results: dict) -> dict:
+        """Merge section results into final JSON"""
+        return {
+            "projectName": results.get("header", {}).get("projectName", "Unknown"),
+            "projectLocation": results.get("header", {}).get("projectLocation", {}),
+            "projectSector": results.get("header", {}).get("projectSector", ""),
+            "schemeName": results.get("header", {}).get("schemeName", ""),
+            "executiveSummary": results.get("overview", {}).get("executiveSummary", ""),
+            "scopeAndObjectives": {
+                "objectives": results.get("overview", {}).get("objectives", []),
+                "scope": results.get("overview", {}).get("scope", ""),
+                "stakeholders": results.get("overview", {}).get("stakeholders", [])
+            },
+            "riskAssessment": results.get("riskAssessment", {}).get("risks", []),
+            "inconsistencyDetection": {
+                "hasInconsistencies": results.get("inconsistencies", {}).get("hasInconsistencies", False),
+                "totalInconsistencies": len(results.get("inconsistencies", {}).get("issues", [])),
+                "issues": results.get("inconsistencies", {}).get("issues", [])
+            },
+            "mdonerComplianceScoring": {
+                "scores": results.get("mdonerCompliance", {}).get("scores", {}),
+                "overallComplianceScore": results.get("mdonerCompliance", {}).get("overallComplianceScore", 0),
+                "complianceGaps": results.get("mdonerCompliance", {}).get("gaps", []),
+                "complianceStrengths": results.get("mdonerCompliance", {}).get("strengths", [])
+            },
+            "analysisMetadata": {
+                "sectionalAnalysis": True,
+                "sectionsAnalyzed": list(results.keys()),
+                "timestamp": datetime.now().isoformat()
+            }
+        }
 
     def clear_database(self):
         """Clears the vector database."""

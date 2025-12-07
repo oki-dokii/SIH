@@ -1,21 +1,58 @@
-# Core Dependencies
-streamlit
-langchain-community
-langchain-huggingface
-langchain-ollama
-chromadb
-pymupdf
-sentence-transformers
+# ===== Core Python Dependencies =====
 
-# Web Server Dependencies
-fastapi
-uvicorn[standard]
-python-multipart
+# FastAPI and Web Server
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+jinja2>=3.1.2
 
-# PyTorch with CUDA 11.8 (for GPU acceleration)
-# Install separately with:
+# Environment and Configuration
+python-dotenv>=1.0.0
+
+# HTTP Client for Sync
+requests>=2.31.0
+
+
+# ===== RAG Engine Dependencies (server.py, rag_engine.py) =====
+
+# LangChain Core
+langchain-core>=0.1.0
+langchain-community>=0.0.20
+langchain-text-splitters>=0.0.1
+
+# LangChain Integrations
+langchain-huggingface>=0.0.1
+langchain-ollama>=0.1.0
+
+# Vector Database
+chromadb>=0.4.0
+
+# Embedding Models
+sentence-transformers>=2.2.0
+
+# PDF Processing
+docling>=1.0.0
+pymupdf>=1.23.0
+
+# Deep Learning Framework
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+# Note: For CUDA support, install with:
 # pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-# (Already installed if you followed setup instructions)
 
-# Docling for advanced PDF parsing
-# Install with: pip install docling
+# ===== DPR Backend Dependencies (backend/app.py) =====
+
+# Google Generative AI (Gemini)
+google-generativeai>=0.3.0
+
+# PDF Report Generation
+weasyprint>=60.0
+plotly>=5.17.0
+kaleido>=0.2.1
+
+# Database
+# SQLite is built-in to Python, no external dependency needed
+
+# ===== Utilities =====
+pydantic>=2.0.0

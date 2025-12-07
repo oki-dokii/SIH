@@ -60,18 +60,49 @@ def init_db(db_path: str = "data/chat.db"):
         )
     """)
     
-    # Create default "Uncategorized" project if it doesn't exist
-    cursor.execute("""
-        INSERT OR IGNORE INTO projects (id, name, description, created_ts)
-        VALUES (1, 'Uncategorized', 'Default project for PDFs without a specific project', ?)
-    """, (datetime.now().isoformat(),))
+    # Add state column to projects table if it doesn't exist (migration from old schema)
+    try:
+        cursor.execute("""
+            ALTER TABLE projects 
+            ADD COLUMN state TEXT
+        """)
+        print("✓ Added state column to projects table")
+    except sqlite3.OperationalError:
+        pass
     
-    # Migrate existing PDFs to default project if they don't have project_id
-    cursor.execute("""
-        UPDATE pdfs 
-        SET project_id = 1 
-        WHERE project_id IS NULL
-    """)
+    # Remove description column if you want to fully migrate (optional - can keep for backward compatibility)
+    # SQLite doesn't support DROP COLUMN easily, so we'll just add new columns
+    
+    # Add sectional_analysis column if it doesn't exist (migration)
+    try:
+        cursor.execute("""
+            ALTER TABLE pdfs 
+            ADD COLUMN sectional_analysis TEXT
+        """)
+        print("✓ Added sectional_analysis column to pdfs table")
+    except sqlite3.OperationalError:
+        # Column already exists
+        pass
+    
+    # Add processing_status column for async processing tracking
+    try:
+        cursor.execute("""
+            ALTER TABLE pdfs 
+            ADD COLUMN processing_status TEXT DEFAULT 'pending'
+        """)
+        print("✓ Added processing_status column to pdfs table")
+    except sqlite3.OperationalError:
+        pass
+    
+    # Add error_message column for failed processing
+    try:
+        cursor.execute("""
+            ALTER TABLE pdfs 
+            ADD COLUMN error_message TEXT
+        """)
+        print("✓ Added error_message column to pdfs table")
+    except sqlite3.OperationalError:
+        pass
     
     conn.commit()
     conn.close()
@@ -80,7 +111,7 @@ def init_db(db_path: str = "data/chat.db"):
 
 # ===== PROJECT CRUD OPERATIONS =====
 
-def create_project(name: str, description: str = "", db_path: str = "data/chat.db") -> int:
+def create_project(name: str, state: str, scheme: str, sector: str, db_path: str = "data/chat.db") -> int:
     """
     Create a new project and return its ID.
     """
@@ -88,9 +119,9 @@ def create_project(name: str, description: str = "", db_path: str = "data/chat.d
     cursor = conn.cursor()
     
     cursor.execute("""
-        INSERT INTO projects (name, description, created_ts)
-        VALUES (?, ?, ?)
-    """, (name, description, datetime.now().isoformat()))
+        INSERT INTO projects (name, state, scheme, sector, created_ts)
+        VALUES (?, ?, ?, ?, ?)
+    """, (name, state, scheme, sector, datetime.now().isoformat()))
     
     project_id = cursor.lastrowid
     conn.commit()
@@ -344,6 +375,65 @@ def delete_pdf(pdf_id: int, db_path: str = "data/chat.db") -> Optional[str]:
     return filepath
 
 
+def update_pdf_analysis(pdf_id: int, analysis_json: str, db_path: str = "data/chat.db") -> bool:
+    """
+    Store sectional analysis JSON for a PDF.
+    
+    Args:
+        pdf_id: ID of the PDF
+        analysis_json: JSON string of analysis results
+        db_path: Path to database
+        
+    Returns:
+        True if successful
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        UPDATE pdfs 
+        SET sectional_analysis = ?
+        WHERE id = ?
+    """, (analysis_json, pdf_id))
+    
+    updated = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    
+    return updated
+
+
+def get_pdf_analysis(pdf_id: int, db_path: str = "data/chat.db") -> Optional[dict]:
+    """
+    Retrieve sectional analysis for a PDF.
+    
+    Args:
+        pdf_id: ID of the PDF
+        db_path: Path to database
+        
+    Returns:
+        Analysis JSON as dict, or None if not found
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT sectional_analysis
+        FROM pdfs
+        WHERE id = ?
+    """, (pdf_id,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row and row[0]:
+        try:
+            return json.loads(row[0])
+        except json.JSONDecodeError:
+            return None
+    return None
+
+
 # ===== CHUNK CRUD OPERATIONS =====
 
 def insert_chunk(pdf_id: int, chunk_index: int, content: str, 
@@ -470,3 +560,30 @@ def clear_chat_history(pdf_id: int, db_path: str = "data/chat.db") -> int:
     conn.close()
     
     return deleted_count
+
+
+# ===== STATUS MANAGEMENT =====
+
+def update_pdf_status(pdf_id: int, status: str, error_message: str = None, db_path: str = "data/chat.db") -> bool:
+    """Update PDF processing status"""
+    import sqlite3
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE pdfs SET processing_status = ?, error_message = ? WHERE id = ?", 
+                   (status, error_message, pdf_id))
+    updated = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return updated
+
+
+def get_pdf_status(pdf_id: int, db_path: str = "data/chat.db"):
+    """Get PDF processing status"""
+    import sqlite3
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT processing_status, error_message FROM pdfs WHERE id = ?", (pdf_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None

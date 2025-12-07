@@ -34,6 +34,8 @@ export default function ProjectDetailPage() {
 
     // Delete Modal State
     const [dprToDelete, setDprToDelete] = useState<number | null>(null)
+    // Analyzing State
+    const [analyzingPdf, setAnalyzingPdf] = useState<number | null>(null)
 
     useEffect(() => {
         if (id) {
@@ -116,6 +118,22 @@ export default function ProjectDetailPage() {
     const handleDeleteClick = (e: React.MouseEvent, dprId: number) => {
         e.stopPropagation()
         setDprToDelete(dprId)
+    }
+
+    const handleAnalyzePdf = async (pdfId: number) => {
+        try {
+            setAnalyzingPdf(pdfId)
+            await api.analyzePdf(pdfId)
+            // Reload the project data to get updated status
+            if (id) {
+                await loadProjectData(parseInt(id))
+            }
+        } catch (err: any) {
+            alert(err.message || 'Failed to analyze PDF')
+            console.error('Error analyzing PDF:', err)
+        } finally {
+            setAnalyzingPdf(null)
+        }
     }
 
     const getDocumentStatus = (doc: DPR) => {
@@ -278,14 +296,31 @@ export default function ProjectDetailPage() {
                                 </div>
 
                                 <div className="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
-                                    <Button
-                                        size="sm"
-                                        className="flex-1 md:flex-none"
-                                        onClick={() => navigate(`/documents/${doc.id}`)}
-                                    >
-                                        <Eye className="h-4 w-4 mr-2" />
-                                        View Analysis
-                                    </Button>
+                                    {/* Show "Analyze DPR Offline" for ready PDFs, "View Analysis" for completed */}
+                                    {doc.chunks_stored && !doc.sectional_analysis ? (
+                                        <Button
+                                            size="sm"
+                                            className="flex-1 md:flex-none"
+                                            onClick={() => handleAnalyzePdf(doc.id)}
+                                            disabled={analyzingPdf === doc.id}
+                                        >
+                                            {analyzingPdf === doc.id ? (
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            ) : (
+                                                <FileText className="h-4 w-4 mr-2" />
+                                            )}
+                                            {analyzingPdf === doc.id ? 'Analyzing...' : 'Analyze DPR Offline'}
+                                        </Button>
+                                    ) : doc.sectional_analysis ? (
+                                        <Button
+                                            size="sm"
+                                            className="flex-1 md:flex-none"
+                                            onClick={() => navigate(`/pdf/${doc.id}/analysis`)}
+                                        >
+                                            <Eye className="h-4 w-4 mr-2" />
+                                            View Analysis
+                                        </Button>
+                                    ) : null}
                                     <Button
                                         variant="outline"
                                         size="sm"

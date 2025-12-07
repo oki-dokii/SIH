@@ -1,0 +1,17 @@
+// Add this function after handleDeleteClick in ProjectDetail.tsx (around line 122):
+
+const handleAnalyzePdf = async (pdfId: number) => {
+    try {
+        setAnalyzingPdf(pdfId)
+        await api.analyzePdf(pdfId)
+        // Reload the project data to get updated status
+        if (id) {
+            await loadProjectData(parseInt(id))
+        }
+    } catch (err: any) {
+        alert(err.message || 'Failed to analyze PDF')
+        console.error('Error analyzing PDF:', err)
+    } finally {
+        setAnalyzingPdf(null)
+    }
+}

@@ -44,7 +44,9 @@ export interface ComparisonMessage {
 export interface Project {
   id: number
   name: string
-  description?: string
+  state: string
+  scheme: string
+  sector: string
   created_ts: string
   pdf_count?: number
 }
@@ -57,7 +59,7 @@ export const api = {
     return data.projects || []
   },
 
-  async createProject(project: { name: string; description?: string }): Promise<Project> {
+  async createProject(project: { name: string; state: string; scheme: string; sector: string }): Promise<Project> {
     const response = await fetch(`${API_BASE_URL}/projects`, {
       method: 'POST',
       headers: {
@@ -87,6 +89,16 @@ export const api = {
     if (!response.ok) throw new Error('Failed to fetch project DPRs')
     const data = await response.json()
     return data.pdfs || []
+  },
+
+  async analyzePdf(pdfId: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/pdf/${pdfId}/analyze`, {
+      method: 'POST',
+    })
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || 'Failed to analyze PDF')
+    }
   },
 
   async getDPRs(): Promise<DPR[]> {
