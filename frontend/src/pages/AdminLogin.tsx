@@ -169,7 +169,7 @@ export default function AdminLogin() {
                         {/* Back Link */}
                         <div className="mt-6 text-center">
                             <button
-                                onClick={() => navigate('/')}
+                                onClick={() => navigate('/role-selection')}
                                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
                             >
                                 ← Back to Role Selection

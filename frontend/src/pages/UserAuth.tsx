@@ -122,7 +122,7 @@ export default function UserAuth() {
 
             if (response.ok && data.success) {
                 loginUser(data.user)
-                navigate('/user')
+                navigate('/user/dashboard')
             } else {
                 setError(data.detail || data.message || 'Invalid credentials')
             }
@@ -439,7 +439,7 @@ export default function UserAuth() {
                         {/* Back Link */}
                         <div className="mt-6 text-center">
                             <button
-                                onClick={() => navigate('/')}
+                                onClick={() => navigate('/role-selection')}
                                 className="text-sm text-muted-foreground hover:text-purple-600 transition-colors"
                             >
                                 ← Back to Role Selection

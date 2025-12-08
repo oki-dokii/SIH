@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from
 import { LanguageProvider } from './contexts/LanguageContext'
 import { RoleProvider, useRole } from './contexts/RoleContext'
 import RoleSelectionPage from './pages/RoleSelection'
+import DPRLandingPage from './pages/DPRLandingPage'
 import AdminLogin from './pages/AdminLogin'
 import UserAuth from './pages/UserAuth'
 import IndexPage from './pages/Index'
@@ -10,14 +11,22 @@ import ProjectDetailPage from './pages/ProjectDetail'
 import DocumentDetailPage from './pages/DocumentDetail'
 import ComparisonsPage from './pages/Comparisons'
 import ComparisonDetailPage from './pages/ComparisonDetail'
-import { useEffect } from 'react'
+import ClientDashboard from './pages/ClientDashboard'
+
 
 function RoleSelectionWithNav() {
-  const { setRole } = useRole()
+  const { setRole, logout, logoutUser } = useRole()
   const navigate = useNavigate()
 
   const handleRoleSelect = (newRole: 'admin' | 'user') => {
+    // Clear any existing authentication
+    logout()
+    logoutUser()
+
+    // Set the new role
     setRole(newRole)
+
+    // Navigate to appropriate login page
     if (newRole === 'admin') {
       navigate('/admin/login')
     } else {
@@ -71,7 +80,7 @@ function UserComingSoon() {
           </div>
           <h2 className="text-2xl font-bold">User View Coming Soon</h2>
           <p className="text-muted-foreground">
-            We're building an amazing user experience for viewing analyzed DPR reports. Check back soon!
+            We're working on the user interface. Please check back later or switch to admin view.
           </p>
         </div>
       </main>
@@ -81,40 +90,50 @@ function UserComingSoon() {
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useRole()
+  const { isAuthenticated, role } = useRole()
   const location = useLocation()
 
-  if (!isAuthenticated) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />
+  if (!isAuthenticated || role !== 'admin') {
+    return <Navigate to="/role-selection" state={{ from: location }} replace />
   }
 
   return <>{children}</>
 }
 
 function AppRoutes() {
-  const { setRole, logout } = useRole()
-  const location = useLocation()
-
-  // Auto-reset role if navigating to root
-  useEffect(() => {
-    if (location.pathname === '/') {
-      logout()
-      setRole(null)
-    }
-  }, [location.pathname, setRole, logout])
+  const { role, isAuthenticated, userInfo } = useRole()
 
   return (
     <Routes>
-      {/* Role Selection at root */}
-      <Route path="/" element={<RoleSelectionWithNav />} />
+      {/* Landing Page at root */}
+      <Route path="/" element={<DPRLandingPage />} />
 
-      {/* Admin Login */}
-      <Route path="/admin/login" element={<AdminLogin />} />
+      {/* Role Selection */}
+      <Route path="/role-selection" element={<RoleSelectionWithNav />} />
 
-      {/* User Auth */}
-      <Route path="/user/auth" element={<UserAuth />} />
+      {/* Admin Login - redirect if already logged in */}
+      <Route
+        path="/admin/login"
+        element={
+          isAuthenticated && role === 'admin'
+            ? <Navigate to="/admin/projects" replace />
+            : <AdminLogin />
+        }
+      />
+
+      {/* User Auth - redirect if already logged in */}
+      <Route
+        path="/user/auth"
+        element={
+          userInfo && role === 'user'
+            ? <Navigate to="/user/dashboard" replace />
+            : <UserAuth />
+        }
+      />
 
       {/* User Routes */}
+      <Route path="/user/dashboard" element={<ClientDashboard />} />
+
       <Route path="/user/*" element={<UserComingSoon />} />
 
       {/* Protected Admin Routes */}

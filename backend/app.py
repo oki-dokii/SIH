@@ -317,6 +317,209 @@ async def user_login(request: UserLoginRequest):
         raise HTTPException(status_code=500, detail="Login failed")
 
 
+# ===== CLIENT DPR API ROUTES =====
+
+@app.post("/api/client/dprs/upload")
+async def client_upload_dpr(
+    client_id: int = Form(...),
+    project_id: int = Form(...),
+    project_name: str = Form(...),
+    file: UploadFile = File(...)
+):
+    """Upload a DPR PDF for a specific client. Creates an unanalyzed DPR that admin can analyze later."""
+    # Validate inputs
+    if not project_name or not project_name.strip():
+        raise HTTPException(status_code=400, detail="Project name is required")
+    
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file selected")
+    
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    
+    try:
+        # Check if client already has a DPR for this project
+        import sqlite3
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id FROM dprs 
+            WHERE project_id = ? AND client_id = ?
+        """, (project_id, client_id))
+        existing_dpr = cursor.fetchone()
+        conn.close()
+        
+        if existing_dpr:
+            raise HTTPException(
+                status_code=400, 
+                detail="You have already uploaded a DPR for this project. Only one DPR per project is allowed."
+            )
+        
+        original_filename = file.filename
+        
+        # Generate unique filename for storage (same as admin uploads)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_id = str(uuid.uuid4())[:8]
+        filename = f"{timestamp}_{unique_id}_{original_filename}"
+        filepath = DATA_DIR / filename
+        
+        # Save the uploaded file to data/ directory
+        print(f"⏳ Saving client DPR: {filename}")
+        with open(filepath, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        print(f"✓ File saved: {filepath} ({len(content)} bytes)")
+        
+        # Upload to Gemini Files API for future analysis
+        file_ref = await gemini_client.upload_file(str(filepath))
+        
+        # Insert record into dprs table WITHOUT analysis (summary_json = None)
+        # This allows admin to see it in the project and trigger analysis
+        print(f"⏳ Inserting client DPR record for {filename}...")
+        dpr_id = db.insert_dpr(
+            filename=filename,
+            original_filename=original_filename,
+            filepath=str(filepath),
+            file_ref=file_ref,
+            summary_json=None,  # NULL = unanalyzed, waiting for admin
+            summary_json_multilang=None,
+            project_id=project_id
+        )
+        
+        # Update the record with client_id and status
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        cursor = conn.cursor()
+        cursor.execute("UPDATE dprs SET client_id = ?, status = 'pending' WHERE id = ?", (client_id, dpr_id))
+        conn.commit()
+        conn.close()
+        
+        return JSONResponse({
+            "success": True,
+            "message": "DPR uploaded successfully. An admin will analyze it soon.",
+            "dpr_id": dpr_id
+        })
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Client DPR upload error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload DPR: {str(e)}")
+
+
+
+
+@app.get("/api/client/dprs")
+async def get_client_dprs_list(client_id: int):
+    """Get all DPRs for a specific client from the main dprs table."""
+    try:
+        import sqlite3
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT d.id, d.project_id, d.client_id, d.original_filename, 
+                   d.filename as dpr_filename,
+                   d.upload_ts as created_at, d.status,
+                   p.name as project_name
+            FROM dprs d
+            LEFT JOIN projects p ON d.project_id = p.id
+            WHERE d.client_id = ?
+            ORDER BY d.upload_ts DESC
+        """, (client_id,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        dprs = [dict(row) for row in rows]
+        return JSONResponse({"dprs": dprs, "count": len(dprs)})
+    except Exception as e:
+        print(f"✗ Get client DPRs error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve DPRs: {str(e)}")
+
+
+
+
+@app.get("/api/client/dprs/{dpr_id}/download")
+async def download_client_dpr(dpr_id: int, client_id: int):
+    """Download a client's DPR PDF."""
+    try:
+        # Get DPR record
+        dpr = db.get_client_dpr(dpr_id)
+        if not dpr:
+            raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+        
+        # Security check: ensure the DPR belongs to the requesting client
+        if dpr["client_id"] != client_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Construct file path
+        filepath = Path("uploads") / str(client_id) / dpr["dpr_filename"]
+        
+        if not filepath.exists():
+            raise HTTPException(status_code=404, detail="File not found on server")
+        
+        # Read file and return
+        with open(filepath, "rb") as f:
+            content = f.read()
+        
+        return Response(
+            content=content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={dpr['original_filename']}"
+            }
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Download client DPR error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to download DPR: {str(e)}")
+
+
+@app.delete("/api/client/dprs/{dpr_id}")
+async def delete_client_dpr(dpr_id: int, client_id: int):
+    """Delete a client's DPR. Allows client to upload a new DPR to that project."""
+    try:
+        # Get DPR record
+        dpr = db.get_dpr(dpr_id)
+        if not dpr:
+            raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+        
+        # Debug logging
+        print(f"DEBUG: DPR data: {dpr}")
+        print(f"DEBUG: dpr.get('client_id') = {dpr.get('client_id')} (type: {type(dpr.get('client_id'))})")
+        print(f"DEBUG: client_id parameter = {client_id} (type: {type(client_id)})")
+        
+        # Security check: ensure the DPR belongs to the requesting client
+        if dpr.get("client_id") != client_id:
+            print(f"✗ Access denied: DPR client_id={dpr.get('client_id')}, request client_id={client_id}")
+            raise HTTPException(status_code=403, detail="Access denied. You can only delete your own DPRs.")
+        
+        # Delete the file
+        filepath = Path(dpr["filepath"])
+        if filepath.exists():
+            filepath.unlink()
+            print(f"✓ Deleted file: {filepath}")
+        
+        # Delete database record
+        db.delete_dpr(dpr_id)
+        print(f"✓ Deleted DPR record: {dpr_id}")
+        
+        return JSONResponse({
+            "success": True,
+            "message": "DPR deleted successfully. You can now upload a new DPR to this project."
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Delete client DPR error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete DPR: {str(e)}")
+
+
+
 # ===== PROJECT API ROUTES =====
 
 @app.get("/projects")
@@ -619,6 +822,76 @@ async def get_dpr(dpr_id: int, language: str = "en"):
             dpr["summary_json"] = multilang_data["en"]
     
     return JSONResponse(dpr)
+
+
+@app.post("/dprs/{dpr_id}/analyze")
+async def analyze_dpr(dpr_id: int, language: str = "en"):
+    """
+    Trigger analysis on an unanalyzed DPR (typically client-uploaded).
+    Admin endpoint to run Gemini analysis on uploaded PDFs.
+    """
+    # Verify DPR exists
+    dpr = db.get_dpr(dpr_id)
+    if not dpr:
+        raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+    
+    # Check if already analyzed
+    if dpr.get("summary_json"):
+        return JSONResponse({
+            "message": "DPR already analyzed",
+            "dpr_id": dpr_id,
+            "existing": True
+        })
+    
+    try:
+        # Set status to 'analyzing' before starting
+        import sqlite3
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        cursor = conn.cursor()
+        cursor.execute("UPDATE dprs SET status = 'analyzing' WHERE id = ?", (dpr_id,))
+        conn.commit()
+        conn.close()
+        
+        file_ref = dpr["uploaded_file_ref"]
+        
+        print(f"⏳ Analyzing DPR {dpr_id}...")
+        
+        # Generate analysis in multiple languages
+        multilang_json = await gemini_client.generate_multilang_json_from_file(file_ref, str(SCHEMA_PATH))
+        
+        print(f"✓ Generated analysis in {len(multilang_json)} languages")
+        
+        # Use the requested language as the default summary_json
+        parsed_json = multilang_json.get(language, multilang_json["en"])
+        
+        # Update database with analysis results and set status to 'completed'
+        db.update_dpr(dpr_id, parsed_json, multilang_json)
+        
+        # Set status to 'completed'
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        cursor = conn.cursor()
+        cursor.execute("UPDATE dprs SET status = 'completed' WHERE id = ?", (dpr_id,))
+        conn.commit()
+        conn.close()
+        
+        return JSONResponse({
+            "message": "Analysis complete",
+            "dpr_id": dpr_id,
+            "summary": parsed_json
+        })
+        
+    except Exception as e:
+        # Reset status to 'pending' on error
+        import sqlite3
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        cursor = conn.cursor()
+        cursor.execute("UPDATE dprs SET status = 'pending' WHERE id = ?", (dpr_id,))
+        conn.commit()
+        conn.close()
+        
+        print(f"✗ Analysis failed for DPR {dpr_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze DPR: {str(e)}")
+
 
 
 @app.delete("/dpr/{dpr_id}")

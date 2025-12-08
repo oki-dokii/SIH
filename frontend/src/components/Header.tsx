@@ -157,10 +157,6 @@ export function Header() {
             >
               {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
-            <Button onClick={handleUploadClick}>
-              <FileText className="h-4 w-4" />
-              {t('common.upload')}
-            </Button>
             <Button
               variant="outline"
               onClick={handleLogout}
@@ -169,13 +165,6 @@ export function Header() {
               <LogOut className="h-4 w-4" />
               Logout
             </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf"
-              onChange={handleFileChange}
-              className="hidden"
-            />
           </div>
         </div>
       </header>

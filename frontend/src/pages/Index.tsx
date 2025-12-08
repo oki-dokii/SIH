@@ -1,65 +1,14 @@
 import { Header } from '@/components/Header'
-import { UploadZone } from '@/components/UploadZone'
 import { FeatureCard } from '@/components/FeatureCard'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Sparkles, Zap, Lock, BarChart3, ArrowRight, CheckCircle2 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { api } from '@/lib/api'
-import { useState } from 'react'
+import { Sparkles, Zap, Lock, BarChart3, ArrowRight, CheckCircle2, FileText, Layers } from 'lucide-react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { ProjectSelectionModal } from '@/components/ProjectSelectionModal'
 
 export default function IndexPage() {
   const navigate = useNavigate()
-  const { t, language } = useLanguage()
-  const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [processing, setProcessing] = useState(false)
-  const [uploadSuccess, setUploadSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // Project Selection State
-  const [pendingFile, setPendingFile] = useState<File | null>(null)
-  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false)
-
-  const handleUpload = async (file: File) => {
-    setPendingFile(file)
-    setIsProjectModalOpen(true)
-  }
-
-  const handleProjectSelect = async (projectId: number) => {
-    if (!pendingFile) return
-
-    setIsProjectModalOpen(false)
-    setUploading(true)
-    setProcessing(false)
-    setUploadSuccess(false)
-    setError(null)
-    setUploadProgress(0)
-
-    try {
-      const result = await api.uploadDPR(pendingFile, language, projectId, (progress) => {
-        setUploadProgress(progress)
-        if (progress === 100) {
-          setProcessing(true)
-        }
-      })
-
-      setUploadSuccess(true)
-      // Small delay to show success message before redirect
-      setTimeout(() => {
-        navigate(`/admin/documents/${result.id}`)
-      }, 1500)
-    } catch (err) {
-      setError('Failed to upload file. Please try again.')
-      console.error('Upload error:', err)
-      setUploading(false)
-      setProcessing(false)
-    } finally {
-      setPendingFile(null)
-    }
-  }
+  const { t } = useLanguage()
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -71,7 +20,7 @@ export default function IndexPage() {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">
                 <Sparkles className="h-4 w-4" />
-                {t('landing.subtitle')}
+                AI-Powered Governance
               </div>
 
               <h1 className="text-5xl md:text-6xl font-bold leading-tight">
@@ -94,55 +43,53 @@ export default function IndexPage() {
             </div>
 
             <div>
-              {uploading ? (
-                <Card className="p-8">
-                  <div className="text-center">
-                    {uploadSuccess ? (
-                      <div className="animate-in fade-in zoom-in duration-300">
-                        <div className="mb-4 flex justify-center">
-                          <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-                            <CheckCircle2 className="h-8 w-8 text-green-600" />
-                          </div>
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2 text-green-600">Upload Complete!</h3>
-                        <p className="text-muted-foreground">Redirecting to analysis...</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="mb-4">
-                          <div className="w-16 h-16 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2">
-                          {processing ? 'Processing Document...' : t('common.loading')}
-                        </h3>
-                        <p className="text-muted-foreground mb-4">
-                          {processing
-                            ? 'Analyzing content with AI. This may take a moment.'
-                            : t('landing.uploadPrompt')}
-                        </p>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-primary h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${uploadProgress}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {processing ? '100%' : `${Math.round(uploadProgress)}%`}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </Card>
-              ) : (
-                <>
-                  <UploadZone onUpload={handleUpload} />
-                  {error && (
-                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
-                      {error}
+              <Card className="p-8 border-primary/20 bg-gradient-to-br from-background to-muted/20">
+                <div className="text-center space-y-4">
+                  <div className="flex justify-center">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <FileText className="h-8 w-8 text-primary" />
                     </div>
-                  )}
-                </>
-              )}
+                  </div>
+                  <h3 className="text-2xl font-bold">DPR Analysis Dashboard</h3>
+                  <p className="text-muted-foreground max-w-2xl mx-auto">
+                    Welcome to the admin dashboard. Clients upload their Detailed Project Reports (DPRs)
+                    which are then available for your review and analysis. Navigate to the{' '}
+                    <Link to="/admin/projects" className="text-primary hover:underline font-medium">
+                      Projects
+                    </Link>{' '}
+                    section to view and analyze submitted DPRs.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 text-left">
+                    <div className="p-4 rounded-lg bg-background border">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        Review DPRs
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Access client-submitted DPRs organized by project
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-background border">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5 text-blue-600" />
+                        AI Analysis
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Trigger AI-powered analysis on submitted documents
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-background border">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <Layers className="h-5 w-5 text-purple-600" />
+                        Compare Projects
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Compare multiple DPRs side-by-side for better insights
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </div>
           </div>
         </section>
@@ -234,15 +181,6 @@ export default function IndexPage() {
           </div>
         </div>
       </footer>
-
-      <ProjectSelectionModal
-        isOpen={isProjectModalOpen}
-        onClose={() => {
-          setIsProjectModalOpen(false)
-          setPendingFile(null)
-        }}
-        onSelect={handleProjectSelect}
-      />
     </div>
   )
 }
