@@ -5,6 +5,8 @@ import { EnvironmentalImpact } from '@/components/EnvironmentalImpact'
 import { FinancialCharts } from '@/components/FinancialCharts'
 import { ChatMessageFormatter } from '@/components/ChatMessageFormatter'
 import { LocationMap } from '@/components/LocationMap'
+import { PDFViewer } from '@/components/PDFViewer'
+import { createClickablePageLinks } from '@/utils/parsePageReferences'
 import {
   ArrowLeft,
   Download,
@@ -46,6 +48,7 @@ export default function DocumentDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [showClearChatConfirm, setShowClearChatConfirm] = useState(false)
+  const [pdfPage, setPdfPage] = useState(1)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -141,6 +144,15 @@ export default function DocumentDetailPage() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
+  }
+
+  function handlePageClick(page: number) {
+    setPdfPage(page)
+    // Scroll PDF viewer into view if needed
+    const pdfViewerElement = window.document.getElementById('pdf-viewer-container')
+    if (pdfViewerElement) {
+      pdfViewerElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
   }
 
   const tabs = [
@@ -300,38 +312,49 @@ export default function DocumentDetailPage() {
 
               <div className="p-6">
                 {activeTab === 'overview' && (
-                  <OverviewTab data={data} />
+                  <OverviewTab data={data} onPageClick={handlePageClick} />
                 )}
 
                 {activeTab === 'analysis' && (
-                  <AnalysisTab data={data} />
+                  <AnalysisTab data={data} onPageClick={handlePageClick} />
                 )}
 
                 {activeTab === 'timeline' && (
-                  <TimelineTab data={data} />
+                  <TimelineTab data={data} onPageClick={handlePageClick} />
                 )}
 
                 {activeTab === 'riskAssessment' && (
-                  <RiskAssessmentTab data={data} />
+                  <RiskAssessmentTab data={data} onPageClick={handlePageClick} />
                 )}
 
                 {activeTab === 'inconsistencies' && (
-                  <InconsistenciesTab data={data} />
+                  <InconsistenciesTab data={data} onPageClick={handlePageClick} />
                 )}
 
                 {activeTab === 'compliance' && (
-                  <ComplianceTab data={data} />
+                  <ComplianceTab data={data} onPageClick={handlePageClick} />
                 )}
 
                 {activeTab === 'recommendations' && (
-                  <RecommendationsTab data={data} />
+                  <RecommendationsTab data={data} onPageClick={handlePageClick} />
                 )}
               </div>
             </Card>
           </div>
 
-          <div className="lg:col-span-1">
-            <Card className="h-[600px] flex flex-col">
+          <div className="lg:col-span-1 flex flex-col gap-4">
+            {/* PDF Viewer */}
+            <div id="pdf-viewer-container">
+              <PDFViewer
+                pdfUrl={`http://127.0.0.1:8000/dpr/${id}/pdf`}
+                initialPage={pdfPage}
+                onPageChange={(page) => setPdfPage(page)}
+                className="h-[400px]"
+              />
+            </div>
+
+            {/* Chat Window */}
+            <Card className="h-[500px] flex flex-col">
               <div className="border-b p-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-5 w-5 text-primary" />
@@ -414,7 +437,7 @@ export default function DocumentDetailPage() {
   )
 }
 
-function OverviewTab({ data }: { data: any }) {
+function OverviewTab({ data, onPageClick }: { data: any; onPageClick: (page: number) => void }) {
   const { t } = useLanguage()
 
   if (!data) {
@@ -459,7 +482,9 @@ function OverviewTab({ data }: { data: any }) {
             <FileText className="h-4 w-4" />
             {t('documentDetail.executiveSummary')}
           </h4>
-          <p className="text-muted-foreground leading-relaxed">{data.executiveSummary}</p>
+          <p className="text-muted-foreground leading-relaxed">
+            {createClickablePageLinks(data.executiveSummary, onPageClick)}
+          </p>
         </div>
       )}
       {data.scopeAndObjectives.mission && (
@@ -499,7 +524,7 @@ function OverviewTab({ data }: { data: any }) {
   )
 }
 
-function TimelineTab({ data }: { data: any }) {
+function TimelineTab({ data, onPageClick }: { data: any; onPageClick: (page: number) => void }) {
   const { t } = useLanguage()
 
   if (!data?.timelineAnalysis) {
@@ -574,7 +599,7 @@ function TimelineTab({ data }: { data: any }) {
   )
 }
 
-function AnalysisTab({ data }: { data: any }) {
+function AnalysisTab({ data, onPageClick }: { data: any; onPageClick: (page: number) => void }) {
   if (!data?.financialAnalysis) {
     return (
       <div className="text-center py-8">
@@ -592,7 +617,7 @@ function AnalysisTab({ data }: { data: any }) {
   )
 }
 
-function RiskAssessmentTab({ data }: { data: any }) {
+function RiskAssessmentTab({ data, onPageClick }: { data: any; onPageClick: (page: number) => void }) {
   if (!data?.riskAssessment && !data?.environmentalImpact) {
     return (
       <div className="text-center py-8">
@@ -628,9 +653,13 @@ function RiskAssessmentTab({ data }: { data: any }) {
                   </div>
                   <div className="flex-1">
                     <h5 className="font-semibold mb-1 dark:text-gray-100">{risk.riskCategory}</h5>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{risk.description}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                      {createClickablePageLinks(risk.description, onPageClick)}
+                    </p>
                     {risk.evidence && (
-                      <p className="text-xs text-gray-600 dark:text-gray-400 italic">Evidence: {risk.evidence}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 italic">
+                        Evidence: {createClickablePageLinks(risk.evidence, onPageClick)}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -647,7 +676,7 @@ function RiskAssessmentTab({ data }: { data: any }) {
   )
 }
 
-function InconsistenciesTab({ data }: { data: any }) {
+function InconsistenciesTab({ data, onPageClick }: { data: any; onPageClick: (page: number) => void }) {
   const inconsistencies = data?.inconsistencyDetection
 
   if (!inconsistencies || !inconsistencies.hasInconsistencies) {
@@ -698,15 +727,21 @@ function InconsistenciesTab({ data }: { data: any }) {
                     <h4 className="font-semibold dark:text-gray-100">{issue.category}</h4>
                     <span className="text-xs px-2 py-1 rounded bg-white dark:bg-gray-800 dark:text-gray-200">{issue.severity}</span>
                   </div>
-                  <p className="text-sm mb-2 text-gray-700 dark:text-gray-300">{issue.description}</p>
+                  <p className="text-sm mb-2 text-gray-700 dark:text-gray-300">
+                    {createClickablePageLinks(issue.description, onPageClick)}
+                  </p>
                   {issue.location && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">📍 Location: {issue.location}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      📍 Location: {createClickablePageLinks(issue.location, onPageClick)}
+                    </p>
                   )}
                   {issue.detectedValues && (
                     <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">🔍 Detected: {issue.detectedValues}</p>
                   )}
                   {issue.impact && (
-                    <p className="text-xs mt-2 p-2 bg-white dark:bg-gray-800 rounded italic text-gray-700 dark:text-gray-300">Impact: {issue.impact}</p>
+                    <p className="text-xs mt-2 p-2 bg-white dark:bg-gray-800 rounded italic text-gray-700 dark:text-gray-300">
+                      Impact: {createClickablePageLinks(issue.impact, onPageClick)}
+                    </p>
                   )}
                 </div>
               </div>
@@ -718,7 +753,7 @@ function InconsistenciesTab({ data }: { data: any }) {
   )
 }
 
-function ComplianceTab({ data }: { data: any }) {
+function ComplianceTab({ data, onPageClick }: { data: any; onPageClick: (page: number) => void }) {
   const compliance = data?.mdonerComplianceScoring
 
   if (!compliance) {
@@ -782,7 +817,9 @@ function ComplianceTab({ data }: { data: any }) {
                 />
               </div>
               {item.findings && (
-                <p className="text-xs text-muted-foreground pl-4">{item.findings}</p>
+                <p className="text-xs text-muted-foreground pl-4">
+                  {createClickablePageLinks(item.findings, onPageClick)}
+                </p>
               )}
             </div>
           )
@@ -820,7 +857,7 @@ function ComplianceTab({ data }: { data: any }) {
   )
 }
 
-function RecommendationsTab({ data }: { data: any }) {
+function RecommendationsTab({ data, onPageClick }: { data: any; onPageClick: (page: number) => void }) {
   const recommendations = data?.smartRecommendations
 
   if (!recommendations) {

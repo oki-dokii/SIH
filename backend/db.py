@@ -254,6 +254,20 @@ def init_db(db_path: str = "data/dpr.db"):
             # Continue anyway - the table still exists
 
     
+    # Migration: Add comparison_result and comparison_generated_at to projects table
+    cursor.execute("PRAGMA table_info(projects)")
+    projects_columns = [col[1] for col in cursor.fetchall()]
+    
+    if 'comparison_result' not in projects_columns:
+        print("⏳ Migrating database: adding comparison columns to projects table...")
+        try:
+            cursor.execute("ALTER TABLE projects ADD COLUMN comparison_result TEXT")
+            cursor.execute("ALTER TABLE projects ADD COLUMN comparison_generated_at TEXT")
+            conn.commit()
+            print("✓ Database migration complete (comparison columns added to projects)")
+        except Exception as e:
+            print(f"⚠ Projects comparison migration failed: {e}")
+    
     # Create client_dprs table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS client_dprs (
@@ -844,7 +858,7 @@ def remove_dpr_from_comparison(comparison_id: int, dpr_id: int, db_path: str = "
 # ===== PROJECT FUNCTIONS =====
 
 def get_projects(db_path: str = "data/dpr.db") -> List[Dict]:
-    """Retrieve all projects with their DPR counts."""
+    """Retrieve all projects with their DPR counts and comparison status."""
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -860,7 +874,14 @@ def get_projects(db_path: str = "data/dpr.db") -> List[Dict]:
     rows = cursor.fetchall()
     conn.close()
     
-    return [dict(row) for row in rows]
+    projects = []
+    for row in rows:
+        project = dict(row)
+        # Add has_comparison flag
+        project['has_comparison'] = project.get('comparison_result') is not None
+        projects.append(project)
+    
+    return projects
 
 
 def create_project(name: str, state: str, scheme: str, sector: str, db_path: str = "data/dpr.db") -> int:
@@ -928,7 +949,7 @@ def delete_project(project_id: int, db_path: str = "data/dpr.db") -> List[str]:
 
 
 def get_project(project_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
-    """Get project details."""
+    """Get project details with comparison status."""
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -938,7 +959,10 @@ def get_project(project_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]
     conn.close()
     
     if row:
-        return dict(row)
+        project = dict(row)
+        # Add has_comparison flag
+        project['has_comparison'] = project.get('comparison_result') is not None
+        return project
     return None
 
 
@@ -969,6 +993,64 @@ def get_dprs_by_project(project_id: int, db_path: str = "data/dpr.db") -> List[D
         dprs.append(dpr)
         
     return dprs
+
+
+def save_project_comparison(project_id: int, comparison_json: dict, db_path: str = "data/dpr.db") -> None:
+    """Save comparison result for a project."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    timestamp = datetime.now().isoformat()
+    json_str = json.dumps(comparison_json, indent=2)
+    
+    cursor.execute("""
+        UPDATE projects 
+        SET comparison_result = ?, comparison_generated_at = ?
+        WHERE id = ?
+    """, (json_str, timestamp, project_id))
+    
+    conn.commit()
+    conn.close()
+    print(f"✓ Saved comparison result for project {project_id}")
+
+
+def get_project_comparison(project_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Retrieve saved comparison result for a project."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT comparison_result, comparison_generated_at
+        FROM projects 
+        WHERE id = ?
+    """, (project_id,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row and row["comparison_result"]:
+        return {
+            "comparison": json.loads(row["comparison_result"]),
+            "generated_at": row["comparison_generated_at"]
+        }
+    return None
+
+
+def clear_project_comparison(project_id: int, db_path: str = "data/dpr.db") -> None:
+    """Clear/reset comparison result for a project."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        UPDATE projects 
+        SET comparison_result = NULL, comparison_generated_at = NULL
+        WHERE id = ?
+    """, (project_id,))
+    
+    conn.commit()
+    conn.close()
+    print(f"✓ Cleared comparison result for project {project_id}")
 
 
 # ===== USER AUTHENTICATION FUNCTIONS =====

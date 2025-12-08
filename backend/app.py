@@ -14,7 +14,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from weasyprint import HTML
-from passlib.context import CryptContext
 
 import backend.db as db
 import backend.gemini_client as gemini_client
@@ -22,10 +21,6 @@ import backend.report_generator as report_generator
 
 # Load environment variables
 load_dotenv()
-
-# Password hashing context
-# Password hashing context with automatic truncation for bcrypt's 72-byte limit
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__truncate_error=False)
 # Paths
 DATA_DIR = Path("data")
 SCHEMA_PATH = Path("backend/schema.json")
@@ -126,6 +121,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition", "Content-Type", "Content-Length"],
 )
 
 DATA_DIR.mkdir(exist_ok=True)
@@ -231,19 +227,8 @@ async def user_register(request: UserRegisterRequest):
         raise HTTPException(status_code=400, detail="Invalid email format")
     
     try:
-        # Truncate password to 72 bytes (bcrypt requirement)
-        # Encode to UTF-8, truncate bytes, then decode back
-        password_bytes = request.password.encode('utf-8')
-        if len(password_bytes) > 72:
-            # Truncate and try to decode, handling potential UTF-8 boundary issues
-            password_bytes = password_bytes[:72]
-            # Decode with error handling for incomplete multibyte characters
-            password_truncated = password_bytes.decode('utf-8', errors='ignore')
-        else:
-            password_truncated = request.password
-        
-        # Hash the password
-        password_hash = pwd_context.hash(password_truncated)
+        # Store password as plain text
+        password_hash = request.password
         
         # Create user in database
         user_id = db.create_user(request.email, password_hash, request.name)
@@ -279,16 +264,8 @@ async def user_login(request: UserLoginRequest):
         if not user:
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
-        # Truncate password to 72 bytes (bcrypt requirement)
-        password_bytes = request.password.encode('utf-8')
-        if len(password_bytes) > 72:
-            password_bytes = password_bytes[:72]
-            password_truncated = password_bytes.decode('utf-8', errors='ignore')
-        else:
-            password_truncated = request.password
-        
-        # Verify password
-        if not pwd_context.verify(password_truncated, user["password_hash"]):
+        # Verify password (plain text comparison)
+        if request.password != user["password_hash"]:
             raise HTTPException(status_code=401, detail="Invalid credentials")
         
         # Return success with user info (excluding password hash)
@@ -564,6 +541,7 @@ async def compare_all_project_dprs(project_id: int):
     """
     Compare all DPRs in a project and recommend the best one.
     Uses Gemini AI to analyze all DPR summaries and provide a detailed comparison.
+    Saves the result to the database.
     """
     # Get all DPRs for the project
     dprs = db.get_dprs_by_project(project_id)
@@ -586,7 +564,44 @@ async def compare_all_project_dprs(project_id: int):
     if not result.get('success'):
         raise HTTPException(status_code=500, detail=result.get('error', 'Comparison failed'))
     
-    return JSONResponse(result)
+    # Save comparison result to database
+    db.save_project_comparison(project_id, result['comparison'])
+    
+    return JSONResponse({
+        "success": True,
+        "comparison": result['comparison'],
+        "saved": True
+    })
+
+
+@app.get("/projects/{project_id}/comparison")
+async def get_project_comparison(project_id: int):
+    """
+    Retrieve saved comparison result for a project.
+    """
+    comparison_data = db.get_project_comparison(project_id)
+    
+    if not comparison_data:
+        raise HTTPException(status_code=404, detail="No saved comparison found for this project")
+    
+    return JSONResponse({
+        "success": True,
+        "comparison": comparison_data["comparison"],
+        "generated_at": comparison_data["generated_at"]
+    })
+
+
+@app.delete("/projects/{project_id}/comparison")
+async def clear_project_comparison(project_id: int):
+    """
+    Clear/reset saved comparison result for a project.
+    """
+    db.clear_project_comparison(project_id)
+    
+    return JSONResponse({
+        "success": True,
+        "message": "Comparison cleared successfully"
+    })
 
 
 # ===== PAGE ROUTES =====

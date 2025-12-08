@@ -123,6 +123,9 @@ export default function ProjectDetailPage() {
             const result = await api.compareAllProjectDPRs(parseInt(id))
             setComparisonResult(result.comparison)
             setShowComparisonModal(true)
+
+            // Reload project data to update has_comparison flag
+            await loadProjectData(parseInt(id))
         } catch (err: any) {
             setComparisonError(err.message || 'Failed to compare DPRs')
             setShowComparisonModal(true)
@@ -285,7 +288,28 @@ export default function ProjectDetailPage() {
                         {/* Compare All Button */}
                         {analyzedDprsCount >= 2 && (
                             <Button
-                                onClick={handleCompareAll}
+                                onClick={async () => {
+                                    // If comparison already exists, fetch and show it
+                                    if ((project as any).has_comparison) {
+                                        try {
+                                            const response = await fetch(`http://127.0.0.1:8000/projects/${id}/comparison`)
+                                            if (response.ok) {
+                                                const data = await response.json()
+                                                setComparisonResult(data.comparison)
+                                                setShowComparisonModal(true)
+                                            } else {
+                                                // If fetch fails, generate new comparison
+                                                handleCompareAll()
+                                            }
+                                        } catch (err) {
+                                            console.error('Error fetching comparison:', err)
+                                            handleCompareAll()
+                                        }
+                                    } else {
+                                        // Generate new comparison
+                                        handleCompareAll()
+                                    }
+                                }}
                                 disabled={comparing}
                                 className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
                             >
@@ -293,6 +317,11 @@ export default function ProjectDetailPage() {
                                     <>
                                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                         Comparing...
+                                    </>
+                                ) : (project as any).has_comparison ? (
+                                    <>
+                                        <Eye className="h-4 w-4 mr-2" />
+                                        View Comparison
                                     </>
                                 ) : (
                                     <>
