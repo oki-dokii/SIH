@@ -10,9 +10,11 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from weasyprint import HTML
+from passlib.context import CryptContext
 
 import backend.db as db
 import backend.gemini_client as gemini_client
@@ -21,6 +23,9 @@ import backend.report_generator as report_generator
 # Load environment variables
 load_dotenv()
 
+# Password hashing context
+# Password hashing context with automatic truncation for bcrypt's 72-byte limit
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__truncate_error=False)
 # Paths
 DATA_DIR = Path("data")
 SCHEMA_PATH = Path("backend/schema.json")
@@ -120,6 +125,15 @@ async def lifespan(app: FastAPI):
 # Initialize FastAPI app with lifespan
 app = FastAPI(title="DPR Analyzer", version="1.0.0", lifespan=lifespan)
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5000", "http://127.0.0.1:5000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 DATA_DIR.mkdir(exist_ok=True)
 
 # Initialize database
@@ -154,6 +168,356 @@ class CreateProjectRequest(BaseModel):
     state: str
     scheme: str
     sector: str
+
+
+
+class AdminLoginRequest(BaseModel):
+    admin_id: str
+    password: str
+
+
+class AdminLoginResponse(BaseModel):
+    success: bool
+    message: str
+
+
+class UserRegisterRequest(BaseModel):
+    name: str
+    username: str
+    email: str
+    password: str
+    confirm_password: str
+
+
+class UserLoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class UserAuthResponse(BaseModel):
+    success: bool
+    message: str
+    user: dict = None
+
+
+# ===== ADMIN AUTH API ROUTES =====
+
+@app.post("/api/admin/login")
+async def admin_login(request: AdminLoginRequest):
+    """Authenticate admin user with credentials from environment variables."""
+    admin_id = os.getenv("ADMIN_ID")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+    
+    if not admin_id or not admin_password:
+        raise HTTPException(status_code=500, detail="Admin credentials not configured")
+    
+    if request.admin_id == admin_id and request.password == admin_password:
+        return JSONResponse({
+            "success": True,
+            "message": "Login successful"
+        })
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+
+# ===== USER AUTH API ROUTES =====
+
+@app.post("/api/user/register")
+async def user_register(request: UserRegisterRequest):
+    """Register a new user account."""
+    # Validate password match
+    if request.password != request.confirm_password:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+    
+    # Validate password length
+    if len(request.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+    
+    # Validate username (alphanumeric)
+    if not request.username.isalnum():
+        raise HTTPException(status_code=400, detail="Username must be alphanumeric")
+    
+    # Validate email format (basic check)
+    if '@' not in request.email or '.' not in request.email:
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    
+    try:
+        # Truncate password to 72 bytes (bcrypt requirement)
+        # Encode to UTF-8, truncate bytes, then decode back
+        password_bytes = request.password.encode('utf-8')
+        if len(password_bytes) > 72:
+            # Truncate and try to decode, handling potential UTF-8 boundary issues
+            password_bytes = password_bytes[:72]
+            # Decode with error handling for incomplete multibyte characters
+            password_truncated = password_bytes.decode('utf-8', errors='ignore')
+        else:
+            password_truncated = request.password
+        
+        # Hash the password
+        password_hash = pwd_context.hash(password_truncated)
+        
+        # Create user in database
+        user_id = db.create_user(request.username, request.email, password_hash, request.name)
+        
+        return JSONResponse({
+            "success": True,
+            "message": "Registration successful",
+            "user": {
+                "id": user_id,
+                "name": request.name,
+                "username": request.username,
+                "email": request.email
+            }
+        })
+    except ValueError as e:
+        # Handle duplicate username/email
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"✗ Registration error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+
+@app.post("/api/user/login")
+async def user_login(request: UserLoginRequest):
+    """Authenticate user with username/email and password."""
+    try:
+        # Get user by username
+        user = db.get_user_by_username(request.username)
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        # Truncate password to 72 bytes (bcrypt requirement)
+        password_bytes = request.password.encode('utf-8')
+        if len(password_bytes) > 72:
+            password_bytes = password_bytes[:72]
+            password_truncated = password_bytes.decode('utf-8', errors='ignore')
+        else:
+            password_truncated = request.password
+        
+        # Verify password
+        if not pwd_context.verify(password_truncated, user["password_hash"]):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        # Return success with user info (excluding password hash)
+        return JSONResponse({
+            "success": True,
+            "message": "Login successful",
+            "user": {
+                "id": user["id"],
+                "name": user["name"],
+                "username": user["username"],
+                "email": user["email"]
+            }
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Login error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Login failed")
+
+
+# ===== CLIENT DPR API ROUTES =====
+
+@app.post("/api/client/dprs/upload")
+async def client_upload_dpr(
+    client_id: int = Form(...),
+    project_id: int = Form(...),
+    project_name: str = Form(...),
+    file: UploadFile = File(...)
+):
+    """Upload a DPR PDF for a specific client. Creates an unanalyzed DPR that admin can analyze later."""
+    # Validate inputs
+    if not project_name or not project_name.strip():
+        raise HTTPException(status_code=400, detail="Project name is required")
+    
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file selected")
+    
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    
+    try:
+        # Check if client already has a DPR for this project
+        import sqlite3
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id FROM dprs 
+            WHERE project_id = ? AND client_id = ?
+        """, (project_id, client_id))
+        existing_dpr = cursor.fetchone()
+        conn.close()
+        
+        if existing_dpr:
+            raise HTTPException(
+                status_code=400, 
+                detail="You have already uploaded a DPR for this project. Only one DPR per project is allowed."
+            )
+        
+        original_filename = file.filename
+        
+        # Generate unique filename for storage (same as admin uploads)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_id = str(uuid.uuid4())[:8]
+        filename = f"{timestamp}_{unique_id}_{original_filename}"
+        filepath = DATA_DIR / filename
+        
+        # Save the uploaded file to data/ directory
+        print(f"⏳ Saving client DPR: {filename}")
+        with open(filepath, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        print(f"✓ File saved: {filepath} ({len(content)} bytes)")
+        
+        # Upload to Gemini Files API for future analysis
+        file_ref = await gemini_client.upload_file(str(filepath))
+        
+        # Insert record into dprs table WITHOUT analysis (summary_json = None)
+        # This allows admin to see it in the project and trigger analysis
+        print(f"⏳ Inserting client DPR record for {filename}...")
+        dpr_id = db.insert_dpr(
+            filename=filename,
+            original_filename=original_filename,
+            filepath=str(filepath),
+            file_ref=file_ref,
+            summary_json=None,  # NULL = unanalyzed, waiting for admin
+            summary_json_multilang=None,
+            project_id=project_id
+        )
+        
+        # Update the record with client_id and status
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        cursor = conn.cursor()
+        cursor.execute("UPDATE dprs SET client_id = ?, status = 'pending' WHERE id = ?", (client_id, dpr_id))
+        conn.commit()
+        conn.close()
+        
+        return JSONResponse({
+            "success": True,
+            "message": "DPR uploaded successfully. An admin will analyze it soon.",
+            "dpr_id": dpr_id
+        })
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Client DPR upload error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload DPR: {str(e)}")
+
+
+
+
+@app.get("/api/client/dprs")
+async def get_client_dprs_list(client_id: int):
+    """Get all DPRs for a specific client from the main dprs table."""
+    try:
+        import sqlite3
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT d.id, d.project_id, d.client_id, d.original_filename, 
+                   d.filename as dpr_filename,
+                   d.upload_ts as created_at, d.status,
+                   p.name as project_name
+            FROM dprs d
+            LEFT JOIN projects p ON d.project_id = p.id
+            WHERE d.client_id = ?
+            ORDER BY d.upload_ts DESC
+        """, (client_id,))
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        dprs = [dict(row) for row in rows]
+        return JSONResponse({"dprs": dprs, "count": len(dprs)})
+    except Exception as e:
+        print(f"✗ Get client DPRs error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve DPRs: {str(e)}")
+
+
+
+
+@app.get("/api/client/dprs/{dpr_id}/download")
+async def download_client_dpr(dpr_id: int, client_id: int):
+    """Download a client's DPR PDF."""
+    try:
+        # Get DPR record
+        dpr = db.get_client_dpr(dpr_id)
+        if not dpr:
+            raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+        
+        # Security check: ensure the DPR belongs to the requesting client
+        if dpr["client_id"] != client_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Construct file path
+        filepath = Path("uploads") / str(client_id) / dpr["dpr_filename"]
+        
+        if not filepath.exists():
+            raise HTTPException(status_code=404, detail="File not found on server")
+        
+        # Read file and return
+        with open(filepath, "rb") as f:
+            content = f.read()
+        
+        return Response(
+            content=content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={dpr['original_filename']}"
+            }
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Download client DPR error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to download DPR: {str(e)}")
+
+
+@app.delete("/api/client/dprs/{dpr_id}")
+async def delete_client_dpr(dpr_id: int, client_id: int):
+    """Delete a client's DPR. Allows client to upload a new DPR to that project."""
+    try:
+        # Get DPR record
+        dpr = db.get_dpr(dpr_id)
+        if not dpr:
+            raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+        
+        # Debug logging
+        print(f"DEBUG: DPR data: {dpr}")
+        print(f"DEBUG: dpr.get('client_id') = {dpr.get('client_id')} (type: {type(dpr.get('client_id'))})")
+        print(f"DEBUG: client_id parameter = {client_id} (type: {type(client_id)})")
+        
+        # Security check: ensure the DPR belongs to the requesting client
+        if dpr.get("client_id") != client_id:
+            print(f"✗ Access denied: DPR client_id={dpr.get('client_id')}, request client_id={client_id}")
+            raise HTTPException(status_code=403, detail="Access denied. You can only delete your own DPRs.")
+        
+        # Delete the file
+        filepath = Path(dpr["filepath"])
+        if filepath.exists():
+            filepath.unlink()
+            print(f"✓ Deleted file: {filepath}")
+        
+        # Delete database record
+        db.delete_dpr(dpr_id)
+        print(f"✓ Deleted DPR record: {dpr_id}")
+        
+        return JSONResponse({
+            "success": True,
+            "message": "DPR deleted successfully. You can now upload a new DPR to this project."
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Delete client DPR error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete DPR: {str(e)}")
+
 
 
 # ===== PROJECT API ROUTES =====
@@ -458,6 +822,76 @@ async def get_dpr(dpr_id: int, language: str = "en"):
             dpr["summary_json"] = multilang_data["en"]
     
     return JSONResponse(dpr)
+
+
+@app.post("/dprs/{dpr_id}/analyze")
+async def analyze_dpr(dpr_id: int, language: str = "en"):
+    """
+    Trigger analysis on an unanalyzed DPR (typically client-uploaded).
+    Admin endpoint to run Gemini analysis on uploaded PDFs.
+    """
+    # Verify DPR exists
+    dpr = db.get_dpr(dpr_id)
+    if not dpr:
+        raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+    
+    # Check if already analyzed
+    if dpr.get("summary_json"):
+        return JSONResponse({
+            "message": "DPR already analyzed",
+            "dpr_id": dpr_id,
+            "existing": True
+        })
+    
+    try:
+        # Set status to 'analyzing' before starting
+        import sqlite3
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        cursor = conn.cursor()
+        cursor.execute("UPDATE dprs SET status = 'analyzing' WHERE id = ?", (dpr_id,))
+        conn.commit()
+        conn.close()
+        
+        file_ref = dpr["uploaded_file_ref"]
+        
+        print(f"⏳ Analyzing DPR {dpr_id}...")
+        
+        # Generate analysis in multiple languages
+        multilang_json = await gemini_client.generate_multilang_json_from_file(file_ref, str(SCHEMA_PATH))
+        
+        print(f"✓ Generated analysis in {len(multilang_json)} languages")
+        
+        # Use the requested language as the default summary_json
+        parsed_json = multilang_json.get(language, multilang_json["en"])
+        
+        # Update database with analysis results and set status to 'completed'
+        db.update_dpr(dpr_id, parsed_json, multilang_json)
+        
+        # Set status to 'completed'
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        cursor = conn.cursor()
+        cursor.execute("UPDATE dprs SET status = 'completed' WHERE id = ?", (dpr_id,))
+        conn.commit()
+        conn.close()
+        
+        return JSONResponse({
+            "message": "Analysis complete",
+            "dpr_id": dpr_id,
+            "summary": parsed_json
+        })
+        
+    except Exception as e:
+        # Reset status to 'pending' on error
+        import sqlite3
+        conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+        cursor = conn.cursor()
+        cursor.execute("UPDATE dprs SET status = 'pending' WHERE id = ?", (dpr_id,))
+        conn.commit()
+        conn.close()
+        
+        print(f"✗ Analysis failed for DPR {dpr_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze DPR: {str(e)}")
+
 
 
 @app.delete("/dpr/{dpr_id}")

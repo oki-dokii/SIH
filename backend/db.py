@@ -57,6 +57,19 @@ def init_db(db_path: str = "data/dpr.db"):
         cursor.execute("PRAGMA foreign_keys=on;")
         print("✓ Database migration complete (project_id)")
     
+    if 'client_id' not in columns:
+        print("⏳ Migrating database: adding client_id column...")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN client_id INTEGER")
+        print("✓ Database migration complete (client_id)")
+    
+    if 'status' not in columns:
+        print("⏳ Migrating database: adding status column...")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN status TEXT DEFAULT 'completed'")
+        # Update existing NULL summary_json rows to 'pending'
+        cursor.execute("UPDATE dprs SET status = 'pending' WHERE summary_json IS NULL")
+        print("✓ Database migration complete (status)")
+    
+    
     # Create index on original_filename for faster lookups
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_original_filename 
@@ -128,6 +141,44 @@ def init_db(db_path: str = "data/dpr.db"):
             timestamp TEXT NOT NULL,
             FOREIGN KEY (comparison_chat_id) REFERENCES comparison_chats (id)
         )
+    """)
+    
+    # Create users table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL,
+            password_hash TEXT NOT NULL,
+            name TEXT,
+            created_at TEXT NOT NULL
+        )
+    """)
+    
+    # Create unique index for username
+    cursor.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username 
+        ON users(username)
+    """)
+    
+    # Create client_dprs table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS client_dprs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id INTEGER NOT NULL,
+            project_name TEXT NOT NULL,
+            dpr_filename TEXT NOT NULL,
+            original_filename TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'Review',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (client_id) REFERENCES users (id)
+        )
+    """)
+    
+    # Create index on client_id for faster lookups
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_client_dprs_client_id 
+        ON client_dprs(client_id)
     """)
     
     conn.commit()
@@ -229,24 +280,44 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang
-        FROM dprs WHERE id = ?
+        SELECT id, filename, original_filename, filepath, uploaded_file_ref, 
+               upload_ts, summary_json, summary_json_multilang, project_id, status, client_id
+        FROM dprs 
+        WHERE id = ?
     """, (dpr_id,))
     
     row = cursor.fetchone()
     conn.close()
     
     if row:
-        return {
+        result = {
             "id": row["id"],
             "filename": row["filename"],
             "original_filename": row["original_filename"],
             "filepath": row["filepath"],
             "uploaded_file_ref": row["uploaded_file_ref"],
             "upload_ts": row["upload_ts"],
-            "summary_json": json.loads(row["summary_json"]),
             "summary_json_multilang": row["summary_json_multilang"]
         }
+        
+        # Add client_id if it exists
+        if "client_id" in row.keys():
+            result["client_id"] = row["client_id"]
+        
+        # Add status if it exists
+        if "status" in row.keys():
+            result["status"] = row["status"]
+        
+        # Parse summary_json if it exists and is not None
+        if row["summary_json"]:
+            try:
+                result["summary_json"] = json.loads(row["summary_json"])
+            except:
+                result["summary_json"] = None
+        else:
+            result["summary_json"] = None
+            
+        return result
     return None
 
 
@@ -790,7 +861,7 @@ def get_dprs_by_project(project_id: int, db_path: str = "data/dpr.db") -> List[D
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, original_filename, upload_ts, summary_json, project_id
+        SELECT id, filename, original_filename, upload_ts, summary_json, project_id, status
         FROM dprs
         WHERE project_id = ?
         ORDER BY upload_ts DESC
@@ -810,3 +881,171 @@ def get_dprs_by_project(project_id: int, db_path: str = "data/dpr.db") -> List[D
         dprs.append(dpr)
         
     return dprs
+
+
+# ===== USER AUTHENTICATION FUNCTIONS =====
+
+def create_user(username: str, email: str, password_hash: str, name: str = None, db_path: str = "data/dpr.db") -> int:
+    """Create a new user and return the user ID."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    timestamp = datetime.now().isoformat()
+    
+    try:
+        cursor.execute("""
+            INSERT INTO users (username, email, password_hash, name, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        """, (username, email, password_hash, name, timestamp))
+        
+        user_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        print(f"✓ User created with ID: {user_id}")
+        return user_id
+    except sqlite3.IntegrityError as e:
+        conn.close()
+        if 'username' in str(e):
+            raise ValueError("Username already exists")
+        else:
+            raise ValueError("User creation failed")
+
+
+def get_user_by_username(username: str, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Retrieve a user by username."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, username, email, password_hash, name, created_at
+        FROM users WHERE username = ?
+    """, (username,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            "id": row["id"],
+            "username": row["username"],
+            "email": row["email"],
+            "password_hash": row["password_hash"],
+            "name": row["name"],
+            "created_at": row["created_at"]
+        }
+    return None
+
+
+def get_user_by_email(email: str, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Retrieve a user by email."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, username, email, password_hash, created_at
+        FROM users WHERE email = ?
+    """, (email,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            "id": row["id"],
+            "username": row["username"],
+            "email": row["email"],
+            "password_hash": row["password_hash"],
+            "created_at": row["created_at"]
+        }
+    return None
+
+
+def get_user_by_username_or_email(identifier: str, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Retrieve a user by username or email."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, username, email, password_hash, created_at
+        FROM users WHERE username = ? OR email = ?
+    """, (identifier, identifier))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            "id": row["id"],
+            "username": row["username"],
+            "email": row["email"],
+            "password_hash": row["password_hash"],
+            "created_at": row["created_at"]
+        }
+    return None
+
+
+# ===== CLIENT DPR FUNCTIONS =====
+
+def create_client_dpr(client_id: int, project_name: str, filename: str, original_filename: str, db_path: str = "data/dpr.db") -> int:
+    """Create a new client DPR record and return its ID."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    timestamp = datetime.now().isoformat()
+    status = "Review"
+    
+    cursor.execute("""
+        INSERT INTO client_dprs (client_id, project_name, dpr_filename, original_filename, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (client_id, project_name, filename, original_filename, status, timestamp))
+    
+    dpr_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    
+    print(f"✓ Client DPR created with ID: {dpr_id} for client {client_id}")
+    return dpr_id
+
+
+def get_client_dprs(client_id: int, db_path: str = "data/dpr.db") -> List[Dict]:
+    """Retrieve all DPRs for a specific client."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, client_id, project_name, dpr_filename, original_filename, status, created_at
+        FROM client_dprs
+        WHERE client_id = ?
+        ORDER BY created_at DESC
+    """, (client_id,))
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in rows]
+
+
+def get_client_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Retrieve a specific client DPR by ID."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, client_id, project_name, dpr_filename, original_filename, status, created_at
+        FROM client_dprs
+        WHERE id = ?
+    """, (dpr_id,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return dict(row)
+    return None
+

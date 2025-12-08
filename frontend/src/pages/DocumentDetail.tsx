@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card'
 import { EnvironmentalImpact } from '@/components/EnvironmentalImpact'
 import { FinancialCharts } from '@/components/FinancialCharts'
 import { ChatMessageFormatter } from '@/components/ChatMessageFormatter'
+import { LocationMap } from '@/components/LocationMap'
 import {
   ArrowLeft,
   Download,
@@ -173,7 +174,7 @@ export default function DocumentDetailPage() {
             <p className="text-muted-foreground mb-6">
               {error || 'The requested document could not be found.'}
             </p>
-            <Button onClick={() => navigate('/documents')}>
+            <Button onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4" />
               Back to Documents
             </Button>
@@ -191,7 +192,7 @@ export default function DocumentDetailPage() {
 
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="outline" onClick={() => navigate('/documents')}>
+          <Button variant="outline" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
@@ -438,12 +439,17 @@ function OverviewTab({ data }: { data: any }) {
             <MapPin className="h-4 w-4" />
             {t('documentDetail.location')}
           </h4>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-3">
             {data.projectLocation.state}
             {data.projectLocation.districts && data.projectLocation.districts.length > 0 && (
               <> - {data.projectLocation.districts.join(', ')}</>
             )}
           </p>
+          <LocationMap
+            state={data.projectLocation.state}
+            districts={data.projectLocation.districts}
+            height="250px"
+          />
         </div>
       )}
 

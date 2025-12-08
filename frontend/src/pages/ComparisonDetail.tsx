@@ -170,7 +170,7 @@ export default function ComparisonDetailPage() {
           <Card className="p-12 text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Comparison not found</h2>
             <p className="text-gray-600 mb-6">The comparison you're looking for doesn't exist.</p>
-            <Button onClick={() => navigate('/comparisons')}>
+            <Button onClick={() => navigate(-1)}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Comparisons
             </Button>
@@ -188,7 +188,7 @@ export default function ComparisonDetailPage() {
         <div className="mb-6">
           <Button
             variant="outline"
-            onClick={() => navigate('/comparisons')}
+            onClick={() => navigate(-1)}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -223,7 +223,7 @@ export default function ComparisonDetailPage() {
                   <div
                     key={dpr.id}
                     className="relative group p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-cyan-500 dark:hover:border-cyan-500 transition-colors"
-                    onClick={() => navigate(`/documents/${dpr.id}`)}
+                    onClick={() => navigate(`/admin/documents/${dpr.id}`)}
                   >
                     {/* Remove button - only show when 3+ PDFs */}
                     {comparison.dprs && comparison.dprs.length >= 3 && (

@@ -38,6 +38,9 @@ export default function ProjectDetailPage() {
     // Delete Modal State
     const [dprToDelete, setDprToDelete] = useState<number | null>(null)
 
+    // Analyzing state
+    const [analyzingDpr, setAnalyzingDpr] = useState<number | null>(null)
+
     useEffect(() => {
         if (id) {
             loadProjectData(parseInt(id))
@@ -58,6 +61,42 @@ export default function ProjectDetailPage() {
             console.error('Error loading project data:', err)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleAnalyze = async (dprId: number) => {
+        setAnalyzingDpr(dprId)
+        try {
+            console.log(`Starting analysis for DPR ${dprId}...`)
+            const response = await fetch(`http://127.0.0.1:8000/dprs/${dprId}/analyze`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+
+            console.log('Response status:', response.status)
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
+                console.error('Analysis error response:', errorData)
+                throw new Error(errorData.detail || `Analysis failed with status ${response.status}`)
+            }
+
+            const result = await response.json()
+            console.log('Analysis result:', result)
+
+            // Reload to get updated DPR with analysis
+            if (id) {
+                await loadProjectData(parseInt(id))
+            }
+
+            alert('DPR analyzed successfully!')
+        } catch (err: any) {
+            console.error('Analysis error:', err)
+            alert(`Failed to analyze DPR: ${err.message}. Check console for details.`)
+        } finally {
+            setAnalyzingDpr(null)
         }
     }
 
@@ -122,10 +161,18 @@ export default function ProjectDetailPage() {
     }
 
     const getDocumentStatus = (doc: DPR) => {
-        if (doc.summary_json) {
+        // Check status field first (if it exists)
+        if ((doc as any).status === 'analyzing') {
+            return { label: 'Analyzing...', color: 'text-blue-600', bg: 'bg-blue-50' }
+        }
+        if ((doc as any).status === 'pending') {
+            return { label: 'Pending Analysis', color: 'text-yellow-600', bg: 'bg-yellow-50' }
+        }
+        if (doc.summary_json || (doc as any).status === 'completed') {
             return { label: t('projectDetail.completed'), color: 'text-green-600', bg: 'bg-green-50' }
         }
-        return { label: t('projectDetail.processing'), color: 'text-blue-600', bg: 'bg-blue-50' }
+        // Fallback for old data
+        return { label: 'Pending Analysis', color: 'text-yellow-600', bg: 'bg-yellow-50' }
     }
 
     const formatDate = (dateString: string) => {
@@ -157,7 +204,7 @@ export default function ProjectDetailPage() {
                         <p className="text-muted-foreground mb-6">
                             {error || t('projectDetail.projectNotFoundDesc')}
                         </p>
-                        <Button onClick={() => navigate('/projects')}>
+                        <Button onClick={() => navigate(-1)}>
                             <ArrowLeft className="h-4 w-4 mr-2" />
                             Back to Projects
                         </Button>
@@ -173,7 +220,7 @@ export default function ProjectDetailPage() {
 
             <main className="flex-1 container mx-auto px-4 py-8">
                 <div className="mb-8">
-                    <Button variant="ghost" className="mb-4 pl-0 hover:pl-2 transition-all" onClick={() => navigate('/projects')}>
+                    <Button variant="ghost" className="mb-4 pl-0 hover:pl-2 transition-all" onClick={() => navigate(-1)}>
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Projects
                     </Button>
@@ -200,32 +247,6 @@ export default function ProjectDetailPage() {
                                 </span>
                             </div>
                         </div>
-                        <Button size="lg" onClick={handleUploadClick} disabled={uploading}>
-                            {uploading ? (
-                                <div className="flex items-center gap-2">
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    <div className="w-20 h-2 bg-primary-foreground/20 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-primary-foreground transition-all duration-300"
-                                            style={{ width: `${Math.max(5, uploadProgress)}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-xs">{Math.round(uploadProgress)}%</span>
-                                </div>
-                            ) : (
-                                <>
-                                    <Upload className="h-4 w-4 mr-2" />
-                                    Upload PDF
-                                </>
-                            )}
-                        </Button>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".pdf"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
                     </div>
                 </div>
 
@@ -252,12 +273,11 @@ export default function ProjectDetailPage() {
                         <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-semibold mb-2">{t('projectDetail.noDocuments')}</h3>
                         <p className="text-muted-foreground mb-4">
-                            {searchQuery ? t('projectDetail.differentSearchTerm') : t('projectDetail.uploadFirst')}
+                            {searchQuery ? t('projectDetail.differentSearchTerm') : 'Clients upload DPRs for this project. Once uploaded, they will appear here for analysis.'}
                         </p>
-                        <Button onClick={handleUploadClick}>
-                            <Upload className="h-4 w-4 mr-2" />
-                            Upload PDF
-                        </Button>
+                        <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                            You can view and analyze submitted DPRs once they are uploaded.
+                        </p>
                     </Card>
                 )}
 
@@ -285,15 +305,35 @@ export default function ProjectDetailPage() {
                                 </div>
 
                                 <div className="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
-                                    <Button
-                                        size="sm"
-                                        className="flex-1 md:flex-none"
-                                        onClick={() => navigate(`/documents/${doc.id}`)}
-                                        disabled={!doc.summary_json}
-                                    >
-                                        <Eye className="h-4 w-4 mr-2" />
-                                        View Analysis
-                                    </Button>
+                                    {!doc.summary_json ? (
+                                        <Button
+                                            size="sm"
+                                            className="flex-1 md:flex-none"
+                                            onClick={() => handleAnalyze(doc.id)}
+                                            disabled={analyzingDpr === doc.id || (doc as any).status === 'analyzing'}
+                                        >
+                                            {(analyzingDpr === doc.id || (doc as any).status === 'analyzing') ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                    Analyzing...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FileText className="h-4 w-4 mr-2" />
+                                                    Analyze DPR
+                                                </>
+                                            )}
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            className="flex-1 md:flex-none"
+                                            onClick={() => navigate(`/admin/documents/${doc.id}`)}
+                                        >
+                                            <Eye className="h-4 w-4 mr-2" />
+                                            View Analysis
+                                        </Button>
+                                    )}
                                     <Button
                                         variant="outline"
                                         size="sm"

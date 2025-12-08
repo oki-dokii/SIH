@@ -1,9 +1,10 @@
-import { FileText, Moon, Sun, Languages, CheckCircle2 } from 'lucide-react'
+import { FileText, Moon, Sun, Languages, CheckCircle2, LogOut } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from './ui/Button'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '../contexts/LanguageContext'
+import { useRole } from '../contexts/RoleContext'
 import { api } from '@/lib/api'
 import { ProjectSelectionModal } from './ProjectSelectionModal'
 import { Card } from './ui/Card'
@@ -13,6 +14,7 @@ export function Header() {
   const location = useLocation()
   const navigate = useNavigate()
   const { language, setLanguage, t } = useLanguage()
+  const { logout } = useRole()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Project Selection & Upload State
@@ -82,7 +84,7 @@ export function Header() {
       // Small delay to show success message before redirect
       setTimeout(() => {
         setUploading(false)
-        navigate(`/documents/${result.id}`)
+        navigate(`/admin/documents/${result.id}`)
       }, 1500)
     } catch (err) {
       console.error('Upload error:', err)
@@ -93,11 +95,16 @@ export function Header() {
     }
   }
 
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/admin" className="flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
               <FileText className="h-6 w-6 text-white" />
             </div>
@@ -106,28 +113,28 @@ export function Header() {
 
           <nav className="hidden md:flex items-center gap-6">
             <Link
-              to="/"
+              to="/admin"
               className={cn(
                 'text-sm font-medium transition-colors hover:text-primary',
-                isActive('/') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
+                isActive('/admin') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
               )}
             >
               {t('common.home')}
             </Link>
             <Link
-              to="/projects"
+              to="/admin/projects"
               className={cn(
                 'text-sm font-medium transition-colors hover:text-primary',
-                isActive('/projects') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
+                isActive('/admin/projects') || location.pathname.startsWith('/admin/projects/') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
               )}
             >
               {t('common.projects')}
             </Link>
             <Link
-              to="/comparisons"
+              to="/admin/comparisons"
               className={cn(
                 'text-sm font-medium transition-colors hover:text-primary',
-                isActive('/comparisons') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
+                isActive('/admin/comparisons') || location.pathname.startsWith('/admin/comparison-chat/') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
               )}
             >
               {t('common.comparisons')}
@@ -150,17 +157,14 @@ export function Header() {
             >
               {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
-            <Button onClick={handleUploadClick}>
-              <FileText className="h-4 w-4" />
-              {t('common.upload')}
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="text-muted-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
             </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf"
-              onChange={handleFileChange}
-              className="hidden"
-            />
           </div>
         </div>
       </header>
