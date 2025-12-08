@@ -203,7 +203,7 @@ def get_project_pdfs(project_id: int, db_path: str = "data/chat.db") -> List[Dic
     
     cursor.execute("""
         SELECT p.id, p.filename, p.original_filename, p.filepath, 
-               p.num_chunks, p.chunks_stored, p.upload_ts,
+               p.num_chunks, p.chunks_stored, p.sectional_analysis, p.processing_status, p.upload_ts,
                COUNT(m.id) as message_count
         FROM pdfs p
         LEFT JOIN messages m ON p.id = m.pdf_id
@@ -297,7 +297,7 @@ def get_all_pdfs(project_id: Optional[int] = None, db_path: str = "data/chat.db"
     if project_id is not None:
         cursor.execute("""
             SELECT p.id, p.project_id, p.filename, p.original_filename, p.filepath, 
-                   p.num_chunks, p.chunks_stored, p.upload_ts,
+                   p.num_chunks, p.chunks_stored, p.sectional_analysis, p.upload_ts,
                    COUNT(m.id) as message_count
             FROM pdfs p
             LEFT JOIN messages m ON p.id = m.pdf_id
@@ -308,7 +308,7 @@ def get_all_pdfs(project_id: Optional[int] = None, db_path: str = "data/chat.db"
     else:
         cursor.execute("""
             SELECT p.id, p.project_id, p.filename, p.original_filename, p.filepath, 
-                   p.num_chunks, p.chunks_stored, p.upload_ts,
+                   p.num_chunks, p.chunks_stored, p.sectional_analysis, p.upload_ts,
                    COUNT(m.id) as message_count
             FROM pdfs p
             LEFT JOIN messages m ON p.id = m.pdf_id

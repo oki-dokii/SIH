@@ -296,22 +296,8 @@ export default function ProjectDetailPage() {
                                 </div>
 
                                 <div className="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
-                                    {/* Show "Analyze DPR Offline" for ready PDFs, "View Analysis" for completed */}
-                                    {doc.chunks_stored && !doc.sectional_analysis ? (
-                                        <Button
-                                            size="sm"
-                                            className="flex-1 md:flex-none"
-                                            onClick={() => handleAnalyzePdf(doc.id)}
-                                            disabled={analyzingPdf === doc.id}
-                                        >
-                                            {analyzingPdf === doc.id ? (
-                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                            ) : (
-                                                <FileText className="h-4 w-4 mr-2" />
-                                            )}
-                                            {analyzingPdf === doc.id ? 'Analyzing...' : 'Analyze DPR Offline'}
-                                        </Button>
-                                    ) : doc.sectional_analysis ? (
+                                    {/* Show different buttons based on status */}
+                                    {doc.sectional_analysis ? (
                                         <Button
                                             size="sm"
                                             className="flex-1 md:flex-none"
@@ -319,6 +305,20 @@ export default function ProjectDetailPage() {
                                         >
                                             <Eye className="h-4 w-4 mr-2" />
                                             View Analysis
+                                        </Button>
+                                    ) : doc.chunks_stored ? (
+                                        <Button
+                                            size="sm"
+                                            className="flex-1 md:flex-none"
+                                            onClick={() => handleAnalyzePdf(doc.id)}
+                                            disabled={analyzingPdf === doc.id || doc.processing_status === 'analyzing'}
+                                        >
+                                            {(analyzingPdf === doc.id || doc.processing_status === 'analyzing') ? (
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            ) : (
+                                                <FileText className="h-4 w-4 mr-2" />
+                                            )}
+                                            {(analyzingPdf === doc.id || doc.processing_status === 'analyzing') ? 'Analyzing...' : 'Analyze DPR Offline'}
                                         </Button>
                                     ) : null}
                                     <Button

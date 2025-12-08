@@ -194,7 +194,8 @@ class RAGEngine:
         self.vector_store = None
         self.retriever = None
         log_time("🤖 Initializing Ollama LLM (llama3.1)...")
-        self.llm = ChatOllama(model="llama3.1:latest", temperature=0, num_ctx=16384, format="json")
+        self.llm = ChatOllama(model="llama3.1:latest", temperature=0, num_ctx=16384)  # For chat (text)
+        self.llm_json = ChatOllama(model="llama3.1:latest", temperature=0, num_ctx=16384, format="json")  # For analysis (JSON)
         self.first_30_chunks = []
         
         # Initialize vector store if it exists
@@ -808,7 +809,7 @@ Task: {{query}}
 Respond ONLY with valid JSON."""
         
         prompt = ChatPromptTemplate.from_template(template)
-        chain = prompt | self.llm | StrOutputParser()
+        chain = prompt | self.llm_json | StrOutputParser()  # Use JSON LLM for analysis
         response = chain.invoke({"context": context, "query": query})
         
         try:

@@ -1,0 +1,135 @@
+{
+  "projectName": "COMPUTERIZATION (NETWORKING) OF STATE COOPERATIVE BANK",
+  "projectLocation": {
+    "state": "State Cooperative Bank",
+    "districts": ""
+  },
+  "projectSector": "Banking and Finance",
+  "schemeName": "CSISAC scheme for least developed states",
+  "executiveSummary": "A Project to complete computerization (Networking) of State Cooperative Bank through setting up of modern data centre at its Head Office and renovation of its existing building.",
+  "scopeAndObjectives": {
+    "objectives": [
+      "Complete centralize networking of HO and remote branches/Regional offices",
+      "Ensure continuous uninterrupted power supply"
+    ],
+    "scope": [
+      "Renovation of HO Building",
+      "Setting up of Data Centre",
+      "Installation of SPV unit"
+    ],
+    "stakeholders": [
+      "State Cooperative Bank (SCB)",
+      "NCDC (National Cooperative Development Corporation)",
+      "Reputed consultants"
+    ]
+  },
+  "riskAssessment": [
+    {
+      "name": "Delays in Renovation Work",
+      "severity": "HIGH",
+      "mitigation": "Engage a reputable contractor and monitor progress regularly.",
+      "evidence": "[Chunk 9 - Page 3] Renovation of HO Building : Since the existing building is very old it needs urgent renovation work..."
+    },
+    {
+      "name": "Data Centre Setup Delays",
+      "severity": "MEDIUM",
+      "mitigation": "Engage a consultant with experience in setting up data centres and ensure timely procurement of equipment.",
+      "evidence": "[Chunk 10 - Page 3] ii) Setting up Data Centre : A modern data centre is to be set up to complete centralize its networking..."
+    },
+    {
+      "name": "Power Outages",
+      "severity": "HIGH",
+      "mitigation": "Install a backup power supply system and ensure regular maintenance of the SPV unit.",
+      "evidence": "[Chunk 11 - Page 3] iii) Installation of SPV Unit : The installation of SPV unit is proposed to ensure continuous uninterrupted power supply."
+    },
+    {
+      "name": "Financial Constraints",
+      "severity": "MEDIUM",
+      "mitigation": "Ensure timely disbursement of funds from NCDC and explore alternative funding sources if necessary.",
+      "evidence": "[Chunk 12 - Page 3] Project Cost & Means of Finance : The Total project cost is worked out to Rs. 40.60 cr..."
+    },
+    {
+      "name": "Security Risks",
+      "severity": "HIGH",
+      "mitigation": "Implement robust security measures, including encryption and access controls, for the data centre.",
+      "evidence": "[Chunk 13 - Page 3] Security : The Bank will offer FDR/Govt. securities/Govt. Guarantee as security for the loan"
+    },
+    {
+      "name": "Project Cost Overruns",
+      "severity": "MEDIUM",
+      "mitigation": "Regularly review and update project cost estimates to ensure that they remain aligned with actual costs.",
+      "evidence": "[Chunk 12 - Page 3] Project Cost & Means of Finance : The Total project cost is worked out to Rs. 40.60 cr..."
+    },
+    {
+      "name": "Dependence on NCDC Funding",
+      "severity": "MEDIUM",
+      "mitigation": "Diversify funding sources and ensure that the project can be completed even if NCDC funding is delayed or withdrawn.",
+      "evidence": "[Chunk 12 - Page 3] Project Cost & Means of Finance : The Total project cost is worked out to Rs. 40.60 cr..."
+    }
+  ],
+  "inconsistencyDetection": {
+    "hasInconsistencies": true,
+    "totalInconsistencies": 4,
+    "issues": [
+      {
+        "category": "Financial calculation error",
+        "severity": "High",
+        "description": "Total project cost is Rs. 40.60 cr, but it should be the sum of Fixed Cost and Operational Cost (Rs. 39.68 cr + Rs. 0.74 cr = Rs. 40.42 cr)",
+        "location": "Chunk 12 - Page 3",
+        "impact": "Incorrect financial planning"
+      },
+      {
+        "category": "Timeline conflict",
+        "severity": "Medium",
+        "description": "The project is expected to be completed within a period of 1 year after sanction, but the loan from NCDC will take some time to process (Rs.26.39 cr in Chunk 17 - Page 3)",
+        "location": "Chunk 14 - Page 3 and Chunk 17 - Page 3",
+        "impact": "Delays in project completion"
+      },
+      {
+        "category": "Contradicting data between sections",
+        "severity": "Low",
+        "description": "The Total project cost is mentioned as Rs. 40.60 cr in Chunk 12 - Page 3, but the loan from NCDC and subsidy are calculated based on a different total (Rs.26.39 cr + Rs.10.15 cr = Rs.36.54 cr)",
+        "location": "Chunk 12 - Page 3 and Chunk 17-19 - Page 3",
+        "impact": "Confusion in financial planning"
+      },
+      {
+        "category": "Missing critical information",
+        "severity": "Low",
+        "description": "The interest rate for the loan from NCDC is not mentioned",
+        "location": "Chunk 12 - Page 3 and Chunk 16-20 - Page 3",
+        "impact": "Uncertainty in financial planning"
+      }
+    ]
+  },
+  "mdonerComplianceScoring": {
+    "scores": {
+      "North Eastern focus": 80,
+      "Beneficiary alignment": 70,
+      "Environmental compliance": 60,
+      "Land acquisition clarity": 40,
+      "Documentation quality": 90
+    },
+    "overallComplianceScore": 68.4,
+    "complianceGaps": [
+      "Lack of clear details on environmental impact assessment",
+      "Unclear land acquisition process and compensation plan",
+      "Beneficiary alignment could be more specific"
+    ],
+    "complianceStrengths": [
+      "Good documentation quality with clear project details",
+      "Project has a clear focus on computerization and modernization of State Cooperative Bank",
+      "NCDC loan and subsidy details are provided"
+    ]
+  },
+  "analysisMetadata": {
+    "sectionalAnalysis": true,
+    "sectionsAnalyzed": [
+      "header",
+      "overview",
+      "riskAssessment",
+      "inconsistencies",
+      "mdonerCompliance"
+    ],
+    "timestamp": "2025-12-07T02:48:06.589030"
+  }
+}

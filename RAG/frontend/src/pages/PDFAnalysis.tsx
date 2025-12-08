@@ -14,6 +14,7 @@ import {
     Send,
     Trash2,
 } from 'lucide-react'
+import { ChatMessageFormatter } from '@/components/ChatMessageFormatter'
 
 type AnalysisData = {
     projectName: string
@@ -114,10 +115,12 @@ export default function PDFAnalysis() {
         try {
             const response = await fetch(`/api/pdf/${pdfId}/messages`)
             if (response.ok) {
-                const messages = await response.json()
-                setChatHistory(messages.map((msg: any) => ({
+                const data = await response.json()
+                // Backend returns { messages: [...], count: n }
+                const messagesList = data.messages || []
+                setChatHistory(messagesList.map((msg: any) => ({
                     role: msg.role,
-                    content: msg.content
+                    content: msg.text  // Database field is 'text', map to 'content'
                 })))
             }
         } catch (err) {
@@ -160,7 +163,7 @@ export default function PDFAnalysis() {
         if (!id || !window.confirm('Clear chat history?')) return
 
         try {
-            await fetch(`/api/pdf/${id}/clear-history`, { method: 'POST' })
+            await fetch(`/api/pdf/${id}/messages`, { method: 'DELETE' })
             setChatHistory([])
         } catch (err) {
             console.error('Failed to clear chat:', err)
@@ -245,10 +248,10 @@ export default function PDFAnalysis() {
                             Overall Score
                         </div>
                         <div className={`text-3xl font-bold ${analysis.mdonerComplianceScoring.overallComplianceScore >= 80
-                                ? 'text-green-600'
-                                : analysis.mdonerComplianceScoring.overallComplianceScore >= 60
-                                    ? 'text-yellow-600'
-                                    : 'text-red-600'
+                            ? 'text-green-600'
+                            : analysis.mdonerComplianceScoring.overallComplianceScore >= 60
+                                ? 'text-yellow-600'
+                                : 'text-red-600'
                             }`}>
                             {Math.round(analysis.mdonerComplianceScoring.overallComplianceScore)}/100
                         </div>
@@ -365,15 +368,17 @@ export default function PDFAnalysis() {
                                     </div>
                                 )}
                                 {chatHistory.map((msg, index) => (
-                                    <div
-                                        key={index}
-                                        className={`p-3 rounded-lg ${msg.role === 'user'
-                                            ? 'bg-blue-100 ml-8'
-                                            : 'bg-gray-100 mr-8'
-                                            }`}
-                                    >
-                                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                                    </div>
+                                    msg.role === 'assistant' ? (
+                                        <div key={index} className="w-full flex justify-start">
+                                            <ChatMessageFormatter text={msg.content} isUser={false} />
+                                        </div>
+                                    ) : (
+                                        <div key={index} className="w-full flex justify-end">
+                                            <div className="p-3 rounded-lg bg-blue-100 max-w-[80%]">
+                                                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                            </div>
+                                        </div>
+                                    )
                                 ))}
                                 {chatLoading && (
                                     <div className="p-3 rounded-lg bg-gray-100 mr-8 flex items-center gap-2">

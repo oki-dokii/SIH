@@ -1,11 +1,16 @@
 import os
 import uuid
 import json
+import asyncio
 import threading
 from queue import Queue
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
@@ -421,8 +426,10 @@ async def analyze_pdf(pdf_id: int):
         # Update status to 'analyzing'
         db.update_pdf_status(pdf_id, 'analyzing', db_path=str(DATA_DIR / "chat.db"))
         
-        # Run sectional analysis
-        analysis_result = rag_engine.generate_sectional_analysis(pdf_id, str(DATA_DIR / "chat.db"))
+        # Run sectional analysis in thread pool to avoid blocking
+        analysis_result = await asyncio.to_thread(
+            rag_engine.generate_sectional_analysis, pdf_id, str(DATA_DIR / "chat.db")
+        )
         
         # Store analysis
         analysis_json = json.dumps(analysis_result)
@@ -514,9 +521,11 @@ async def chat_with_pdf(pdf_id: int, chat_message: ChatMessage):
         # Store user message
         db.insert_message(pdf_id, "user", chat_message.message, str(DATA_DIR / "chat.db"))
         
-        # Get response from RAG engine in CONVERSATIONAL mode (not JSON)
+        # Get response from RAG engine in CONVERSATIONAL mode (not JSON) - run in thread
         print(f"⏳ Processing chat message for PDF {pdf_id}")
-        answer, sources = rag_engine.chat(chat_message.message, json_mode=False)
+        answer, sources = await asyncio.to_thread(
+            rag_engine.chat, chat_message.message, json_mode=False
+        )
         
         # Store assistant message
         db.insert_message(pdf_id, "assistant", answer, str(DATA_DIR / "chat.db"))
