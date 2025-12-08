@@ -25,7 +25,9 @@ def init_db(db_path: str = "data/cloud.db"):
             scheme TEXT NOT NULL,
             sector TEXT NOT NULL,
             created_ts TEXT DEFAULT (datetime('now')),
-            updated_ts TEXT DEFAULT (datetime('now'))
+            updated_ts TEXT DEFAULT (datetime('now')),
+            deleted INTEGER DEFAULT 0,
+            deleted_at TEXT
         )
     """)
     
@@ -39,6 +41,8 @@ def init_db(db_path: str = "data/cloud.db"):
             filepath TEXT NOT NULL,
             upload_ts TEXT DEFAULT (datetime('now')),
             updated_ts TEXT DEFAULT (datetime('now')),
+            deleted INTEGER DEFAULT 0,
+            deleted_at TEXT,
             FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
         )
     """)
@@ -59,6 +63,16 @@ def init_db(db_path: str = "data/cloud.db"):
         ON files(project_id)
     """)
     
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_projects_deleted 
+        ON projects(deleted)
+    """)
+    
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_files_deleted 
+        ON files(deleted)
+    """)
+    
     conn.commit()
     conn.close()
     print(f"✅ Cloud database initialized: {db_path}")
@@ -67,15 +81,24 @@ def init_db(db_path: str = "data/cloud.db"):
 # ===== PROJECT OPERATIONS =====
 
 def create_project(name: str, state: str, scheme: str, sector: str, 
+                   created_ts: Optional[str] = None,
                    db_path: str = "data/cloud.db") -> int:
     """Create a new project and return its ID."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    cursor.execute("""
-        INSERT INTO projects (name, state, scheme, sector)
-        VALUES (?, ?, ?, ?)
-    """, (name, state, scheme, sector))
+    if created_ts:
+        # Use provided timestamp from offline sync
+        cursor.execute("""
+            INSERT INTO projects (name, state, scheme, sector, created_ts)
+            VALUES (?, ?, ?, ?, ?)
+        """, (name, state, scheme, sector, created_ts))
+    else:
+        # Use default timestamp for new projects
+        cursor.execute("""
+            INSERT INTO projects (name, state, scheme, sector)
+            VALUES (?, ?, ?, ?)
+        """, (name, state, scheme, sector))
     
     project_id = cursor.lastrowid
     conn.commit()
@@ -85,17 +108,28 @@ def create_project(name: str, state: str, scheme: str, sector: str,
 
 
 def update_project(project_id: int, name: str, state: str, scheme: str, 
-                   sector: str, db_path: str = "data/cloud.db") -> bool:
+                   sector: str, created_ts: Optional[str] = None,
+                   db_path: str = "data/cloud.db") -> bool:
     """Update an existing project."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    cursor.execute("""
-        UPDATE projects 
-        SET name = ?, state = ?, scheme = ?, sector = ?,
-            updated_ts = datetime('now')
-        WHERE id = ?
-    """, (name, state, scheme, sector, project_id))
+    if created_ts:
+        # Update with provided timestamp from offline sync
+        cursor.execute("""
+            UPDATE projects 
+            SET name = ?, state = ?, scheme = ?, sector = ?, created_ts = ?,
+                updated_ts = datetime('now')
+            WHERE id = ?
+        """, (name, state, scheme, sector, created_ts, project_id))
+    else:
+        # Update without changing created_ts
+        cursor.execute("""
+            UPDATE projects 
+            SET name = ?, state = ?, scheme = ?, sector = ?,
+                updated_ts = datetime('now')
+            WHERE id = ?
+        """, (name, state, scheme, sector, project_id))
     
     success = cursor.rowcount > 0
     conn.commit()
@@ -267,3 +301,112 @@ def delete_file(file_id: int, db_path: str = "data/cloud.db") -> Optional[str]:
     conn.close()
     
     return filepath
+def soft_delete_project(project_id: int, db_path: str = "data/cloud.db") -> bool:
+    """
+    Soft delete a project by marking it as deleted.
+    Also soft deletes all associated files.
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    now = datetime.now().isoformat()
+    
+    # Soft delete the project
+    cursor.execute("""
+        UPDATE projects 
+        SET deleted = 1, deleted_at = ?, updated_ts = ?
+        WHERE id = ? AND deleted = 0
+    """, (now, now, project_id))
+    
+    success = cursor.rowcount > 0
+    
+    if success:
+        # Also soft delete all files in this project
+        cursor.execute("""
+            UPDATE files 
+            SET deleted = 1, deleted_at = ?, updated_ts = ?
+            WHERE project_id = ? AND deleted = 0
+        """, (now, now, project_id))
+    
+    conn.commit()
+    conn.close()
+    
+    return success
+
+
+def soft_delete_file(file_id: int, db_path: str = "data/cloud.db") -> bool:
+    """Soft delete a file by marking it as deleted."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    now = datetime.now().isoformat()
+    
+    cursor.execute("""
+        UPDATE files 
+        SET deleted = 1, deleted_at = ?, updated_ts = ?
+        WHERE id = ? AND deleted = 0
+    """, (now, now, file_id))
+    
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    
+    return success
+
+
+def get_deleted_projects(since: Optional[str] = None, 
+                         db_path: str = "data/cloud.db") -> List[Dict]:
+    """
+    Retrieve projects that were deleted since a given timestamp.
+    Used for deletion sync.
+    """
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    if since:
+        cursor.execute("""
+            SELECT * FROM projects 
+            WHERE deleted = 1 AND deleted_at > ?
+            ORDER BY deleted_at DESC
+        """, (since,))
+    else:
+        cursor.execute("""
+            SELECT * FROM projects 
+            WHERE deleted = 1
+            ORDER BY deleted_at DESC
+        """)
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in rows]
+
+
+def get_deleted_files(since: Optional[str] = None,
+                      db_path: str = "data/cloud.db") -> List[Dict]:
+    """
+    Retrieve files that were deleted since a given timestamp.
+    Used for deletion sync.
+    """
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    if since:
+        cursor.execute("""
+            SELECT * FROM files 
+            WHERE deleted = 1 AND deleted_at > ?
+            ORDER BY deleted_at DESC
+        """, (since,))
+    else:
+        cursor.execute("""
+            SELECT * FROM files 
+            WHERE deleted = 1
+            ORDER BY deleted_at DESC
+        """)
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in rows]

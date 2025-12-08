@@ -179,9 +179,7 @@ async def create_project(project: ProjectCreate):
 
 @app.get("/api/projects")
 async def list_projects():
-    """
-    Get a list of all projects with PDF counts.
-    """
+    """Get a list of all projects with PDF counts."""
     projects = db.get_all_projects(str(DATA_DIR / "chat.db"))
     return JSONResponse({"projects": projects, "count": len(projects)})
 
@@ -208,7 +206,7 @@ async def get_project(project_id: int):
 @app.delete("/api/projects/{project_id}")
 async def delete_project(project_id: int):
     """
-    Delete a project and all associated PDFs.
+    Soft delete a project (marks as deleted, syncs to cloud).
     """
     # Verify project exists
     project = db.get_project(project_id, str(DATA_DIR / "chat.db"))
@@ -216,32 +214,25 @@ async def delete_project(project_id: int):
         raise HTTPException(status_code=404, detail=f"Project {project_id} not found")
     
     try:
-        # Get PDFs to delete files from disk
-        pdfs = db.get_project_pdfs(project_id, str(DATA_DIR / "chat.db"))
+        # Use soft delete for sync propagation
+        success = db.soft_delete_project_local(project_id, str(DATA_DIR / "chat.db"))
         
-        # Delete from database
-        db.delete_project(project_id, str(DATA_DIR / "chat.db"))
-        
-        # Delete PDF files from disk
-        for pdf in pdfs:
-            filepath = pdf.get("filepath")
-            if filepath and os.path.exists(filepath):
-                try:
-                    os.remove(filepath)
-                    print(f"✓ Deleted file: {filepath}")
-                except Exception as e:
-                    print(f"⚠ Failed to delete file {filepath}: {str(e)}")
+        if not success:
+            raise HTTPException(status_code=404, detail="Project already deleted")
         
         # Clear RAG engine database
         rag_engine.clear_database()
         
+        print(f"✅ Soft deleted project {project_id}, marked dirty for sync")
         return JSONResponse({
             "success": True,
-            "message": f"Deleted project {project_id} and {len(pdfs)} PDFs"
+            "message": f"Project {project_id} deleted and will sync to cloud"
         })
     except Exception as e:
-        print(f"✗ Delete project error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to delete project: {str(e)}")
+        print(f"❌ Delete error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ===== SYNC ENDPOINTS (ADMIN ONLY) =====
@@ -628,4 +619,4 @@ async def delete_pdf(pdf_id: int):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)

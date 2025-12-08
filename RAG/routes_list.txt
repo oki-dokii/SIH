@@ -1,0 +1,25 @@
+Registered Fast API Routes:
+======================================================================
+['HEAD', 'GET'] - /openapi.json
+['HEAD', 'GET'] - /docs
+['HEAD', 'GET'] - /docs/oauth2-redirect
+['HEAD', 'GET'] - /redoc
+['GET'] - /
+['POST'] - /api/projects
+['GET'] - /api/projects
+['GET'] - /api/projects/{project_id}
+['DELETE'] - /api/projects/{project_id}
+['POST'] - /api/admin/sync
+['GET'] - /api/admin/sync/status
+['POST'] - /api/upload-pdf
+['GET'] - /api/pdfs
+['POST'] - /api/pdf/{pdf_id}/analyze
+['GET'] - /api/pdf/{pdf_id}
+['GET'] - /api/pdf/{pdf_id}/analysis
+['POST'] - /api/pdf/{pdf_id}/chat
+['GET'] - /api/pdf/{pdf_id}/messages
+['DELETE'] - /api/pdf/{pdf_id}/messages
+['DELETE'] - /api/pdf/{pdf_id}
+
+======================================================================
+Total routes: 20

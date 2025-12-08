@@ -197,21 +197,16 @@ class SyncManager:
         last_sync = self.get_sync_timestamp('last_projects_sync')
         
         try:
-            print(f"🔍 Fetching projects since {last_sync}")
             response = requests.get(
                 f"{self.cloud_url}/projects",
                 params={"since": last_sync},
                 timeout=10
             )
             
-            print(f"📡 Cloud response: {response.status_code}")
-            
             if response.status_code != 200:
-                print(f"❌ Bad response from cloud: {response. text[:200]}")
                 return 0
             
             cloud_projects = response.json().get('projects', [])
-            print(f"📦 Received {len(cloud_projects)} projects from cloud")
             
             if not cloud_projects:
                 return 0
@@ -221,8 +216,6 @@ class SyncManager:
             synced_count = 0
             
             for cloud_project in cloud_projects:
-                print(f"  Processing: {cloud_project.get('name', 'UNNAMED')} (ID:{cloud_project.get('id', '?')})")
-                
                 # Check if we already have this project
                 cursor.execute("""
                     SELECT id FROM projects WHERE remote_id = ?
@@ -231,63 +224,52 @@ class SyncManager:
                 existing = cursor.fetchone()
                 
                 if existing:
-                    print(f"    Already exists locally as ID:{existing[0]}")
-                    # Update existing local project (only if not dirty)  
+                    # Update existing local project (only if not dirty)
                     cursor.execute("""
                         UPDATE projects 
                         SET name = ?, state = ?, scheme = ?, sector = ?,
                             last_synced_ts = datetime('now')
                         WHERE remote_id = ? AND dirty = 0
                     """, (
-                        cloud_project.get('name', ''),
-                        cloud_project.get('state', ''),
-                        cloud_project.get('scheme', ''),
-                        cloud_project.get('sector', ''),
+                        cloud_project['name'],
+                        cloud_project['state'],
+                        cloud_project['scheme'],
+                        cloud_project['sector'],
                         cloud_project['id']
                     ))
                     
                     if cursor.rowcount > 0:
-                        print(f"    ✓ Updated")
                         synced_count += 1
-                    else:
-                        print(f"    Skipped (dirty or no changes)")
                 else:
                     # Create new local project from cloud
-                    # Use .get() with defaults to handle missing/NULL fields
-                    print(f"    Creating new local project...")
-                    try:
-                        cursor.execute("""
-                            INSERT INTO projects 
-                            (name, state, scheme, sector, remote_id, dirty, last_synced_ts, created_ts)
-                            VALUES (?, ?, ?, ?, ?, 0, datetime('now'), ?)
-                        """, (
-                            cloud_project.get('name', ''),
-                            cloud_project.get('state', ''),
-                            cloud_project.get('scheme', ''),
-                            cloud_project.get('sector', ''),
-                            cloud_project['id'],
-                            cloud_project.get('created_ts', datetime.now().isoformat())
-                        ))
-                        print(f"    ✓ Created as local ID:{cursor.lastrowid}")
-                        synced_count += 1
-                    except Exception as e:
-                        print(f"    ❌ INSERT failed: {e}")
+                    cursor.execute("""
+                        INSERT INTO projects 
+                        (name, state, scheme, sector, remote_id, dirty, last_synced_ts, created_ts)
+                        VALUES (?, ?, ?, ?, ?, 0, datetime('now'), ?)
+                    """, (
+                        cloud_project['name'],
+                        cloud_project['state'],
+                        cloud_project['scheme'],
+                        cloud_project['sector'],
+                        cloud_project['id'],
+                        cloud_project['created_ts']
+                    ))
+                    synced_count += 1
             
             conn.commit()
             conn.close()
             
-            # Update last sync timestamp ONLY if we actually synced something
+            # Update last sync timestamp
+            current_time = datetime.now().isoformat()
+            self.set_sync_timestamp('last_projects_sync', current_time)
+            
             if synced_count > 0:
-                current_time = datetime.now().isoformat()
-                self.set_sync_timestamp('last_projects_sync', current_time)
                 print(f"⬇️ Synced down {synced_count} projects")
             
             return synced_count
             
         except Exception as e:
             print(f"❌ Failed to sync down projects: {e}")
-            import traceback
-            traceback.print_exc()
             return 0
     
     def sync_down_files(self) -> int:
@@ -355,10 +337,11 @@ class SyncManager:
             conn.commit()
             conn.close()
             
-            # Update last sync timestamp ONLY if we actually synced something
+            # Update last sync timestamp
+            current_time = datetime.now().isoformat()
+            self.set_sync_timestamp('last_files_sync', current_time)
+            
             if synced_count > 0:
-                current_time = datetime.now().isoformat()
-                self.set_sync_timestamp('last_files_sync', current_time)
                 print(f"⬇️ Synced down {synced_count} files")
             
             return synced_count

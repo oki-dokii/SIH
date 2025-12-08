@@ -38,6 +38,7 @@ class ProjectCreate(BaseModel):
     state: str
     scheme: str
     sector: str
+    created_ts: Optional[str] = None  # Accept created_ts from offline sync
 
 
 class ProjectUpdate(BaseModel):
@@ -45,6 +46,7 @@ class ProjectUpdate(BaseModel):
     state: str
     scheme: str
     sector: str
+    created_ts: Optional[str] = None  # Accept created_ts from offline sync
 
 
 # ===== HEALTH CHECK =====
@@ -80,6 +82,7 @@ def create_project(project: ProjectCreate):
         state=project.state,
         scheme=project.scheme,
         sector=project.sector,
+        created_ts=project.created_ts,  # Pass created_ts from offline sync
         db_path=DB_PATH
     )
     
@@ -100,6 +103,7 @@ def update_project(project_id: int, project: ProjectUpdate):
         state=project.state,
         scheme=project.scheme,
         sector=project.sector,
+        created_ts=project.created_ts,  # Pass created_ts from offline sync
         db_path=DB_PATH
     )
     
@@ -124,6 +128,30 @@ def get_project(project_id: int):
     project["files"] = files
     
     return project
+
+
+@app.post("/projects/{project_id}/delete")
+def soft_delete_project_endpoint(project_id: int):
+    """
+    Soft delete a project (marks as deleted without removing).
+    Called during deletion sync.
+    """
+    success = db.soft_delete_project(project_id, db_path=DB_PATH)
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="Project not found or already deleted")
+    
+    return {"message": "Project marked as deleted", "id": project_id}
+
+
+@app.get("/projects/deleted")  
+def get_deleted_projects(since: Optional[str] = None):
+    """
+    Get list of deleted projects.
+    Used for deletion sync.
+    """
+    deletions = db.get_deleted_projects(since=since, db_path=DB_PATH)
+    return {"deleted_projects": deletions}
 
 
 # ===== FILE ENDPOINTS =====
@@ -206,21 +234,25 @@ def get_file(file_id: int):
     return file_data
 
 
-@app.delete("/files/{file_id}")
+@app.delete("/files/{file_id}")  
 def delete_file(file_id: int):
-    """Delete a file and its record."""
-    filepath = db.delete_file(file_id, db_path=DB_PATH)
+    """Soft delete a file (marks as deleted)."""
+    success = db.soft_delete_file(file_id, db_path=DB_PATH)
     
-    if not filepath:
-        raise HTTPException(status_code=404, detail="File not found")
+    if not success:
+        raise HTTPException(status_code=404, detail="File not found or already deleted")
     
-    # Delete file from disk
-    try:
-        Path(filepath).unlink(missing_ok=True)
-    except Exception as e:
-        print(f"Warning: Failed to delete file from disk: {e}")
-    
-    return {"message": "File deleted successfully"}
+    return {"message": "File marked as deleted"}
+
+
+@app.get("/files/deleted")
+def get_deleted_files(since: Optional[str] = None):
+    """
+    Get list of deleted files.
+    Used for deletion sync.
+    """
+    deletions = db.get_deleted_files(since=since, db_path=DB_PATH)
+    return {"deleted_files": deletions}
 
 
 # ===== ADMIN SYNC ENDPOINTS =====

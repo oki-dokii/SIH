@@ -16,7 +16,9 @@ def init_db(db_path: str = "data/chat.db"):
         CREATE TABLE IF NOT EXISTS projects (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
-            description TEXT,
+            state TEXT,
+            scheme TEXT,
+            sector TEXT,
             created_ts TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -60,13 +62,31 @@ def init_db(db_path: str = "data/chat.db"):
         )
     """)
     
-    # Add state column to projects table if it doesn't exist (migration from old schema)
+    # Add state, scheme, sector columns to projects table if they don't exist (migration from old schema)
     try:
         cursor.execute("""
             ALTER TABLE projects 
             ADD COLUMN state TEXT
         """)
         print("✓ Added state column to projects table")
+    except sqlite3.OperationalError:
+        pass
+    
+    try:
+        cursor.execute("""
+            ALTER TABLE projects 
+            ADD COLUMN scheme TEXT
+        """)
+        print("✓ Added scheme column to projects table")
+    except sqlite3.OperationalError:
+        pass
+    
+    try:
+        cursor.execute("""
+            ALTER TABLE projects 
+            ADD COLUMN sector TEXT
+        """)
+        print("✓ Added sector column to projects table")
     except sqlite3.OperationalError:
         pass
     
@@ -139,7 +159,7 @@ def get_project(project_id: int, db_path: str = "data/chat.db") -> Optional[Dict
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, name, description, created_ts
+        SELECT id, name, state, scheme, sector, created_ts
         FROM projects
         WHERE id = ?
     """, (project_id,))
@@ -154,17 +174,18 @@ def get_project(project_id: int, db_path: str = "data/chat.db") -> Optional[Dict
 
 def get_all_projects(db_path: str = "data/chat.db") -> List[Dict]:
     """
-    Retrieve all projects with PDF counts.
+    Retrieve all NON-DELETED projects with PDF counts.
     """
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT p.id, p.name, p.description, p.created_ts,
+        SELECT p.id, p.name, p.state, p.scheme, p.sector, p.created_ts,
                COUNT(d.id) as pdf_count
         FROM projects p
-        LEFT JOIN pdfs d ON p.id = d.project_id
+        LEFT JOIN pdfs d ON p.id = d.project_id AND d.deleted = 0
+        WHERE p.deleted = 0
         GROUP BY p.id
         ORDER BY p.created_ts DESC
     """)
@@ -587,3 +608,125 @@ def get_pdf_status(pdf_id: int, db_path: str = "data/chat.db"):
     row = cursor.fetchone()
     conn.close()
     return dict(row) if row else None
+def soft_delete_project_local(project_id: int, db_path: str = "data/chat.db") -> bool:
+    """
+    Soft delete a project locally and mark as dirty for sync.
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    now = datetime.now().isoformat()
+    
+    cursor.execute("""
+        UPDATE projects 
+        SET deleted = 1, deleted_at = ?, dirty = 1
+        WHERE id = ? AND deleted = 0
+    """, (now, project_id))
+    
+    success = cursor.rowcount > 0
+    
+    if success:
+        # Also soft delete all PDFs in this project
+        cursor.execute("""
+            UPDATE pdfs 
+            SET deleted = 1, deleted_at = ?, dirty = 1
+            WHERE project_id = ? AND deleted = 0
+        """, (now, project_id))
+    
+    conn.commit()
+    conn.close()
+    
+    return success
+
+
+def soft_delete_pdf_local(pdf_id: int, db_path: str = "data/chat.db") -> bool:
+    """
+    Soft delete a PDF locally and mark as dirty for sync.
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    now = datetime.now().isoformat()
+    
+    cursor.execute("""
+        UPDATE pdfs 
+        SET deleted = 1, deleted_at = ?, dirty = 1
+        WHERE id = ? AND deleted = 0
+    """, (now, pdf_id))
+    
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    
+    return success
+
+
+def mark_project_deleted_from_cloud(remote_id: int, db_path: str = "data/chat.db") -> bool:
+    """
+    Mark a local project as deleted when deletion comes from cloud.
+    Does NOT mark as dirty since this is a cloud-initiated deletion.
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    now = datetime.now().isoformat()
+    
+    cursor.execute("""
+        UPDATE projects 
+        SET deleted = 1, deleted_at = ?
+        WHERE remote_id = ? AND deleted = 0
+    """, (now, remote_id))
+    
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    
+    return success
+
+
+def mark_pdf_deleted_from_cloud(remote_id: int, db_path: str = "data/chat.db") -> bool:
+    """
+    Mark a local PDF as deleted when deletion comes from cloud.
+    Does NOT mark as dirty since this is a cloud-initiated deletion.
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    now = datetime.now().isoformat()
+    
+    cursor.execute("""
+        UPDATE pdfs  
+        SET deleted = 1, deleted_at = ?
+        WHERE remote_id = ? AND deleted = 0
+    """, (now, remote_id))
+    
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    
+    return success
+
+
+# Add to get_all_projects to filter out deleted by default
+def get_all_projects_active(db_path: str = "data/chat.db") -> List[Dict]:
+    """
+    Retrieve all NON-DELETED projects with PDF counts.
+    """
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT p.id, p.name, p.state, p.scheme, p.sector, p.created_ts,
+               COUNT(d.id) as pdf_count
+        FROM projects p
+        LEFT JOIN pdfs d ON p.id = d.project_id AND d.deleted = 0
+        WHERE p.deleted = 0
+        GROUP BY p.id
+        ORDER BY p.created_ts DESC
+    """)
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in rows]
