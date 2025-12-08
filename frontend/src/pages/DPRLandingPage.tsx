@@ -187,25 +187,7 @@ const DPRAnalyzerLanding: React.FC = () => {
                         <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-10 font-medium text-white">
                             AI-powered DPR analysis for the North Eastern States. <br className="hidden md:block" />
                             Accelerating development through intelligent automation.
-                        </p>
-
-                        {/* Stats Row */}
-                        <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mb-12">
-                            <div className="text-center">
-                                <div className="text-3xl font-bold text-white">{PDF_COUNT}</div>
-                                <div className="text-xs uppercase tracking-wider text-white opacity-80">PDFs Processed</div>
-                            </div>
-                            <div className="text-center">
-                                <div className={`text-3xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{ACCURACY}</div>
-                                <div className="text-xs uppercase tracking-wider text-white opacity-80">Accuracy</div>
-                            </div>
-                            <div className="text-center">
-                                <div className={`text-3xl font-bold ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{STATES_COVERED}</div>
-                                <div className="text-xs uppercase tracking-wider text-white opacity-80">States Covered</div>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                        </p><div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
                             <button
                                 onClick={() => setIsAuthModalOpen(true)}
                                 className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg shadow-lg shadow-blue-500/25 hover:scale-105 hover:shadow-blue-500/40 transition-all duration-300"

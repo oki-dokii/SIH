@@ -13,6 +13,7 @@ interface RoleContextType {
     setRole: (role: Role) => void
     isAdmin: boolean
     isAuthenticated: boolean
+    isLoading: boolean
     login: () => void
     logout: () => void
     userInfo: UserInfo | null
@@ -26,13 +27,14 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     const [role, setRole] = useState<Role>(null)
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+    const [isLoading, setIsLoading] = useState<boolean>(true)
 
     // Load authentication state from localStorage on mount
     useEffect(() => {
         const savedAuth = localStorage.getItem('adminAuthenticated')
         const savedRole = localStorage.getItem('userRole') as Role
         const savedUserInfo = localStorage.getItem('userInfo')
-        
+
         if (savedAuth === 'true' && savedRole === 'admin') {
             setIsAuthenticated(true)
             setRole('admin')
@@ -45,6 +47,9 @@ export function RoleProvider({ children }: { children: ReactNode }) {
                 console.error('Failed to parse user info:', e)
             }
         }
+
+        // Set loading to false after attempting to restore auth state
+        setIsLoading(false)
     }, [])
 
     const login = () => {
@@ -76,11 +81,12 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     }
 
     return (
-        <RoleContext.Provider value={{ 
-            role, 
-            setRole, 
+        <RoleContext.Provider value={{
+            role,
+            setRole,
             isAdmin: role === 'admin',
             isAuthenticated,
+            isLoading,
             login,
             logout,
             userInfo,

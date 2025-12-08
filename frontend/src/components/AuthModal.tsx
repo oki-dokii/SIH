@@ -86,7 +86,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             if (response.ok && data.success) {
                 login()
                 onClose()
-                navigate('/admin/projects')
+                navigate('/admin')
             } else {
                 setAdminError(data.message || 'Invalid credentials')
             }
@@ -270,31 +270,16 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                             <UserIcon className="h-8 w-8 text-white" />
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-bold mb-2">User</h3>
+                                            <h3 className="text-xl font-bold mb-2">Client</h3>
                                             <p className="text-sm text-muted-foreground">
-                                                View mode for browsing analyzed reports and project documentation
+                                                Upload and manage your DPRs, track project progress, and access analyzed reports
                                             </p>
                                         </div>
                                         <div className="text-sm text-purple-600 font-medium group-hover:underline">
-                                            Coming Soon →
+                                            Access Dashboard →
                                         </div>
                                     </div>
                                 </button>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-6 mt-8 pt-6 border-t">
-                                <div className="text-center">
-                                    <div className="text-2xl font-bold text-primary">10K+</div>
-                                    <div className="text-xs text-muted-foreground">Documents Analyzed</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-2xl font-bold text-primary">99.9%</div>
-                                    <div className="text-xs text-muted-foreground">Accuracy Rate</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-2xl font-bold text-primary">24/7</div>
-                                    <div className="text-xs text-muted-foreground">Availability</div>
-                                </div>
                             </div>
                         </div>
                     )}

@@ -66,40 +66,24 @@ export default function RoleSelectionPage({ onRoleSelect }: { onRoleSelect?: (ro
 
                         {/* User Card */}
                         <Card
-                            className="p-8 cursor-pointer group hover:border-primary/50 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                            className="p-8 cursor-pointer group hover:border-purple-600 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                             onClick={() => handleRoleClick('user')}
                         >
                             <div className="space-y-4">
-                                <div className="h-16 w-16 mx-auto rounded-2xl bg-gradient-to-br from-slate-500 to-slate-700 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                <div className="h-16 w-16 mx-auto rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                                     <User className="h-8 w-8 text-white" />
                                 </div>
-                                <h3 className="text-2xl font-bold">User</h3>
+                                <h3 className="text-2xl font-bold">Client</h3>
                                 <p className="text-muted-foreground">
-                                    View mode for browsing analyzed reports and project documentation
+                                    Upload and manage your DPRs, track project progress, and access analyzed reports
                                 </p>
                                 <div className="pt-4">
-                                    <span className="inline-flex items-center gap-2 text-muted-foreground font-medium group-hover:gap-3 group-hover:text-foreground transition-all">
-                                        Coming Soon →
+                                    <span className="inline-flex items-center gap-2 text-purple-600 font-medium group-hover:gap-3 transition-all">
+                                        Access Dashboard →
                                     </span>
                                 </div>
                             </div>
                         </Card>
-                    </div>
-
-                    {/* Features Preview */}
-                    <div className="pt-12 grid grid-cols-3 gap-4 text-center">
-                        <div className="space-y-1">
-                            <div className="text-2xl font-bold text-primary">10K+</div>
-                            <div className="text-sm text-muted-foreground">Documents Analyzed</div>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-2xl font-bold text-primary">99.9%</div>
-                            <div className="text-sm text-muted-foreground">Accuracy Rate</div>
-                        </div>
-                        <div className="space-y-1">
-                            <div className="text-2xl font-bold text-primary">24/7</div>
-                            <div className="text-sm text-muted-foreground">Availability</div>
-                        </div>
                     </div>
                 </div>
             </main>
