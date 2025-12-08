@@ -104,6 +104,17 @@ MANDATORY BEHAVIOR:
    - If you adjust any financial values to make them balance, add `FINANCIAL_VALIDATION:` explanation to assumptions
    - This validation is NON-NEGOTIABLE: do not return mismatched totals
 
+10a) **COST BREAKDOWN EXTRACTION** (CRITICAL - MUST DO):
+   - **REQUIRED**: Extract ALL cost components from the DPR and populate the `costBreakdown` array
+   - Each cost breakdown item MUST have: `component` (name), `amountLakhINR` (exact amount), `percent` (percentage of total)
+   - Extract EXACT values from tables, charts, or text - DO NOT HALLUCINATE or make up values
+   - Common components include: Land Acquisition, Building/Construction, Machinery/Equipment, Pre-operative Expenses, Working Capital, Contingency, etc.
+   - If the DPR shows a cost breakdown table or pie chart, extract ALL items from it
+   - The sum of all `amountLakhINR` in costBreakdown should approximately equal totalInitialInvestmentLakhINR
+   - The sum of all `percent` values should approximately equal 100
+   - If percentages are not provided in the document, calculate them: (componentAmount / totalCost) * 100
+   - Include page references in assumptions if extracting from specific tables/pages
+
 11) **INCONSISTENCY DETECTION** (CRITICAL):
    Thoroughly analyze the DPR for inconsistencies and populate the `inconsistencyDetection` object:
    - **FLAG AS CRITICAL ISSUE** if financial components don't sum correctly
@@ -157,6 +168,7 @@ SCHEMA:
 
 ADDITIONAL INSTRUCTIONS:
 - **FINANCIAL VALIDATION (MANDATORY)**: Sum(projectCost components) = totalInitialInvestment AND Sum(capitalStructure components) = totalInitialInvestment. Adjust/normalize values if needed and document in assumptions with `FINANCIAL_VALIDATION:` prefix.
+- **COST BREAKDOWN (MANDATORY)**: Extract ALL cost components from the DPR into the `costBreakdown` array. Each item must have exact `component` name, `amountLakhINR`, and `percent`. Extract from tables/charts/text - do NOT make up values. Sum of amounts should equal total cost.
 - overallScore: compute a number 0-100 using document evidence and the rubric in the system instruction.
 - recommendation: one of ["Approve","Approve with Conditions","Reject","Review"].
 - financialAnalysis: populate numeric fields. If a numeric value is missing, infer conservatively and explain with `INFERRED_REASON:` in assumptions.

@@ -1,5 +1,6 @@
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Card } from './ui/Card'
+import { DollarSign } from 'lucide-react'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658']
 
@@ -16,10 +17,17 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
 
   const projectCost = financialAnalysis.projectCost
   const capitalStructure = financialAnalysis.capitalStructure
+  const costBreakdown = financialAnalysis.costBreakdown || []
 
   const safeNumber = (val: any): number => {
     const num = Number(val)
     return isNaN(num) ? 0 : num
+  }
+
+  // Format currency for display
+  const formatCurrency = (val: number): string => {
+    if (val >= 100) return `₹${val.toFixed(0)}L`
+    return `₹${val.toFixed(2)}L`
   }
 
   const projectCostData = []
@@ -70,6 +78,12 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
     if (value > 0) capitalStructureData.push({ name: 'Member Contribution', value })
   }
 
+  // Filter out items with zero or invalid amounts for cost breakdown table
+  const validCostBreakdown = costBreakdown.filter((item: any) => {
+    const amount = safeNumber(item.amountLakhINR)
+    return amount > 0 && item.component
+  })
+
   const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
     const x = cx + radius * Math.cos(-midAngle * Math.PI / 180)
@@ -78,11 +92,11 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
     if (percent < 0.05) return null
 
     return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor={x > cx ? 'start' : 'end'} 
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
         className="text-xs font-semibold"
       >
@@ -106,6 +120,54 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
 
   return (
     <div className="space-y-6">
+      {/* Cost Breakdown Table - NEW */}
+      {validCostBreakdown.length > 0 && (
+        <Card className="p-6">
+          <h4 className="font-semibold mb-4 flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-indigo-600" />
+            Cost Breakdown
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b-2 border-indigo-200">
+                  <th className="text-left py-3 px-2 font-semibold text-gray-700">Component</th>
+                  <th className="text-right py-3 px-2 font-semibold text-gray-700">Amount (₹ Lakh)</th>
+                  <th className="text-right py-3 px-2 font-semibold text-gray-700">Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {validCostBreakdown.map((item: any, index: number) => (
+                  <tr key={index} className="border-b border-gray-100 hover:bg-indigo-50/50 transition-colors">
+                    <td className="py-3 px-2">
+                      <span className="font-medium text-gray-800">{item.component}</span>
+                    </td>
+                    <td className="text-right py-3 px-2 font-semibold text-gray-900">
+                      {formatCurrency(safeNumber(item.amountLakhINR))}
+                    </td>
+                    <td className="text-right py-3 px-2 text-indigo-600 font-semibold">
+                      {safeNumber(item.percent) > 0 ? `${safeNumber(item.percent).toFixed(1)}%` : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-indigo-200 bg-indigo-50">
+                  <td className="py-3 px-2 font-bold text-gray-800">Total</td>
+                  <td className="text-right py-3 px-2 font-bold text-gray-900">
+                    {formatCurrency(validCostBreakdown.reduce((sum: number, item: any) => sum + safeNumber(item.amountLakhINR), 0))}
+                  </td>
+                  <td className="text-right py-3 px-2 font-bold text-indigo-600">
+                    {validCostBreakdown.reduce((sum: number, item: any) => sum + safeNumber(item.percent), 0).toFixed(1)}%
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* Original Pie Charts */}
       <div className="grid md:grid-cols-2 gap-6">
         {projectCostData.length > 0 && (
           <Card className="p-6">
@@ -127,9 +189,9 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
                   ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  layout="horizontal" 
-                  verticalAlign="bottom" 
+                <Legend
+                  layout="horizontal"
+                  verticalAlign="bottom"
                   align="center"
                   wrapperStyle={{ fontSize: '12px' }}
                 />
@@ -166,9 +228,9 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
                   ))}
                 </Pie>
                 <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  layout="horizontal" 
-                  verticalAlign="bottom" 
+                <Legend
+                  layout="horizontal"
+                  verticalAlign="bottom"
                   align="center"
                   wrapperStyle={{ fontSize: '12px' }}
                 />
@@ -186,6 +248,7 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
         )}
       </div>
 
+      {/* Original Bar Chart */}
       {(projectCostData.length > 0 || capitalStructureData.length > 0) && (
         <Card className="p-6">
           <h4 className="font-semibold mb-4">Cost Components Comparison</h4>
@@ -195,14 +258,14 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
               margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="name" 
-                angle={-45} 
-                textAnchor="end" 
+              <XAxis
+                dataKey="name"
+                angle={-45}
+                textAnchor="end"
                 height={100}
                 style={{ fontSize: '11px' }}
               />
-              <YAxis 
+              <YAxis
                 label={{ value: 'Amount (₹ Lakh)', angle: -90, position: 'insideLeft' }}
               />
               <Tooltip content={<CustomTooltip />} />

@@ -29,6 +29,13 @@
       "termLoanInterestRatePercent": "number or null",
       "assumedInterestRatePercent": "number or null"
     },
+    "costBreakdown": [
+      {
+        "component": "string (e.g., 'Land Acquisition', 'Construction', 'Equipment', 'Working Capital', etc.)",
+        "amountLakhINR": "number (exact amount in Lakhs)",
+        "percent": "number (percentage of total cost)"
+      }
+    ],
     "capacityAndRevenue": "object with relevant capacity metrics",
     "costs": "object with cost breakdowns",
     "profitability": "object with profitability metrics",
