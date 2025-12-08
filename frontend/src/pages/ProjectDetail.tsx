@@ -15,7 +15,11 @@ import {
     MapPin,
     Layers,
     Briefcase,
-    X
+    X,
+    Scale,
+    Trophy,
+    CheckCircle,
+    AlertCircle
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -40,6 +44,12 @@ export default function ProjectDetailPage() {
 
     // Analyzing state
     const [analyzingDpr, setAnalyzingDpr] = useState<number | null>(null)
+
+    // Compare All state
+    const [comparing, setComparing] = useState(false)
+    const [showComparisonModal, setShowComparisonModal] = useState(false)
+    const [comparisonResult, setComparisonResult] = useState<any>(null)
+    const [comparisonError, setComparisonError] = useState<string | null>(null)
 
     useEffect(() => {
         if (id) {
@@ -99,6 +109,28 @@ export default function ProjectDetailPage() {
             setAnalyzingDpr(null)
         }
     }
+
+    const handleCompareAll = async () => {
+        if (!id) return
+
+        setComparing(true)
+        setComparisonError(null)
+        setComparisonResult(null)
+
+        try {
+            const result = await api.compareAllProjectDPRs(parseInt(id))
+            setComparisonResult(result.comparison)
+            setShowComparisonModal(true)
+        } catch (err: any) {
+            setComparisonError(err.message || 'Failed to compare DPRs')
+            setShowComparisonModal(true)
+        } finally {
+            setComparing(false)
+        }
+    }
+
+    // Count analyzed DPRs
+    const analyzedDprsCount = documents.filter(doc => doc.summary_json).length
 
     const handleUploadClick = () => {
         fileInputRef.current?.click()
@@ -247,6 +279,27 @@ export default function ProjectDetailPage() {
                                 </span>
                             </div>
                         </div>
+
+                        {/* Compare All Button */}
+                        {analyzedDprsCount >= 2 && (
+                            <Button
+                                onClick={handleCompareAll}
+                                disabled={comparing}
+                                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                            >
+                                {comparing ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Comparing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Scale className="h-4 w-4 mr-2" />
+                                        Compare All DPRs
+                                    </>
+                                )}
+                            </Button>
+                        )}
                     </div>
                 </div>
 
@@ -371,6 +424,154 @@ export default function ProjectDetailPage() {
                             </Button>
                             <Button type="button" className="flex-1 bg-red-600 hover:bg-red-700" onClick={confirmDelete}>
                                 Delete Document
+                            </Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {/* Comparison Results Modal */}
+            {showComparisonModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <Card className="w-full max-w-4xl p-6 my-8 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold flex items-center gap-2">
+                                <Scale className="h-6 w-6 text-purple-600" />
+                                DPR Comparison Results
+                            </h2>
+                            <button
+                                onClick={() => setShowComparisonModal(false)}
+                                className="text-muted-foreground hover:text-foreground"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        {comparisonError ? (
+                            <div className="text-center py-8">
+                                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                                <p className="text-lg font-semibold text-red-600">Comparison Failed</p>
+                                <p className="text-muted-foreground">{comparisonError}</p>
+                            </div>
+                        ) : comparisonResult && (
+                            <div className="space-y-6">
+                                {/* Best DPR Recommendation */}
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border border-green-200 dark:border-green-800 rounded-xl p-6">
+                                    <div className="flex items-start gap-4">
+                                        <div className="bg-green-500 p-3 rounded-full">
+                                            <Trophy className="h-6 w-6 text-white" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-lg font-bold text-green-700 dark:text-green-400 mb-1">
+                                                🏆 Best DPR: {comparisonResult.bestDprName}
+                                            </h3>
+                                            <p className="text-green-600 dark:text-green-300">
+                                                {comparisonResult.recommendation}
+                                            </p>
+                                            <Button
+                                                className="mt-4 bg-green-600 hover:bg-green-700"
+                                                onClick={() => navigate(`/admin/documents/${comparisonResult.bestDprId}`)}
+                                            >
+                                                <Eye className="h-4 w-4 mr-2" />
+                                                View Best DPR
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Comparison Summary */}
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-2">Comparison Summary</h3>
+                                    <p className="text-muted-foreground">{comparisonResult.comparisonSummary}</p>
+                                </div>
+
+                                {/* Key Metrics */}
+                                {comparisonResult.keyMetrics && comparisonResult.keyMetrics.length > 0 && (
+                                    <div>
+                                        <h3 className="text-lg font-semibold mb-3">Key Metrics Comparison</h3>
+                                        <div className="grid gap-3">
+                                            {comparisonResult.keyMetrics.map((metric: any, idx: number) => (
+                                                <div key={idx} className="bg-muted/50 rounded-lg p-4">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <span className="font-medium">{metric.metric}</span>
+                                                        <span className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">
+                                                            Winner: {metric.winner}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground">{metric.analysis}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Individual DPR Analysis */}
+                                {comparisonResult.dprAnalysis && comparisonResult.dprAnalysis.length > 0 && (
+                                    <div>
+                                        <h3 className="text-lg font-semibold mb-3">Individual DPR Analysis</h3>
+                                        <div className="grid gap-4">
+                                            {comparisonResult.dprAnalysis.map((dpr: any) => (
+                                                <Card
+                                                    key={dpr.dprId}
+                                                    className={`p-4 ${dpr.dprId === comparisonResult.bestDprId ? 'border-green-500 border-2' : ''}`}
+                                                >
+                                                    <div className="flex items-start justify-between mb-3">
+                                                        <div className="flex items-center gap-2">
+                                                            {dpr.dprId === comparisonResult.bestDprId && (
+                                                                <Trophy className="h-5 w-5 text-green-500" />
+                                                            )}
+                                                            <h4 className="font-semibold">{dpr.dprName}</h4>
+                                                        </div>
+                                                        <span className="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-3 py-1 rounded-full text-sm font-medium">
+                                                            Score: {dpr.overallScore}/10
+                                                        </span>
+                                                    </div>
+
+                                                    <p className="text-sm text-muted-foreground mb-3">{dpr.verdict}</p>
+
+                                                    <div className="grid md:grid-cols-2 gap-4">
+                                                        <div>
+                                                            <h5 className="text-sm font-medium text-green-600 mb-2 flex items-center gap-1">
+                                                                <CheckCircle className="h-4 w-4" /> Strengths
+                                                            </h5>
+                                                            <ul className="text-sm space-y-1">
+                                                                {dpr.strengths?.map((s: string, i: number) => (
+                                                                    <li key={i} className="text-muted-foreground">• {s}</li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                        <div>
+                                                            <h5 className="text-sm font-medium text-red-600 mb-2 flex items-center gap-1">
+                                                                <AlertCircle className="h-4 w-4" /> Weaknesses
+                                                            </h5>
+                                                            <ul className="text-sm space-y-1">
+                                                                {dpr.weaknesses?.map((w: string, i: number) => (
+                                                                    <li key={i} className="text-muted-foreground">• {w}</li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="mt-3"
+                                                        onClick={() => navigate(`/admin/documents/${dpr.dprId}`)}
+                                                    >
+                                                        <Eye className="h-4 w-4 mr-2" />
+                                                        View DPR
+                                                    </Button>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="flex justify-end mt-6">
+                            <Button variant="outline" onClick={() => setShowComparisonModal(false)}>
+                                Close
                             </Button>
                         </div>
                     </Card>

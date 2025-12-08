@@ -89,6 +89,18 @@ export const api = {
     return data.dprs || []
   },
 
+  async compareAllProjectDPRs(projectId: number): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/compare-all`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Comparison failed' }))
+      throw new Error(error.detail || 'Failed to compare DPRs')
+    }
+    return response.json()
+  },
+
   async getDPRs(): Promise<DPR[]> {
     const response = await fetch(`${API_BASE_URL}/dprs`)
     if (!response.ok) throw new Error('Failed to fetch DPRs')

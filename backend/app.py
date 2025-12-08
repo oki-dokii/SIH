@@ -562,6 +562,36 @@ async def get_project_dprs(project_id: int):
     return JSONResponse({"dprs": dprs, "count": len(dprs)})
 
 
+@app.post("/projects/{project_id}/compare-all")
+async def compare_all_project_dprs(project_id: int):
+    """
+    Compare all DPRs in a project and recommend the best one.
+    Uses Gemini AI to analyze all DPR summaries and provide a detailed comparison.
+    """
+    # Get all DPRs for the project
+    dprs = db.get_dprs_by_project(project_id)
+    
+    if not dprs:
+        raise HTTPException(status_code=404, detail="No DPRs found in this project")
+    
+    # Filter to only analyzed DPRs (those with summary_json)
+    analyzed_dprs = [dpr for dpr in dprs if dpr.get('summary_json')]
+    
+    if len(analyzed_dprs) < 2:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Need at least 2 analyzed DPRs to compare. Found {len(analyzed_dprs)} analyzed DPRs."
+        )
+    
+    # Compare using Gemini
+    result = await gemini_client.compare_all_dprs(analyzed_dprs)
+    
+    if not result.get('success'):
+        raise HTTPException(status_code=500, detail=result.get('error', 'Comparison failed'))
+    
+    return JSONResponse(result)
+
+
 # ===== PAGE ROUTES =====
 
 @app.get("/", response_class=HTMLResponse)

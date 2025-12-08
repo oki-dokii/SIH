@@ -466,3 +466,160 @@ def clear_comparison_chat_session(comparison_id: int) -> None:
     if comparison_id in _comparison_chat_sessions:
         del _comparison_chat_sessions[comparison_id]
         print(f"✓ Cleared comparison chat session for comparison {comparison_id}")
+
+
+# ===== COMPARE ALL DPRs FUNCTION =====
+
+async def compare_all_dprs(dprs: list[dict]) -> dict:
+    """
+    Compare all DPRs in a project and recommend the best one.
+    
+    Args:
+        dprs: List of DPR objects with id, original_filename, and summary_json
+        
+    Returns:
+        Comparison result with best DPR recommendation and analysis
+    """
+    print(f"⏳ Comparing {len(dprs)} DPRs...")
+    start_time = time.time()
+    
+    if len(dprs) < 2:
+        return {
+            'success': False,
+            'error': 'Need at least 2 analyzed DPRs to compare'
+        }
+    
+    # Build context with all DPRs
+    dprs_context = []
+    for i, dpr in enumerate(dprs, 1):
+        summary = dpr.get('summary_json', {})
+        dprs_context.append(f"""
+=== DPR {i}: {dpr.get('original_filename', f'DPR_{dpr.get("id")}')} (ID: {dpr.get('id')}) ===
+{json.dumps(summary, indent=2, default=str)}
+""")
+    
+    combined_context = "\n".join(dprs_context)
+    
+    prompt = f"""You are an expert DPR (Detailed Project Report) analyst. You have been given {len(dprs)} DPR documents for comparison.
+
+YOUR TASK: Analyze all the DPRs below and determine which one is the BEST choice for implementation.
+
+{combined_context}
+
+CRITICAL JSON OUTPUT RULES:
+1. Return ONLY a single valid JSON object
+2. NO markdown code blocks, NO extra text before or after the JSON
+3. ALL string values must have quotes properly escaped
+4. Use double quotes for all strings
+5. No trailing commas
+6. All text in strings must be on a single line (no newlines inside strings)
+
+Please provide your analysis in the following JSON format:
+{{
+    "bestDprId": <number>,
+    "bestDprName": "<filename>",
+    "recommendation": "<2-3 sentence summary on ONE line>",
+    "comparisonSummary": "<Overview paragraph on ONE line>",
+    "keyMetrics": [
+        {{
+            "metric": "<metric name>",
+            "winner": "<filename>",
+            "analysis": "<brief comparison on ONE line>"
+        }}
+    ],
+    "dprAnalysis": [
+        {{
+            "dprId": <number>,
+            "dprName": "<filename>",
+            "strengths": ["<strength 1>", "<strength 2>"],
+            "weaknesses": ["<weakness 1>", "<weakness 2>"],
+            "overallScore": "<score out of 10>",
+            "verdict": "<1 sentence on ONE line>"
+        }}
+    ]
+}}
+
+Evaluate based on:
+1. Financial viability (cost estimates, ROI, funding structure)
+2. Technical feasibility (scope, methodology, risk management)
+3. Environmental & social impact
+4. Implementation timeline and milestones
+5. Completeness and quality of documentation
+
+REMEMBER: Return ONLY the JSON object. No markdown, no explanation text."""
+
+
+    try:
+        model = genai.GenerativeModel(
+            model_name="gemini-2.5-flash",
+            generation_config={
+                "temperature": 0.2,  # Lower temperature for more consistent JSON
+                "max_output_tokens": 8192,  # Increased for detailed comparison
+            }
+        )
+        
+        response = await asyncio.to_thread(model.generate_content, prompt)
+        
+        # Get raw response
+        response_text = response.text.strip()
+        
+        # Debug: Print first 500 chars of raw response
+        print(f"🔍 Raw response preview: {response_text[:500]}...")
+        
+        # Clean up markdown code blocks if present
+        if response_text.startswith("```"):
+            lines = response_text.split('\n')
+            # Remove opening code fence
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            # Remove closing code fence
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            response_text = '\n'.join(lines).strip()
+        
+        # Try to parse JSON
+        try:
+            comparison_result = json.loads(response_text)
+        except json.JSONDecodeError as json_err:
+            # If JSON parsing fails, log detailed info and return error
+            print(f"✗ JSON Parse Error: {json_err}")
+            print(f"✗ Response text (first 1000 chars): {response_text[:1000]}")
+            
+            # Try to extract JSON if it's embedded in text
+            import re
+            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+            if json_match:
+                try:
+                    comparison_result = json.loads(json_match.group(0))
+                    print("✓ Successfully extracted JSON from response")
+                except:
+                    raise json_err
+            else:
+                raise json_err
+        
+        elapsed = time.time() - start_time
+        print(f"✓ DPR comparison completed in {elapsed:.2f}s")
+        
+        return {
+            'success': True,
+            'comparison': comparison_result
+        }
+        
+    except json.JSONDecodeError as e:
+        print(f"✗ Failed to parse comparison response as JSON: {e}")
+        raw_text = response.text if 'response' in locals() else "No response captured"
+        print(f"✗ Full raw response:\n{raw_text}")
+        return {
+            'success': False,
+            'error': f'AI returned invalid JSON format. Please try again.',
+            'details': str(e)
+        }
+    except Exception as e:
+        print(f"✗ Comparison error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
