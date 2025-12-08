@@ -41,7 +41,11 @@ const DPRAnalyzerLanding: React.FC = () => {
         return () => clearInterval(interval);
     }, []);
 
-    const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark for "Deep navy" preference
+    // Initialize theme from localStorage or default to dark
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        const savedTheme = localStorage.getItem('theme')
+        return savedTheme === 'dark' || savedTheme === null // Default to dark if no preference
+    })
     const [isOffline, setIsOffline] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -60,7 +64,11 @@ const DPRAnalyzerLanding: React.FC = () => {
         }
     }, [isDarkMode]);
 
-    const toggleTheme = () => setIsDarkMode(!isDarkMode);
+    const toggleTheme = () => {
+        const newDarkMode = !isDarkMode
+        setIsDarkMode(newDarkMode)
+        localStorage.setItem('theme', newDarkMode ? 'dark' : 'light')
+    }
     const toggleOffline = () => setIsOffline(!isOffline);
     const toggleChat = () => setIsChatOpen(!isChatOpen);
 
@@ -473,7 +481,7 @@ const DPRAnalyzerLanding: React.FC = () => {
                 <div className="flex flex-col h-full">
                     <div className={`p-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'} flex justify-between items-center`}>
                         <h3 className="font-bold flex items-center gap-2"><MessageSquare size={18} className="text-blue-500" /> AI Assistant</h3>
-                        
+
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">

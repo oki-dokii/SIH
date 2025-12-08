@@ -196,6 +196,64 @@ def init_db(db_path: str = "data/dpr.db"):
         ON users(username)
     """)
     
+    # MIGRATION: Add UNIQUE constraint on email if not exists
+    cursor.execute("PRAGMA table_info(users)")
+    users_columns = cursor.fetchall()
+    
+    # Check if email has unique constraint by checking indexes
+    cursor.execute("PRAGMA index_list(users)")
+    indexes = cursor.fetchall()
+    has_email_unique = any('email' in str(idx) for idx in indexes)
+    
+    if not has_email_unique:
+        print("⏳ Migrating database: adding UNIQUE constraint on email...")
+        try:
+            cursor.execute("PRAGMA foreign_keys=off;")
+            cursor.execute("BEGIN TRANSACTION;")
+            
+            # Create new users table with email UNIQUE constraint
+            cursor.execute("""
+                CREATE TABLE users_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    email TEXT NOT NULL UNIQUE,
+                    password_hash TEXT NOT NULL,
+                    name TEXT,
+                    username TEXT,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            
+            
+            # Copy data from old table, keeping only most recent user per email
+            # (in case of duplicates, keep the one with highest ID)
+            cursor.execute("""
+                INSERT INTO users_new (id, email, password_hash, name, username, created_at)
+                SELECT id, email, password_hash, name, username, created_at 
+                FROM users
+                WHERE id IN (
+                    SELECT MAX(id) FROM users GROUP BY email
+                )
+            """)
+            
+            # Drop old table and rename new one
+            cursor.execute("DROP TABLE users")
+            cursor.execute("ALTER TABLE users_new RENAME TO users")
+            
+            # Recreate email unique index
+            cursor.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
+                ON users(email)
+            """)
+            
+            cursor.execute("COMMIT;")
+            cursor.execute("PRAGMA foreign_keys=on;")
+            print("✓ Database migration complete (email UNIQUE constraint added)")
+        except Exception as e:
+            cursor.execute("ROLLBACK;")
+            print(f"⚠ Email uniqueness migration failed: {e}")
+            # Continue anyway - the table still exists
+
+    
     # Create client_dprs table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS client_dprs (
@@ -915,7 +973,7 @@ def get_dprs_by_project(project_id: int, db_path: str = "data/dpr.db") -> List[D
 
 # ===== USER AUTHENTICATION FUNCTIONS =====
 
-def create_user(username: str, email: str, password_hash: str, name: str = None, db_path: str = "data/dpr.db") -> int:
+def create_user(email: str, password_hash: str, name: str = None, username: str = None, db_path: str = "data/dpr.db") -> int:
     """Create a new user and return the user ID."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -924,9 +982,9 @@ def create_user(username: str, email: str, password_hash: str, name: str = None,
     
     try:
         cursor.execute("""
-            INSERT INTO users (username, email, password_hash, name, created_at)
+            INSERT INTO users (email, password_hash, name, username, created_at)
             VALUES (?, ?, ?, ?, ?)
-        """, (username, email, password_hash, name, timestamp))
+        """, (email, password_hash, name, username, timestamp))
         
         user_id = cursor.lastrowid
         conn.commit()
@@ -936,8 +994,8 @@ def create_user(username: str, email: str, password_hash: str, name: str = None,
         return user_id
     except sqlite3.IntegrityError as e:
         conn.close()
-        if 'username' in str(e):
-            raise ValueError("Username already exists")
+        if 'email' in str(e) or 'UNIQUE' in str(e):
+            raise ValueError("Email already exists")
         else:
             raise ValueError("User creation failed")
 
@@ -960,6 +1018,32 @@ def get_user_by_username(username: str, db_path: str = "data/dpr.db") -> Optiona
         return {
             "id": row["id"],
             "username": row["username"],
+            "email": row["email"],
+            "password_hash": row["password_hash"],
+            "name": row["name"],
+            "created_at": row["created_at"]
+        }
+    return None
+
+
+def get_user_by_email(email: str, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Retrieve a user by email."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, username, email, password_hash, name, created_at
+        FROM users WHERE email = ?
+    """, (email,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            "id": row["id"],
+            "username": row["username"] if "username" in row.keys() else None,
             "email": row["email"],
             "password_hash": row["password_hash"],
             "name": row["name"],
@@ -1013,6 +1097,32 @@ def get_user_by_username_or_email(identifier: str, db_path: str = "data/dpr.db")
             "username": row["username"],
             "email": row["email"],
             "password_hash": row["password_hash"],
+            "created_at": row["created_at"]
+        }
+    return None
+
+
+def get_user_by_email(email: str, db_path: str = "data/dpr.db") -> Optional[Dict]:
+    """Retrieve a user by email."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, username, email, password_hash, name, created_at
+        FROM users WHERE email = ?
+    """, (email,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            "id": row["id"],
+            "username": row["username"] if "username" in row.keys() else None,
+            "email": row["email"],
+            "password_hash": row["password_hash"],
+            "name": row["name"],
             "created_at": row["created_at"]
         }
     return None

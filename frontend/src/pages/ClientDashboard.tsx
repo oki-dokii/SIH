@@ -253,7 +253,7 @@ export default function ClientDashboard() {
 
                     <div className="flex items-center gap-4">
                         <span className="text-sm text-muted-foreground">
-                            Welcome, <span className="font-medium text-foreground">{userInfo?.username || 'User'}</span>
+                            Welcome, <span className="font-medium text-foreground">{userInfo?.name || 'User'}</span>
                         </span>
                         <Button variant="outline" size="sm" onClick={handleLogout}>
                             Logout

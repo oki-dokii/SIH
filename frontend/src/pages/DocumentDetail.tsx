@@ -482,13 +482,13 @@ function OverviewTab({ data }: { data: any }) {
       {data.financialAnalysis?.returnsAndCoverage && (
         <div className="grid md:grid-cols-2 gap-4">
           {data.financialAnalysis.returnsAndCoverage.avgDSCR && (
-            <Card className="p-4 bg-cyan-50">
+            <Card className="p-4 bg-cyan-50 dark:bg-cyan-950">
               <div className="text-sm text-muted-foreground mb-1">{t('documentDetail.avgDSCR')}</div>
               <div className="text-3xl font-bold text-primary">{data.financialAnalysis.returnsAndCoverage.avgDSCR}</div>
             </Card>
           )}
           {data.financialAnalysis.returnsAndCoverage.IRRPercent && (
-            <Card className="p-4 bg-cyan-50">
+            <Card className="p-4 bg-cyan-50 dark:bg-cyan-950">
               <div className="text-sm text-muted-foreground mb-1">{t('documentDetail.irr')}</div>
               <div className="text-3xl font-bold text-primary">{data.financialAnalysis.returnsAndCoverage.IRRPercent}%</div>
             </Card>
@@ -515,7 +515,7 @@ function TimelineTab({ data }: { data: any }) {
   return (
     <div className="space-y-6">
       {timeline.implementationDurationMonths && (
-        <Card className="p-6 bg-gradient-to-r from-cyan-50 to-blue-50">
+        <Card className="p-6 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950 dark:to-blue-950">
           <div className="flex items-center gap-4">
             <Clock className="h-10 w-10 text-primary" />
             <div>
@@ -562,9 +562,9 @@ function TimelineTab({ data }: { data: any }) {
           </h4>
           <div className="space-y-2">
             {timeline.timelineRisks.map((risk: string, idx: number) => (
-              <div key={idx} className="flex gap-2 items-start p-3 bg-orange-50 rounded-lg">
-                <XCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-muted-foreground">{risk}</p>
+              <div key={idx} className="flex gap-2 items-start p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                <XCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-gray-700 dark:text-gray-300">{risk}</p>
               </div>
             ))}
           </div>
@@ -613,9 +613,9 @@ function RiskAssessmentTab({ data }: { data: any }) {
             {data.riskAssessment.map((risk: any, idx: number) => (
               <Card key={idx} className={cn(
                 'p-4',
-                risk.severity === 'High' ? 'border-red-300 bg-red-50' :
-                  risk.severity === 'Medium' ? 'border-orange-300 bg-orange-50' :
-                    'border-green-300 bg-green-50'
+                risk.severity === 'High' ? 'border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950' :
+                  risk.severity === 'Medium' ? 'border-orange-300 bg-orange-50 dark:border-orange-800 dark:bg-orange-950' :
+                    'border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950'
               )}>
                 <div className="flex items-start gap-3">
                   <div className={cn(
@@ -627,10 +627,10 @@ function RiskAssessmentTab({ data }: { data: any }) {
                     {risk.severity}
                   </div>
                   <div className="flex-1">
-                    <h5 className="font-semibold mb-1">{risk.riskCategory}</h5>
-                    <p className="text-sm text-muted-foreground mb-2">{risk.description}</p>
+                    <h5 className="font-semibold mb-1 dark:text-gray-100">{risk.riskCategory}</h5>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{risk.description}</p>
                     {risk.evidence && (
-                      <p className="text-xs text-muted-foreground italic">Evidence: {risk.evidence}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 italic">Evidence: {risk.evidence}</p>
                     )}
                   </div>
                 </div>
@@ -661,10 +661,10 @@ function InconsistenciesTab({ data }: { data: any }) {
   }
 
   const severityColors = {
-    Critical: 'bg-red-100 text-red-800 border-red-300',
-    High: 'bg-orange-100 text-orange-800 border-orange-300',
-    Medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    Low: 'bg-blue-100 text-blue-800 border-blue-300',
+    Critical: 'bg-red-100 text-red-800 border-red-300 dark:bg-red-950 dark:text-red-200 dark:border-red-800',
+    High: 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-950 dark:text-orange-200 dark:border-orange-800',
+    Medium: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-950 dark:text-yellow-200 dark:border-yellow-800',
+    Low: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-200 dark:border-blue-800',
   }
 
   const categoryIcons = {
@@ -695,18 +695,18 @@ function InconsistenciesTab({ data }: { data: any }) {
                 <Icon className="h-5 w-5 mt-1 flex-shrink-0" />
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold">{issue.category}</h4>
-                    <span className="text-xs px-2 py-1 rounded bg-white">{issue.severity}</span>
+                    <h4 className="font-semibold dark:text-gray-100">{issue.category}</h4>
+                    <span className="text-xs px-2 py-1 rounded bg-white dark:bg-gray-800 dark:text-gray-200">{issue.severity}</span>
                   </div>
-                  <p className="text-sm mb-2">{issue.description}</p>
+                  <p className="text-sm mb-2 text-gray-700 dark:text-gray-300">{issue.description}</p>
                   {issue.location && (
-                    <p className="text-xs text-muted-foreground mb-1">📍 Location: {issue.location}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">📍 Location: {issue.location}</p>
                   )}
                   {issue.detectedValues && (
-                    <p className="text-xs text-muted-foreground mb-1">🔍 Detected: {issue.detectedValues}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">🔍 Detected: {issue.detectedValues}</p>
                   )}
                   {issue.impact && (
-                    <p className="text-xs mt-2 p-2 bg-white rounded italic">Impact: {issue.impact}</p>
+                    <p className="text-xs mt-2 p-2 bg-white dark:bg-gray-800 rounded italic text-gray-700 dark:text-gray-300">Impact: {issue.impact}</p>
                   )}
                 </div>
               </div>
@@ -842,8 +842,8 @@ function RecommendationsTab({ data }: { data: any }) {
           </div>
           <div className="space-y-2">
             {recommendations.criticalActions.map((action: string, idx: number) => (
-              <Card key={idx} className="p-3 border-l-4 border-red-500 bg-red-50">
-                <p className="text-sm">{action}</p>
+              <Card key={idx} className="p-3 border-l-4 border-red-500 bg-red-50 dark:bg-red-950">
+                <p className="text-sm text-gray-700 dark:text-gray-300">{action}</p>
               </Card>
             ))}
           </div>
@@ -858,8 +858,8 @@ function RecommendationsTab({ data }: { data: any }) {
           </div>
           <div className="space-y-2">
             {recommendations.improvementSuggestions.map((suggestion: string, idx: number) => (
-              <Card key={idx} className="p-3 border-l-4 border-yellow-500 bg-yellow-50">
-                <p className="text-sm">{suggestion}</p>
+              <Card key={idx} className="p-3 border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+                <p className="text-sm text-gray-700 dark:text-gray-300">{suggestion}</p>
               </Card>
             ))}
           </div>
@@ -876,7 +876,7 @@ function RecommendationsTab({ data }: { data: any }) {
             {recommendations.bestPractices.map((practice: string, idx: number) => (
               <li key={idx} className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                <span className="text-sm">{practice}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{practice}</span>
               </li>
             ))}
           </ul>
@@ -895,7 +895,7 @@ function RecommendationsTab({ data }: { data: any }) {
                 <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold">
                   {idx + 1}
                 </div>
-                <p className="text-sm flex-1 pt-0.5">{step}</p>
+                <p className="text-sm flex-1 pt-0.5 text-gray-700 dark:text-gray-300">{step}</p>
               </div>
             ))}
           </div>

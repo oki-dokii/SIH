@@ -7,11 +7,9 @@ import { User, Mail, Lock, AlertCircle, CheckCircle2 } from 'lucide-react'
 export default function UserAuth() {
     const [mode, setMode] = useState<'signup' | 'signin'>('signup')
     const [name, setName] = useState('')
-    const [username, setUsername] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [signinUsername, setSigninUsername] = useState('') // For sign in (username only)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
     const [isLoading, setIsLoading] = useState(false)
@@ -24,7 +22,7 @@ export default function UserAuth() {
         setSuccess('')
 
         // Validation
-        if (!name || !username || !email || !password || !confirmPassword) {
+        if (!name || !email || !password || !confirmPassword) {
             setError('Please fill in all fields')
             return
         }
@@ -36,12 +34,6 @@ export default function UserAuth() {
 
         if (password.length < 8) {
             setError('Password must be at least 8 characters long')
-            return
-        }
-
-        const alphanumericRegex = /^[a-zA-Z0-9]+$/
-        if (!alphanumericRegex.test(username)) {
-            setError('Username must be alphanumeric (letters and numbers only)')
             return
         }
 
@@ -61,7 +53,6 @@ export default function UserAuth() {
                 },
                 body: JSON.stringify({
                     name,
-                    username,
                     email,
                     password,
                     confirm_password: confirmPassword,
@@ -74,7 +65,6 @@ export default function UserAuth() {
                 setSuccess('Registration successful! You can now sign in.')
                 // Clear form
                 setName('')
-                setUsername('')
                 setEmail('')
                 setPassword('')
                 setConfirmPassword('')
@@ -99,8 +89,8 @@ export default function UserAuth() {
         setError('')
         setSuccess('')
 
-        if (!signinUsername || !password) {
-            setError('Please enter your username and password')
+        if (!email || !password) {
+            setError('Please enter your email and password')
             return
         }
 
@@ -113,7 +103,7 @@ export default function UserAuth() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    username: signinUsername,
+                    email,
                     password,
                 }),
             })
@@ -243,27 +233,7 @@ export default function UserAuth() {
                                     </div>
                                 </div>
 
-                                {/* Username */}
-                                <div className="space-y-2">
-                                    <label htmlFor="username" className="block text-sm font-medium">
-                                        Username
-                                    </label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <User className="h-5 w-5 text-muted-foreground" />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            id="username"
-                                            value={username}
-                                            onChange={(e) => setUsername(e.target.value)}
-                                            className="block w-full pl-10 pr-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                                            placeholder="Choose a username"
-                                            disabled={isLoading}
-                                        />
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">Alphanumeric characters only</p>
-                                </div>
+
 
                                 {/* Email */}
                                 <div className="space-y-2">
@@ -361,22 +331,22 @@ export default function UserAuth() {
                             </form>
                         ) : (
                             <form onSubmit={handleSignIn} className="space-y-4">
-                                {/* Username */}
+                                {/* Email */}
                                 <div className="space-y-2">
-                                    <label htmlFor="signin-username" className="block text-sm font-medium">
-                                        Username
+                                    <label htmlFor="signin-email" className="block text-sm font-medium">
+                                        Email
                                     </label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <User className="h-5 w-5 text-muted-foreground" />
+                                            <Mail className="h-5 w-5 text-muted-foreground" />
                                         </div>
                                         <input
-                                            type="text"
-                                            id="signin-username"
-                                            value={signinUsername}
-                                            onChange={(e) => setSigninUsername(e.target.value)}
+                                            type="email"
+                                            id="signin-email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
                                             className="block w-full pl-10 pr-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                                            placeholder="Enter your username"
+                                            placeholder="your@email.com"
                                             disabled={isLoading}
                                         />
                                     </div>

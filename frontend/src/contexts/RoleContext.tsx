@@ -4,7 +4,7 @@ type Role = 'admin' | 'user' | null
 
 interface UserInfo {
     id: number
-    username: string
+    name: string
     email: string
 }
 

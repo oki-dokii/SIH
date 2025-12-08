@@ -177,14 +177,13 @@ class AdminLoginResponse(BaseModel):
 
 class UserRegisterRequest(BaseModel):
     name: str
-    username: str
     email: str
     password: str
     confirm_password: str
 
 
 class UserLoginRequest(BaseModel):
-    username: str
+    email: str
     password: str
 
 
@@ -227,10 +226,6 @@ async def user_register(request: UserRegisterRequest):
     if len(request.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
     
-    # Validate username (alphanumeric)
-    if not request.username.isalnum():
-        raise HTTPException(status_code=400, detail="Username must be alphanumeric")
-    
     # Validate email format (basic check)
     if '@' not in request.email or '.' not in request.email:
         raise HTTPException(status_code=400, detail="Invalid email format")
@@ -251,7 +246,7 @@ async def user_register(request: UserRegisterRequest):
         password_hash = pwd_context.hash(password_truncated)
         
         # Create user in database
-        user_id = db.create_user(request.username, request.email, password_hash, request.name)
+        user_id = db.create_user(request.email, password_hash, request.name)
         
         return JSONResponse({
             "success": True,
@@ -259,24 +254,27 @@ async def user_register(request: UserRegisterRequest):
             "user": {
                 "id": user_id,
                 "name": request.name,
-                "username": request.username,
                 "email": request.email
             }
         })
     except ValueError as e:
-        # Handle duplicate username/email
+        # Handle duplicate email
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         print(f"✗ Registration error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Registration failed")
+        print(f"✗ Error type: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
+        # Return the actual error message
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
 
 
 @app.post("/api/user/login")
 async def user_login(request: UserLoginRequest):
     """Authenticate user with username/email and password."""
     try:
-        # Get user by username
-        user = db.get_user_by_username(request.username)
+        # Get user by email
+        user = db.get_user_by_email(request.email)
         
         if not user:
             raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -300,7 +298,6 @@ async def user_login(request: UserLoginRequest):
             "user": {
                 "id": user["id"],
                 "name": user["name"],
-                "username": user["username"],
                 "email": user["email"]
             }
         })
@@ -812,6 +809,37 @@ async def get_dpr(dpr_id: int):
     
     return JSONResponse(dpr)
 
+
+
+
+@app.get("/dpr/{dpr_id}/pdf")
+async def get_dpr_pdf(dpr_id: int):
+    """
+    Serve the PDF file for a DPR.
+    Can be used for both viewing (in new tab) and downloading.
+    """
+    dpr = db.get_dpr(dpr_id)
+    
+    if not dpr:
+        raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+    
+    filepath = dpr.get("filepath")
+    if not filepath or not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="PDF file not found on server")
+    
+    # Read the PDF file
+    with open(filepath, "rb") as f:
+        content = f.read()
+    
+    # Return the PDF with appropriate headers
+    # The browser will handle viewing based on the Content-Disposition header
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{dpr.get("original_filename", "document.pdf")}"'
+        }
+    )
 
 @app.post("/dprs/{dpr_id}/analyze")
 async def analyze_dpr(dpr_id: int):

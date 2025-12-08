@@ -28,8 +28,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     // User Auth State
     const [userEmail, setUserEmail] = useState('')
     const [userPassword, setUserPassword] = useState('')
+    const [userConfirmPassword, setUserConfirmPassword] = useState('')
     const [userName, setUserName] = useState('')
-    const [userUsername, setUserUsername] = useState('')
     const [userError, setUserError] = useState('')
     const [userLoading, setUserLoading] = useState(false)
     const [showUserPassword, setShowUserPassword] = useState(false)
@@ -53,7 +53,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         setUserEmail('')
         setUserPassword('')
         setUserName('')
-        setUserUsername('')
         setUserError('')
     }
 
@@ -104,8 +103,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         if (userAuthTab === 'login') {
             // User Login
-            if (!userUsername || !userPassword) {
-                setUserError('Please enter both username and password')
+            if (!userEmail || !userPassword) {
+                setUserError('Please enter your email and password')
                 return
             }
 
@@ -115,7 +114,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 const response = await fetch('http://127.0.0.1:8000/api/user/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: userUsername, password: userPassword }),
+                    body: JSON.stringify({ email: userEmail, password: userPassword }),
                 })
 
                 const data = await response.json()
@@ -123,7 +122,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 if (response.ok && data.success) {
                     loginUser({
                         id: data.user.id,
-                        username: data.user.username,
+                        name: data.user.name,
                         email: data.user.email
                     })
                     onClose()
@@ -139,14 +138,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             }
         } else {
             // User Signup - Client-side validation
-            if (!userName || !userUsername || !userEmail || !userPassword) {
+            if (!userName || !userEmail || !userPassword || !userConfirmPassword) {
                 setUserError('Please fill in all fields')
                 return
             }
 
-            // Validate username (alphanumeric only)
-            if (!/^[a-zA-Z0-9]+$/.test(userUsername)) {
-                setUserError('Username must be alphanumeric (letters and numbers only)')
+            // Check if passwords match
+            if (userPassword !== userConfirmPassword) {
+                setUserError('Passwords do not match')
                 return
             }
 
@@ -170,10 +169,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         name: userName,
-                        username: userUsername,
                         email: userEmail,
                         password: userPassword,
-                        confirm_password: userPassword
+                        confirm_password: userConfirmPassword
                     }),
                 })
 
@@ -182,18 +180,21 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 if (response.ok && data.success) {
                     loginUser({
                         id: data.user.id,
-                        username: data.user.username,
+                        name: data.user.name,
                         email: data.user.email
                     })
                     onClose()
                     navigate('/user/dashboard')
                 } else {
-                    // Handle error response - check both 'detail' and 'message' fields
-                    setUserError(data.detail || data.message || 'Signup failed')
+                    // Show detailed error from backend
+                    const errorMessage = data.detail || data.message || 'Signup failed. Please try again.'
+                    setUserError(errorMessage)
+                    console.error('Signup failed:', data)
                 }
             } catch (err: any) {
                 console.error('Signup error:', err)
-                setUserError(err.message || 'Failed to connect to server. Please try again.')
+                const errorMessage = err.message || 'Failed to connect to server. Please try again.'
+                setUserError(errorMessage)
             } finally {
                 setUserLoading(false)
             }
@@ -442,70 +443,53 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                                 />
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label htmlFor="userUsername" className="block text-sm font-medium">
-                                                Username
-                                            </label>
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                    <UserIcon className="h-5 w-5 text-muted-foreground" />
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    id="userUsername"
-                                                    value={userUsername}
-                                                    onChange={(e) => setUserUsername(e.target.value)}
-                                                    className="block w-full pl-10 pr-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-colors bg-background"
-                                                    placeholder="Choose a username"
-                                                    disabled={userLoading}
-                                                />
-                                            </div>
-                                            <p className="text-xs text-muted-foreground">Alphanumeric characters only</p>
-                                        </div>
+
                                     </>
                                 )}
 
                                 {userAuthTab === 'login' && (
                                     <div className="space-y-2">
-                                        <label htmlFor="userUsernameLogin" className="block text-sm font-medium">
-                                            Username
+                                        <label htmlFor="userEmailLogin" className="block text-sm font-medium">
+                                            Email
                                         </label>
                                         <div className="relative">
                                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <UserIcon className="h-5 w-5 text-muted-foreground" />
+                                                <Mail className="h-5 w-5 text-muted-foreground" />
                                             </div>
                                             <input
-                                                type="text"
-                                                id="userUsernameLogin"
-                                                value={userUsername}
-                                                onChange={(e) => setUserUsername(e.target.value)}
+                                                type="email"
+                                                id="userEmailLogin"
+                                                value={userEmail}
+                                                onChange={(e) => setUserEmail(e.target.value)}
                                                 className="block w-full pl-10 pr-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-colors bg-background"
-                                                placeholder="Enter your username"
+                                                placeholder="Enter your email"
                                                 disabled={userLoading}
                                             />
                                         </div>
                                     </div>
                                 )}
 
-                                <div className="space-y-2">
-                                    <label htmlFor="userEmail" className="block text-sm font-medium">
-                                        Email Address
-                                    </label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <Mail className="h-5 w-5 text-muted-foreground" />
+                                {userAuthTab === 'signup' && (
+                                    <div className="space-y-2">
+                                        <label htmlFor="userEmail" className="block text-sm font-medium">
+                                            Email Address
+                                        </label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <Mail className="h-5 w-5 text-muted-foreground" />
+                                            </div>
+                                            <input
+                                                type="email"
+                                                id="userEmail"
+                                                value={userEmail}
+                                                onChange={(e) => setUserEmail(e.target.value)}
+                                                className="block w-full pl-10 pr-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-colors bg-background"
+                                                placeholder="Enter your email"
+                                                disabled={userLoading}
+                                            />
                                         </div>
-                                        <input
-                                            type="email"
-                                            id="userEmail"
-                                            value={userEmail}
-                                            onChange={(e) => setUserEmail(e.target.value)}
-                                            className="block w-full pl-10 pr-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-colors bg-background"
-                                            placeholder="Enter your email"
-                                            disabled={userLoading}
-                                        />
                                     </div>
-                                </div>
+                                )}
 
                                 <div className="space-y-2">
                                     <label htmlFor="userPassword" className="block text-sm font-medium">
@@ -537,6 +521,28 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                                         </button>
                                     </div>
                                 </div>
+
+                                {userAuthTab === 'signup' && (
+                                    <div className="space-y-2">
+                                        <label htmlFor="userConfirmPassword" className="block text-sm font-medium">
+                                            Confirm Password
+                                        </label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <Lock className="h-5 w-5 text-muted-foreground" />
+                                            </div>
+                                            <input
+                                                type="password"
+                                                id="userConfirmPassword"
+                                                value={userConfirmPassword}
+                                                onChange={(e) => setUserConfirmPassword(e.target.value)}
+                                                className="block w-full pl-10 pr-3 py-2.5 border border-border rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-purple-600 transition-colors bg-background"
+                                                placeholder="Re-enter your password"
+                                                disabled={userLoading}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
 
                                 <button
                                     type="submit"

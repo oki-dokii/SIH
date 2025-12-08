@@ -19,7 +19,9 @@ import {
     Scale,
     Trophy,
     CheckCircle,
-    AlertCircle
+    AlertCircle,
+    Download,
+    ExternalLink
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -358,6 +360,35 @@ export default function ProjectDetailPage() {
                                 </div>
 
                                 <div className="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
+                                    {/* View PDF Button */}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="shrink-0"
+                                        onClick={() => window.open(`/api/dpr/${doc.id}/pdf`, '_blank')}
+                                        title="View PDF in new tab"
+                                    >
+                                        <ExternalLink className="h-4 w-4" />
+                                    </Button>
+
+                                    {/* Download PDF Button */}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="shrink-0"
+                                        onClick={() => {
+                                            const link = document.createElement('a');
+                                            link.href = `/api/dpr/${doc.id}/pdf`;
+                                            link.download = doc.original_filename;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        }}
+                                        title="Download PDF"
+                                    >
+                                        <Download className="h-4 w-4" />
+                                    </Button>
+
                                     {!doc.summary_json ? (
                                         <Button
                                             size="sm"

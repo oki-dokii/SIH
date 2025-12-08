@@ -109,8 +109,8 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
     if (active && payload && payload.length && payload[0]?.value !== undefined) {
       const value = safeNumber(payload[0].value)
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
-          <p className="font-semibold text-sm">{payload[0].name}</p>
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
+          <p className="font-semibold text-sm text-gray-900 dark:text-gray-100">{payload[0].name}</p>
           <p className="text-primary font-bold">₹{value.toFixed(2)} Lakh</p>
         </div>
       )
@@ -130,34 +130,34 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b-2 border-indigo-200">
-                  <th className="text-left py-3 px-2 font-semibold text-gray-700">Component</th>
-                  <th className="text-right py-3 px-2 font-semibold text-gray-700">Amount (₹ Lakh)</th>
-                  <th className="text-right py-3 px-2 font-semibold text-gray-700">Percentage</th>
+                <tr className="border-b-2 border-indigo-200 dark:border-indigo-800">
+                  <th className="text-left py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Component</th>
+                  <th className="text-right py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Amount (₹ Lakh)</th>
+                  <th className="text-right py-3 px-2 font-semibold text-gray-700 dark:text-gray-300">Percentage</th>
                 </tr>
               </thead>
               <tbody>
                 {validCostBreakdown.map((item: any, index: number) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-indigo-50/50 transition-colors">
+                  <tr key={index} className="border-b border-gray-100 dark:border-gray-800 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/50 transition-colors">
                     <td className="py-3 px-2">
-                      <span className="font-medium text-gray-800">{item.component}</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">{item.component}</span>
                     </td>
-                    <td className="text-right py-3 px-2 font-semibold text-gray-900">
+                    <td className="text-right py-3 px-2 font-semibold text-gray-900 dark:text-gray-100">
                       {formatCurrency(safeNumber(item.amountLakhINR))}
                     </td>
-                    <td className="text-right py-3 px-2 text-indigo-600 font-semibold">
+                    <td className="text-right py-3 px-2 text-indigo-600 dark:text-indigo-400 font-semibold">
                       {safeNumber(item.percent) > 0 ? `${safeNumber(item.percent).toFixed(1)}%` : '—'}
                     </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-indigo-200 bg-indigo-50">
-                  <td className="py-3 px-2 font-bold text-gray-800">Total</td>
-                  <td className="text-right py-3 px-2 font-bold text-gray-900">
+                <tr className="border-t-2 border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950">
+                  <td className="py-3 px-2 font-bold text-gray-800 dark:text-gray-200">Total</td>
+                  <td className="text-right py-3 px-2 font-bold text-gray-900 dark:text-gray-100">
                     {formatCurrency(validCostBreakdown.reduce((sum: number, item: any) => sum + safeNumber(item.amountLakhINR), 0))}
                   </td>
-                  <td className="text-right py-3 px-2 font-bold text-indigo-600">
+                  <td className="text-right py-3 px-2 font-bold text-indigo-600 dark:text-indigo-400">
                     {validCostBreakdown.reduce((sum: number, item: any) => sum + safeNumber(item.percent), 0).toFixed(1)}%
                   </td>
                 </tr>

@@ -24,13 +24,24 @@ export function Header() {
   const [uploadSuccess, setUploadSuccess] = useState(false)
 
   useEffect(() => {
-    const isDarkMode = document.documentElement.classList.contains('dark')
+    // Check localStorage first, then check current state
+    const savedTheme = localStorage.getItem('theme')
+    const isDarkMode = savedTheme === 'dark' || (!savedTheme && document.documentElement.classList.contains('dark'))
+
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
     setIsDark(isDarkMode)
   }, [])
 
   const toggleDarkMode = () => {
+    const newDarkMode = !isDark
     document.documentElement.classList.toggle('dark')
-    setIsDark(!isDark)
+    setIsDark(newDarkMode)
+    // Save preference to localStorage
+    localStorage.setItem('theme', newDarkMode ? 'dark' : 'light')
   }
 
   const isActive = (path: string) => location.pathname === path
