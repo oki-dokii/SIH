@@ -25,7 +25,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 export default function ProjectDetailPage() {
     const navigate = useNavigate()
     const { id } = useParams<{ id: string }>()
-    const { language, t } = useLanguage()
+    const { t } = useLanguage()
     const [project, setProject] = useState<Project | null>(null)
     const [documents, setDocuments] = useState<DPR[]>([])
     const [searchQuery, setSearchQuery] = useState('')
@@ -120,7 +120,7 @@ export default function ProjectDetailPage() {
         setUploadProgress(0)
 
         try {
-            await api.uploadDPR(file, language, parseInt(id), (progress) => {
+            await api.uploadDPR(file, parseInt(id), (progress) => {
                 setUploadProgress(progress)
             })
 

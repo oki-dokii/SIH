@@ -66,13 +66,10 @@ async def lifespan(app: FastAPI):
             
             try:
                 # Generate analysis (now async)
-                multilang_json = await gemini_client.generate_multilang_json_from_file(file_ref, str(SCHEMA_PATH))
-                
-                # Default to English for the main summary_json
-                parsed_json = multilang_json.get("en", multilang_json)
+                parsed_json = await gemini_client.generate_json_from_file(file_ref, str(SCHEMA_PATH))
                 
                 # Update database (run in thread pool)
-                await asyncio.to_thread(db.update_dpr, dpr_id, parsed_json, multilang_json)
+                await asyncio.to_thread(db.update_dpr, dpr_id, parsed_json)
                 print(f"✓ Completed analysis for DPR {dpr_id}")
                 
             except Exception as e:
@@ -99,13 +96,10 @@ async def lifespan(app: FastAPI):
                         
                         # Retry analysis with new file reference
                         print(f"↺ Retrying analysis for DPR {dpr_id}...")
-                        multilang_json = await gemini_client.generate_multilang_json_from_file(new_file_ref, str(SCHEMA_PATH))
-                        
-                        # Default to English for the main summary_json
-                        parsed_json = multilang_json.get("en", multilang_json)
+                        parsed_json = await gemini_client.generate_json_from_file(new_file_ref, str(SCHEMA_PATH))
                         
                         # Update database with analysis results
-                        await asyncio.to_thread(db.update_dpr, dpr_id, parsed_json, multilang_json)
+                        await asyncio.to_thread(db.update_dpr, dpr_id, parsed_json)
                         print(f"✓ Completed analysis for DPR {dpr_id} after re-upload")
                         
                     except Exception as retry_error:
@@ -382,7 +376,6 @@ async def client_upload_dpr(
             filepath=str(filepath),
             file_ref=file_ref,
             summary_json=None,  # NULL = unanalyzed, waiting for admin
-            summary_json_multilang=None,
             project_id=project_id
         )
         
@@ -673,18 +666,15 @@ async def upload_dpr(
             filepath=str(filepath),
             file_ref=file_ref,
             summary_json=None,
-            summary_json_multilang=None,
             project_id=project_id
         )
         
         # Generate analysis in background
-        print("⏳ Generating analysis in multiple languages...")
+        print("⏳ Generating analysis...")
         try:
-            multilang_json = await gemini_client.generate_multilang_json_from_file(file_ref, str(SCHEMA_PATH))
-            print(f"✓ Generated analysis in {len(multilang_json)} languages")
-            
-            parsed_json = multilang_json.get(language, multilang_json["en"])
-            db.update_dpr(dpr_id, parsed_json, multilang_json)
+            parsed_json = await gemini_client.generate_json_from_file(file_ref, str(SCHEMA_PATH))
+            print(f"✓ Generated analysis successfully")
+            db.update_dpr(dpr_id, parsed_json)
             
             return JSONResponse({
                 "id": dpr_id,
@@ -742,35 +732,14 @@ async def upload_dpr(file: UploadFile = File(...), language: str = Form("en")):
             content = await file.read()
             f.write(content)
         print(f"✓ File saved: {filepath} ({len(content)} bytes)")
-        
-        # Upload to Gemini Files API (now async)
-        file_ref = await gemini_client.upload_file(str(filepath))
-        
-        # Insert initial record into database (so it shows as "Processing")
-        print(f"⏳ Inserting initial DPR record for {filename}...")
-        dpr_id = db.insert_dpr(
-            filename=filename,
-            original_filename=original_filename,
-            filepath=str(filepath),
-            file_ref=file_ref,
-            summary_json=None,  # Initially None -> Processing
-            summary_json_multilang=None
-        )
-        
-        # Generate JSON in multiple languages for future-proof multilingual support
-        print("⏳ Generating analysis in multiple languages (English & Hindi)...")
-        
         try:
             # Single call to get both English and Hindi analysis (now async)
-            multilang_json = await gemini_client.generate_multilang_json_from_file(file_ref, str(SCHEMA_PATH))
+            parsed_json = await gemini_client.generate_json_from_file(file_ref, str(SCHEMA_PATH))
             
-            print(f"✓ Generated analysis in {len(multilang_json)} languages")
-            
-            # Use the requested language as the default summary_json for backward compatibility
-            parsed_json = multilang_json.get(language, multilang_json["en"])
+            print(f"✓ Generated analysis successfully")
             
             # Update database with analysis results
-            db.update_dpr(dpr_id, parsed_json, multilang_json)
+            db.update_dpr(dpr_id, parsed_json)
             
             return JSONResponse({
                 "id": dpr_id,
@@ -795,37 +764,27 @@ async def upload_dpr(file: UploadFile = File(...), language: str = Form("en")):
 
 
 @app.get("/dpr/{dpr_id}")
-async def get_dpr(dpr_id: int, language: str = "en"):
+async def get_dpr(dpr_id: int):
     """
     Retrieve a stored DPR by ID.
     
-    Returns the DPR metadata and parsed JSON in the requested language.
+    Returns the DPR metadata and parsed JSON.
     
     Args:
         dpr_id: The DPR ID
-        language: Language code ("en", "hi", etc.) - defaults to "en"
+        
     """
     dpr = db.get_dpr(dpr_id)
     
     if not dpr:
         raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
     
-    # If multilang data exists, use the requested language version
-    if dpr.get("summary_json_multilang"):
-        import json
-        multilang_data = json.loads(dpr["summary_json_multilang"]) if isinstance(dpr["summary_json_multilang"], str) else dpr["summary_json_multilang"]
-        
-        # Get the requested language version, fallback to English if not available
-        if language in multilang_data:
-            dpr["summary_json"] = multilang_data[language]
-        elif "en" in multilang_data:
-            dpr["summary_json"] = multilang_data["en"]
     
     return JSONResponse(dpr)
 
 
 @app.post("/dprs/{dpr_id}/analyze")
-async def analyze_dpr(dpr_id: int, language: str = "en"):
+async def analyze_dpr(dpr_id: int):
     """
     Trigger analysis on an unanalyzed DPR (typically client-uploaded).
     Admin endpoint to run Gemini analysis on uploaded PDFs.
@@ -857,15 +816,14 @@ async def analyze_dpr(dpr_id: int, language: str = "en"):
         print(f"⏳ Analyzing DPR {dpr_id}...")
         
         # Generate analysis in multiple languages
-        multilang_json = await gemini_client.generate_multilang_json_from_file(file_ref, str(SCHEMA_PATH))
+        parsed_json = await gemini_client.generate_json_from_file(file_ref, str(SCHEMA_PATH))
         
-        print(f"✓ Generated analysis in {len(multilang_json)} languages")
+        print(f"✓ Generated analysis successfully")
         
         # Use the requested language as the default summary_json
-        parsed_json = multilang_json.get(language, multilang_json["en"])
         
         # Update database with analysis results and set status to 'completed'
-        db.update_dpr(dpr_id, parsed_json, multilang_json)
+        db.update_dpr(dpr_id, parsed_json)
         
         # Set status to 'completed'
         conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))

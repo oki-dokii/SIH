@@ -473,7 +473,7 @@ const DPRAnalyzerLanding: React.FC = () => {
                 <div className="flex flex-col h-full">
                     <div className={`p-4 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-100'} flex justify-between items-center`}>
                         <h3 className="font-bold flex items-center gap-2"><MessageSquare size={18} className="text-blue-500" /> AI Assistant</h3>
-                        <button className="text-xs px-2 py-1 rounded bg-slate-500/10 hover:bg-slate-500/20">English / Hindi</button>
+                        
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">

@@ -1,18 +1,22 @@
-import { createContext, useContext, useState, ReactNode } from 'react'
-import { Language, getTranslation } from '../lib/i18n'
+import { createContext, useContext, ReactNode } from 'react'
+import { getTranslation } from '../lib/i18n'
 
 interface LanguageContextType {
-  language: Language
-  setLanguage: (lang: Language) => void
+  language: 'en'
+  setLanguage: (lang: 'en') => void
   t: (key: string) => string
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en')
+  // Language is now fixed to English only
+  const language = 'en' as const
 
-  const t = (key: string) => getTranslation(language, key)
+  // setLanguage is a no-op now since we only support English
+  const setLanguage = () => { }
+
+  const t = (key: string) => getTranslation('en', key)
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>

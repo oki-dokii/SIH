@@ -96,16 +96,15 @@ export const api = {
     return data.dprs || []
   },
 
-  async getDPR(id: number, language: string = 'en'): Promise<DPR> {
-    const response = await fetch(`${API_BASE_URL}/dpr/${id}?language=${language}`)
+  async getDPR(id: number): Promise<DPR> {
+    const response = await fetch(`${API_BASE_URL}/dpr/${id}`)
     if (!response.ok) throw new Error('Failed to fetch DPR')
     return response.json()
   },
 
-  async uploadDPR(file: File, language: string = 'en', projectId?: number, onProgress?: (progress: number) => void): Promise<UploadResponse> {
+  async uploadDPR(file: File, projectId?: number, onProgress?: (progress: number) => void): Promise<UploadResponse> {
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('language', language)
     if (projectId) {
       formData.append('project_id', projectId.toString())
     }

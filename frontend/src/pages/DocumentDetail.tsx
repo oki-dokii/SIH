@@ -36,7 +36,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 export default function DocumentDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const { t, language } = useLanguage()
+  const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState('overview')
   const [chatMessage, setChatMessage] = useState('')
   const [chatHistory, setChatHistory] = useState<Message[]>([])
@@ -53,7 +53,7 @@ export default function DocumentDetailPage() {
       loadDocument(parseInt(id))
       loadChatHistory(parseInt(id))
     }
-  }, [id, language])
+  }, [id])
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -62,7 +62,7 @@ export default function DocumentDetailPage() {
   async function loadDocument(dprId: number) {
     try {
       setLoading(true)
-      const doc = await api.getDPR(dprId, language)
+      const doc = await api.getDPR(dprId)
       setDocument(doc)
       setError(null)
     } catch (err) {

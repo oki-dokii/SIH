@@ -64,38 +64,25 @@ async def upload_file(file_path: str) -> str:
     return uploaded_file.name
 
 
-async def generate_multilang_json_from_file(file_ref: str, schema_path: str) -> Dict:
+async def generate_json_from_file(file_ref: str, schema_path: str) -> Dict:
     """
-    Generate structured JSON from an uploaded file using Gemini in both English and Hindi.
+    Generate structured JSON from an uploaded file using Gemini in English only.
     """
-    print(f"⏳ Generating Multilingual JSON from file: {file_ref}")
+    print(f"⏳ Generating JSON from file: {file_ref}")
     start_time = time.time()
     
     # Read the schema
     with open(schema_path, 'r') as f:
         schema_content = f.read()
     
-    # Create a strict system prompt
-    system_instruction = f"""You are an expert project analyst for Detailed Project Reports (DPRs). Read the attached PDF and produce EXACTLY one valid JSON object containing analysis in both English and Hindi.
+    # Create a strict system prompt (English only)
+    system_instruction = f"""You are an expert project analyst for Detailed Project Reports (DPRs). Read the attached PDF and produce EXACTLY one valid JSON object containing analysis in English.
 
-OUTPUT FORMAT:
-The output must be a single JSON object with exactly two keys: "en" and "hi".
-{{
-  "en": {{ ... English JSON matching schema ... }},
-  "hi": {{ ... Hindi JSON matching schema ... }}
-}}
-
-1. "en": The analysis in English.
-2. "hi": The EXACT SAME analysis, but with all textual fields translated into Hindi (Devanagari script).
-   - Keep all field names, keys, numbers, and technical terms in English.
-   - Translate values of string fields like "executiveSummary", "recommendation" (e.g. "Approved" -> "स्वीकृत"), "riskAssessment.mitigation", etc.
-   - Ensure the structure and numeric values in "hi" are IDENTICAL to "en".
-
-MANDATORY BEHAVIOR (Apply to both "en" and "hi" versions):
-1) OUTPUT: Return exactly one JSON object with "en" and "hi" keys. Do NOT add markdown or extra text.
+MANDATORY BEHAVIOR:
+1) OUTPUT: Return exactly one JSON object. Do NOT add markdown or extra text.
 2) ANALYZE & INFER: You must both extract explicit values from the PDF and also ANALYZE the information and INFER values where the document does not state them. In particular you MUST compute:
    - overallScore: a numeric score 0-100 (see scoring rubric below). Do NOT return null for overallScore.
-   - recommendation: one of exactly ["Approved","Approved with Conditions","Rejected","Needs Review"] (and Hindi equivalents). Do NOT return null.
+   - recommendation: one of exactly ["Approved","Approved with Conditions","Rejected","Needs Review"]. Do NOT return null.
    - financialAnalysis: populate numeric fields (if missing, infer conservatively and explain).
    - riskAssessment: identify top risks, severity and evidence (these are analytical outputs).
 3) REQUIRED NON-NULL FIELDS: The following fields MUST NOT be null (fill them or infer if missing): 
@@ -106,7 +93,7 @@ MANDATORY BEHAVIOR (Apply to both "en" and "hi" versions):
 6) FORMATTING RULES: 
    - Numbers must be plain JSON numbers (no commas, no currency symbols, no percent signs). If the source uses percent signs or another scale, convert to numeric form (explain conversion in `INFERRED_REASON:`).
    - Arrays must be arrays. Strings should be concise.
-7) PAGE REFERENCES & EVIDENCE: For any numeric or tabular value you cite, include page references in the `assumptions` text or in the `riskAssessment[*].evidence` field (e.g., “table on page 12”). Prefer adding page numbers for `key_tables` if you identify them.
+7) PAGE REFERENCES & EVIDENCE: For any numeric or tabular value you cite, include page references in the `assumptions` text or in the `riskAssessment[*].evidence` field (e.g., "table on page 12"). Prefer adding page numbers for `key_tables` if you identify them.
 8) RISK ANALYSIS: For `riskAssessment`, list the top 3-6 risks with a one-line mitigation each. For each risk include severity: HIGH / MEDIUM / LOW, and a brief evidence note (page/table).
 9) SCORING & RECOMMENDATION MAPPING: Compute `overallScore` using the rubric below; map recommendation by thresholds (but you may deviate only if you explain in `INFERRED_REASON:`).
 
@@ -117,7 +104,7 @@ MANDATORY BEHAVIOR (Apply to both "en" and "hi" versions):
    - If you adjust any financial values to make them balance, add `FINANCIAL_VALIDATION:` explanation to assumptions
    - This validation is NON-NEGOTIABLE: do not return mismatched totals
 
-11) **INCONSISTENCY DETECTION** (CRITICAL - Phase 3):
+11) **INCONSISTENCY DETECTION** (CRITICAL):
    Thoroughly analyze the DPR for inconsistencies and populate the `inconsistencyDetection` object:
    - **FLAG AS CRITICAL ISSUE** if financial components don't sum correctly
    - Verify beneficiary counts are consistent across sections
@@ -128,7 +115,7 @@ MANDATORY BEHAVIOR (Apply to both "en" and "hi" versions):
    - Set `hasInconsistencies` to true if ANY issues found
    - Count total inconsistencies accurately
 
-12) **MDONER COMPLIANCE SCORING** (CRITICAL - Phase 3):
+12) **MDONER COMPLIANCE SCORING** (CRITICAL):
    Calculate weighted compliance score in `mdonerComplianceScoring`:
    - **North Eastern Focus (25%)**: NE states location? NE-specific challenges addressed? Score 0-100
    - **Beneficiary Alignment (20%)**: Tribal/marginalized communities targeted? Realistic counts? Score 0-100
@@ -139,7 +126,7 @@ MANDATORY BEHAVIOR (Apply to both "en" and "hi" versions):
    - Calculate `overallComplianceScore` = (northEasternFocus*0.25 + beneficiaryAlignment*0.20 + environmentalCompliance*0.20 + landAcquisition*0.15 + documentationQuality*0.10 + financialViability*0.10)
    - List specific compliance gaps and strengths
 
-13) **SMART RECOMMENDATIONS** (CRITICAL - Phase 3):
+13) **SMART RECOMMENDATIONS** (CRITICAL):
    Generate actionable recommendations in `smartRecommendations`:
    - **Critical Actions**: Must-fix items before approval (address Critical inconsistencies, mandatory gaps)
    - **Improvement Suggestions**: Enhancements to strengthen project (Medium/High inconsistencies, weak compliance areas)
@@ -163,13 +150,12 @@ Follow the rubric and trace any deviations. Return only the JSON object.
 
     
     # Create the user prompt with schema
-    user_prompt = f"""Analyze the attached PDF and return EXACTLY one JSON object with "en" and "hi" keys, where each key contains an object following the schema below.
+    user_prompt = f"""Analyze the attached PDF and return EXACTLY one JSON object following the schema below.
 
 SCHEMA:
 {schema_content}
 
-ADDITIONAL INSTRUCTIONS (repeat of key rules):
-- **OUTPUT**: {{ "en": {{...}}, "hi": {{...}} }}
+ADDITIONAL INSTRUCTIONS:
 - **FINANCIAL VALIDATION (MANDATORY)**: Sum(projectCost components) = totalInitialInvestment AND Sum(capitalStructure components) = totalInitialInvestment. Adjust/normalize values if needed and document in assumptions with `FINANCIAL_VALIDATION:` prefix.
 - overallScore: compute a number 0-100 using document evidence and the rubric in the system instruction.
 - recommendation: one of ["Approve","Approve with Conditions","Reject","Review"].
@@ -188,11 +174,6 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
         system_instruction=system_instruction
     )
     
-    # Generate content with the file attached (blocking call offloaded to thread)
-    # Note: genai.get_file is also a network call, so we offload that too if needed, 
-    # but here we can just pass the file_ref name string if the SDK supports it, 
-    # or fetch the file object in a thread.
-    
     def _generate():
         file_obj = genai.get_file(file_ref)
         return model.generate_content([file_obj, user_prompt])
@@ -200,7 +181,7 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
     response = await asyncio.to_thread(_generate)
     
     elapsed = time.time() - start_time
-    print(f"✓ Multilingual JSON generated in {elapsed:.2f}s (response length: {len(response.text)} chars)")
+    print(f"✓ JSON generated in {elapsed:.2f}s (response length: {len(response.text)} chars)")
     
     # Parse and validate the JSON
     try:
@@ -235,10 +216,7 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
         if not isinstance(parsed_json, dict):
             raise ValueError("Response is not a JSON object")
         
-        if "en" not in parsed_json or "hi" not in parsed_json:
-            raise ValueError("Response missing 'en' or 'hi' keys")
-        
-        # Validate English object
+        # Validate required keys
         required_keys = [
             "projectName", "projectLocation", "projectSector", 
             "executiveSummary", "overallScore", "recommendation",
@@ -247,13 +225,11 @@ Now analyze the attached file and return EXACTLY the one JSON object described a
             "inconsistencyDetection", "mdonerComplianceScoring", "smartRecommendations"
         ]
         
-        for lang in ["en", "hi"]:
-            lang_json = parsed_json[lang]
-            missing_keys = [key for key in required_keys if key not in lang_json]
-            if missing_keys:
-                raise ValueError(f"Missing required keys in '{lang}' object: {missing_keys}")
+        missing_keys = [key for key in required_keys if key not in parsed_json]
+        if missing_keys:
+            raise ValueError(f"Missing required keys: {missing_keys}")
         
-        print(f"✓ Multilingual JSON validated successfully")
+        print(f"✓ JSON validated successfully")
         return parsed_json
         
     except json.JSONDecodeError as e:

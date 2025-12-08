@@ -31,20 +31,55 @@ def init_db(db_path: str = "data/dpr.db"):
             filepath TEXT NOT NULL,
             uploaded_file_ref TEXT NOT NULL,
             upload_ts TEXT NOT NULL,
-            summary_json TEXT NOT NULL,
-            summary_json_multilang TEXT,
+            summary_json TEXT,
             FOREIGN KEY (project_id) REFERENCES projects (id)
         )
     """)
     
-    # MIGRATION: Add summary_json_multilang column if it doesn't exist
+    # MIGRATION: Check if summary_json column has NOT NULL constraint and needs to be relaxed
+    # This requires recreating the table in SQLite
+    cursor.execute("PRAGMA table_info(dprs)")
+    columns_info = cursor.fetchall()
+    columns = [col[1] for col in columns_info]
+    
+    # Find summary_json column info
+    summary_json_info = next((col for col in columns_info if col[1] == 'summary_json'), None)
+    if summary_json_info and summary_json_info[3] == 1:  # notnull = 1 means NOT NULL constraint
+        print("⏳ Migrating database: relaxing summary_json NOT NULL constraint...")
+        try:
+            cursor.execute("PRAGMA foreign_keys=off;")
+            cursor.execute("BEGIN TRANSACTION;")
+            cursor.execute("""
+                CREATE TABLE dprs_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    project_id INTEGER,
+                    filename TEXT NOT NULL,
+                    original_filename TEXT NOT NULL,
+                    filepath TEXT NOT NULL,
+                    uploaded_file_ref TEXT NOT NULL,
+                    upload_ts TEXT NOT NULL,
+                    summary_json TEXT,
+                    client_id INTEGER,
+                    status TEXT DEFAULT 'completed',
+                    FOREIGN KEY (project_id) REFERENCES projects (id)
+                )
+            """)
+            cursor.execute("""
+                INSERT INTO dprs_new (id, project_id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, client_id, status)
+                SELECT id, project_id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, client_id, status FROM dprs
+            """)
+            cursor.execute("DROP TABLE dprs")
+            cursor.execute("ALTER TABLE dprs_new RENAME TO dprs")
+            cursor.execute("COMMIT;")
+            cursor.execute("PRAGMA foreign_keys=on;")
+            print("✓ Database migration complete (summary_json constraint relaxed)")
+        except Exception as e:
+            cursor.execute("ROLLBACK;")
+            print(f"⚠ Migration failed: {e}")
+    
+    # Refresh columns list after potential migration
     cursor.execute("PRAGMA table_info(dprs)")
     columns = [col[1] for col in cursor.fetchall()]
-    
-    if 'summary_json_multilang' not in columns:
-        print("⏳ Migrating database: adding summary_json_multilang column...")
-        cursor.execute("ALTER TABLE dprs ADD COLUMN summary_json_multilang TEXT")
-        print("✓ Database migration complete")
 
     if 'project_id' not in columns:
         print("⏳ Migrating database: adding project_id column...")
@@ -187,19 +222,18 @@ def init_db(db_path: str = "data/dpr.db"):
 
 
 def insert_dpr(filename: str, original_filename: str, filepath: str, file_ref: str, 
-               summary_json: dict, summary_json_multilang: dict = None, project_id: int = None, db_path: str = "data/dpr.db") -> int:
+               summary_json: dict, project_id: int = None, db_path: str = "data/dpr.db") -> int:
     """Insert a new DPR record and return its ID."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
     timestamp = datetime.now().isoformat()
-    json_str = json.dumps(summary_json, indent=2)
-    multilang_str = json.dumps(summary_json_multilang, indent=2) if summary_json_multilang else None
+    json_str = json.dumps(summary_json, indent=2) if summary_json else None
     
     cursor.execute("""
-        INSERT INTO dprs (filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang, project_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (filename, original_filename, filepath, file_ref, timestamp, json_str, multilang_str, project_id))
+        INSERT INTO dprs (filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, project_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (filename, original_filename, filepath, file_ref, timestamp, json_str, project_id))
     
     dpr_id = cursor.lastrowid
     conn.commit()
@@ -209,19 +243,18 @@ def insert_dpr(filename: str, original_filename: str, filepath: str, file_ref: s
     return dpr_id
 
 
-def update_dpr(dpr_id: int, summary_json: dict, summary_json_multilang: dict = None, db_path: str = "data/dpr.db"):
+def update_dpr(dpr_id: int, summary_json: dict, db_path: str = "data/dpr.db"):
     """Update an existing DPR record with analysis results."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
     json_str = json.dumps(summary_json, indent=2)
-    multilang_str = json.dumps(summary_json_multilang, indent=2) if summary_json_multilang else None
     
     cursor.execute("""
         UPDATE dprs 
-        SET summary_json = ?, summary_json_multilang = ?
+        SET summary_json = ?
         WHERE id = ?
-    """, (json_str, multilang_str, dpr_id))
+    """, (json_str, dpr_id))
     
     conn.commit()
     conn.close()
@@ -281,7 +314,7 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
     
     cursor.execute("""
         SELECT id, filename, original_filename, filepath, uploaded_file_ref, 
-               upload_ts, summary_json, summary_json_multilang, project_id, status, client_id
+               upload_ts, summary_json, project_id, status, client_id
         FROM dprs 
         WHERE id = ?
     """, (dpr_id,))
@@ -296,8 +329,7 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
             "original_filename": row["original_filename"],
             "filepath": row["filepath"],
             "uploaded_file_ref": row["uploaded_file_ref"],
-            "upload_ts": row["upload_ts"],
-            "summary_json_multilang": row["summary_json_multilang"]
+            "upload_ts": row["upload_ts"]
         }
         
         # Add client_id if it exists
@@ -328,7 +360,7 @@ def get_dpr_by_filename(original_filename: str, db_path: str = "data/dpr.db") ->
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang
+        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json
         FROM dprs WHERE original_filename = ?
     """, (original_filename,))
     
@@ -343,8 +375,7 @@ def get_dpr_by_filename(original_filename: str, db_path: str = "data/dpr.db") ->
             "filepath": row["filepath"],
             "uploaded_file_ref": row["uploaded_file_ref"],
             "upload_ts": row["upload_ts"],
-            "summary_json": json.loads(row["summary_json"]),
-            "summary_json_multilang": row["summary_json_multilang"]
+            "summary_json": json.loads(row["summary_json"]) if row["summary_json"] else None
         }
     return None
 
@@ -356,7 +387,7 @@ def get_all_dprs(db_path: str = "data/dpr.db") -> List[Dict]:
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json, summary_json_multilang
+        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json
         FROM dprs
         ORDER BY upload_ts DESC
     """)
@@ -372,8 +403,7 @@ def get_all_dprs(db_path: str = "data/dpr.db") -> List[Dict]:
             "filepath": row["filepath"],
             "uploaded_file_ref": row["uploaded_file_ref"],
             "upload_ts": row["upload_ts"],
-            "summary_json": json.loads(row["summary_json"]),
-            "summary_json_multilang": row["summary_json_multilang"]
+            "summary_json": json.loads(row["summary_json"]) if row["summary_json"] else None
         }
         for row in rows
     ]

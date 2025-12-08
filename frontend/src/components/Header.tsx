@@ -1,9 +1,8 @@
-import { FileText, Moon, Sun, Languages, CheckCircle2, LogOut } from 'lucide-react'
+import { FileText, Moon, Sun, CheckCircle2, LogOut } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from './ui/Button'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
-import { useLanguage } from '../contexts/LanguageContext'
 import { useRole } from '../contexts/RoleContext'
 import { api } from '@/lib/api'
 import { ProjectSelectionModal } from './ProjectSelectionModal'
@@ -13,7 +12,6 @@ export function Header() {
   const [isDark, setIsDark] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const { language, setLanguage, t } = useLanguage()
   const { logout } = useRole()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -36,10 +34,6 @@ export function Header() {
   }
 
   const isActive = (path: string) => location.pathname === path
-
-  const toggleLanguage = () => {
-    setLanguage(language === 'en' ? 'hi' : 'en')
-  }
 
   const handleUploadClick = () => {
     fileInputRef.current?.click()
@@ -73,7 +67,7 @@ export function Header() {
     setUploadProgress(0)
 
     try {
-      const result = await api.uploadDPR(pendingFile, language, projectId, (progress) => {
+      const result = await api.uploadDPR(pendingFile, projectId, (progress) => {
         setUploadProgress(progress)
         if (progress === 100) {
           setProcessing(true)
@@ -108,7 +102,7 @@ export function Header() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
               <FileText className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-primary">{t('landing.title')}</span>
+            <span className="text-xl font-bold text-primary">DPR Analyzer</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
@@ -119,7 +113,7 @@ export function Header() {
                 isActive('/admin') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
               )}
             >
-              {t('common.home')}
+              Home
             </Link>
             <Link
               to="/admin/projects"
@@ -128,7 +122,7 @@ export function Header() {
                 isActive('/admin/projects') || location.pathname.startsWith('/admin/projects/') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
               )}
             >
-              {t('common.projects')}
+              Projects
             </Link>
             <Link
               to="/admin/comparisons"
@@ -137,19 +131,11 @@ export function Header() {
                 isActive('/admin/comparisons') || location.pathname.startsWith('/admin/comparison-chat/') ? 'text-primary border-b-2 border-primary pb-1' : 'text-foreground'
               )}
             >
-              {t('common.comparisons')}
+              Comparisons
             </Link>
           </nav>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={toggleLanguage}
-              className="p-2 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
-              aria-label="Toggle language"
-            >
-              <Languages className="h-5 w-5" />
-              <span className="text-sm font-medium">{language === 'en' ? 'हिं' : 'EN'}</span>
-            </button>
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-lg hover:bg-muted transition-colors"
@@ -199,12 +185,12 @@ export function Header() {
                     <div className="w-16 h-16 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                   </div>
                   <h3 className="text-lg font-semibold mb-2">
-                    {processing ? 'Processing Document...' : t('common.loading')}
+                    {processing ? 'Processing Document...' : 'Loading...'}
                   </h3>
                   <p className="text-muted-foreground mb-4">
                     {processing
                       ? 'Analyzing content with AI. This may take a moment.'
-                      : t('landing.uploadPrompt')}
+                      : 'Please wait while we process your document'}
                   </p>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
