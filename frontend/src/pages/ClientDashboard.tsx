@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useRole } from '@/contexts/RoleContext'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Upload, FileText, Download, Clock, Trash2 } from 'lucide-react'
+import { Upload, FileText, Download, Clock, Trash2, MessageSquare, X } from 'lucide-react'
 
 interface ClientDPR {
     id: number
@@ -35,6 +35,7 @@ export default function ClientDashboard() {
     const [uploading, setUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
+    const [selectedFeedback, setSelectedFeedback] = useState<ClientDPR | null>(null)
 
     // Form state
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null)
@@ -421,6 +422,15 @@ export default function ClientDashboard() {
                                                                 {new Date(dpr.feedback_timestamp).toLocaleDateString()}
                                                             </p>
                                                         )}
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => setSelectedFeedback(dpr)}
+                                                            className="mt-2 text-xs inline-flex items-center gap-1"
+                                                        >
+                                                            <MessageSquare className="h-3 w-3" />
+                                                            View Full Feedback
+                                                        </Button>
                                                     </div>
                                                 ) : (
                                                     <span className="text-sm text-muted-foreground italic">No feedback yet</span>
@@ -463,6 +473,50 @@ export default function ClientDashboard() {
                     © 2025 <span className="text-primary font-semibold">DPR Analyzer</span> - All rights reserved
                 </div>
             </footer>
+
+            {/* Feedback Modal */}
+            {selectedFeedback && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <Card className="w-full max-w-2xl p-6 max-h-[80vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h2 className="text-2xl font-bold flex items-center gap-2">
+                                    <MessageSquare className="h-6 w-6 text-primary" />
+                                    Admin Feedback
+                                </h2>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    For: {selectedFeedback.original_filename}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedFeedback(null)}
+                                className="text-muted-foreground hover:text-foreground"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div className="mb-4">
+                            <div className="bg-muted/50 rounded-lg p-4">
+                                <p className="text-sm text-foreground whitespace-pre-wrap">
+                                    {selectedFeedback.admin_feedback}
+                                </p>
+                            </div>
+                            {selectedFeedback.feedback_timestamp && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    Received on: {new Date(selectedFeedback.feedback_timestamp).toLocaleString()}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end">
+                            <Button variant="outline" onClick={() => setSelectedFeedback(null)}>
+                                Close
+                            </Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
         </div>
     )
 }
