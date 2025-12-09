@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPR Analyzer - Home</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="hero-header">
+            <h1>🔍 DPR Analyzer</h1>
+            <p class="subtitle">AI-Powered Detailed Project Report Analysis</p>
+            <p class="description">Upload your DPR PDF and get instant AI-powered analysis with structured insights, risk assessment, and interactive chat capabilities.</p>
+        </header>
+
+        <div class="main-actions">
+            <div class="action-card upload-card">
+                <div class="card-icon">📄</div>
+                <h2>Upload New DPR</h2>
+                <p>Analyze a new project report with AI</p>
+                
+                <form id="uploadForm" class="upload-form">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="fileInput" accept=".pdf" required>
+                        <label for="fileInput" class="file-input-label">Choose PDF File</label>
+                    </div>
+                    <div id="fileName" class="file-name"></div>
+                    <button type="submit" class="btn btn-primary" id="uploadBtn">
+                        <span class="btn-text">🚀 Analyze Document</span>
+                    </button>
+                </form>
+
+                <div class="loading" id="loadingSection">
+                    <div class="spinner"></div>
+                    <div class="loading-text">🤖 AI is analyzing your document...</div>
+                    <div class="loading-subtext">This may take 10-30 seconds. Please wait.</div>
+                </div>
+
+                <div class="error-message" id="errorMessage" style="display: none;"></div>
+            </div>
+
+            <div class="action-card view-card">
+                <div class="card-icon">📊</div>
+                <h2>View All DPRs</h2>
+                <p>Browse previously analyzed reports</p>
+                <a href="/dprs/list" class="btn btn-secondary">
+                    <span class="btn-text">📋 View All Reports</span>
+                </a>
+            </div>
+        </div>
+
+        <footer class="home-footer">
+            <p>Powered by Google Gemini 2.5 Flash</p>
+        </footer>
+    </div>
+
+    <script src="/static/home.js"></script>
+</body>
+</html>

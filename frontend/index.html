@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DPR Analyzer - AI-Powered Document Analysis</title>
+  <style>
+    /* Hide Google Translate default widget and banner */
+    #google_translate_element {
+      display: none !important;
+    }
+
+    .goog-te-banner-frame.skiptranslate {
+      display: none !important;
+    }
+
+    body {
+      top: 0px !important;
+    }
+
+    .goog-te-balloon-frame {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Hidden Google Translate widget container -->
+  <div id="google_translate_element"></div>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>
