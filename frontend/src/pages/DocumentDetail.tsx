@@ -911,31 +911,55 @@ function ComplianceTab({ data, onPageClick, projectId }: { data: any; onPageClic
     return 'text-red-600'
   }
 
-  // Get weight percentage for display
+  // Function to convert camelCase to readable label
+  const formatLabel = (key: string) => {
+    // Special cases for compound words
+    const specialCases: Record<string, string> = {
+      'schemeEligibilityAlignment': 'Scheme Eligibility Alignment',
+      'technicalEngineeringQuality': 'Technical & Engineering Quality',
+      'environmentalStatutoryCompliance': 'Environmental & Statutory Compliance',
+      'landAcquisitionSocialSafeguards': 'Land Acquisition & Social Safeguards',
+      'financialRealismCostIntegrity': 'Financial Realism & Cost Integrity',
+      'implementationReadinessMonitoring': 'Implementation Readiness & Monitoring',
+      'riskPreparednessHazardMitigation': 'Risk Preparedness & Hazard Mitigation',
+      'innovationTechnologyAdoption': 'Innovation & Technology Adoption',
+      'governanceTransparencyAccountability': 'Governance, Transparency & Accountability',
+      'northEasternFocus': 'North Eastern Focus',
+      'beneficiaryAlignment': 'Beneficiary Alignment',
+      'documentationQuality': 'Documentation Quality',
+      'environmentalCompliance': 'Environmental Compliance',
+      'landAcquisition': 'Land Acquisition',
+      'financialViability': 'Financial Viability',
+    }
+
+    if (specialCases[key]) return specialCases[key]
+
+    // Fallback: convert camelCase to Title Case
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, (str) => str.toUpperCase())
+      .trim()
+  }
+
+  // Get weight percentage for display - dynamically from data
   const getWeightPercentage = (key: string) => {
+    const item = compliance.scoringBreakdown?.[key]
+    if (item && item.weight !== undefined) {
+      return `${Math.round(item.weight * 100)}%`
+    }
     if (projectWeights && projectWeights[key]) {
       return `${Math.round(projectWeights[key] * 100)}%`
     }
-    // Default weights if not loaded yet
-    const defaults: any = {
-      'northEasternFocus': '25%',
-      'beneficiaryAlignment': '20%',
-      'environmentalCompliance': '20%',
-      'landAcquisition': '15%',
-      'documentationQuality': '10%',
-      'financialViability': '10%',
-    }
-    return defaults[key] || '0%'
+    return '0%'
   }
 
-  const criteria = [
-    { key: 'northEasternFocus', label: 'North Eastern Focus' },
-    { key: 'beneficiaryAlignment', label: 'Beneficiary Alignment' },
-    { key: 'environmentalCompliance', label: 'Environmental Compliance' },
-    { key: 'landAcquisition', label: 'Land Acquisition' },
-    { key: 'documentationQuality', label: 'Documentation Quality' },
-    { key: 'financialViability', label: 'Financial Viability' },
-  ]
+  // Dynamic criteria generation from actual data
+  const criteria = compliance.scoringBreakdown
+    ? Object.keys(compliance.scoringBreakdown).map(key => ({
+      key,
+      label: formatLabel(key)
+    }))
+    : []
 
   return (
     <div className="space-y-6">

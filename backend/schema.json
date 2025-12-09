@@ -116,7 +116,143 @@
   },
   "mdonerComplianceScoring": {
     "overallComplianceScore": "number (0-100, weighted average)",
-    "scoringBreakdown": {
+    "sector": "string (echoed from projectSector for tracking)",
+    "scoringBreakdown": "CONDITIONAL STRUCTURE - Use one of the following based on projectSector:",
+    "OPTION_A_IF_projectSector_equals_Roads_and_Bridges": {
+      "schemeEligibilityAlignment": {
+        "score": "number (0-100)",
+        "weight": 0.12,
+        "findings": "string (Does it match NESIDS/NEC guidelines? Is sector eligibility confirmed? Is DPR rationale aligned with scheme objectives?)",
+        "detailedReasoning": "string (comprehensive explanation of why this score was assigned)",
+        "evidence": {
+          "quote": "string (direct quote from the DPR supporting this score)",
+          "pageLocation": "string (e.g., 'Page 15, Section 3.2')"
+        },
+        "met": "boolean"
+      },
+      "technicalEngineeringQuality": {
+        "score": "number (0-100)",
+        "weight": 0.20,
+        "findings": "string (Are designs vetted? Technical assumptions valid? BoQs accurate? Engineering standards followed? Geotechnical, structural, environmental considerations included?)",
+        "detailedReasoning": "string (comprehensive explanation)",
+        "evidence": {
+          "quote": "string (direct quote)",
+          "pageLocation": "string"
+        },
+        "met": "boolean"
+      },
+      "environmentalStatutoryCompliance": {
+        "score": "number (0-100)",
+        "weight": 0.10,
+        "findings": "string (Required clearances identified? EIA/EMP quality? Sensitive zones flagged? Mitigation measures adequate?)",
+        "detailedReasoning": "string (comprehensive explanation)",
+        "evidence": {
+          "quote": "string (direct quote)",
+          "pageLocation": "string"
+        },
+        "met": "boolean"
+      },
+      "landAcquisitionSocialSafeguards": {
+        "score": "number (0-100)",
+        "weight": 0.10,
+        "findings": "string (Ownership records verified? Tribal and FRA compliance? R&R plans and consent documentation?)",
+        "detailedReasoning": "string (comprehensive explanation)",
+        "evidence": {
+          "quote": "string (direct quote)",
+          "pageLocation": "string"
+        },
+        "met": "boolean"
+      },
+      "financialRealismCostIntegrity": {
+        "score": "number (0-100)",
+        "weight": 0.10,
+        "findings": "string (Costing realistic? No artificial cost inflation? IRR, DSCR, NPV projections sound and explainable?)",
+        "detailedReasoning": "string (comprehensive explanation)",
+        "evidence": {
+          "quote": "string (direct quote)",
+          "pageLocation": "string"
+        },
+        "met": "boolean"
+      },
+      "implementationReadinessMonitoring": {
+        "score": "number (0-100)",
+        "weight": 0.07,
+        "findings": "string (Timeline realistic? DPR identifies bottlenecks? Monitoring indicators and milestone definitions present?)",
+        "detailedReasoning": "string (comprehensive explanation)",
+        "evidence": {
+          "quote": "string (direct quote)",
+          "pageLocation": "string"
+        },
+        "met": "boolean"
+      },
+      "riskPreparednessHazardMitigation": {
+        "score": "number (0-100)",
+        "weight": 0.06,
+        "findings": "string (Natural hazard analysis - floods, landslides, seismic? Mitigation strategies adequate? Climate resilience included?)",
+        "detailedReasoning": "string (comprehensive explanation)",
+        "evidence": {
+          "quote": "string (direct quote)",
+          "pageLocation": "string"
+        },
+        "met": "boolean"
+      },
+      "innovationTechnologyAdoption": {
+        "score": "number (0-100)",
+        "weight": 0.05,
+        "findings": "string (Modern materials or processes? Digital systems, automation, sustainability features? Cost-saving or efficiency-improving innovations?)",
+        "detailedReasoning": "string (comprehensive explanation)",
+        "evidence": {
+          "quote": "string (direct quote)",
+          "pageLocation": "string"
+        },
+        "met": "boolean"
+      },
+      "governanceTransparencyAccountability": {
+        "score": "number (0-100)",
+        "weight": 0.05,
+        "findings": "string (Clear institutional structure? Roles and responsibilities defined? Accountability and grievance mechanisms present?)",
+        "detailedReasoning": "string (comprehensive explanation)",
+        "evidence": {
+          "quote": "string (direct quote)",
+          "pageLocation": "string"
+        },
+        "met": "boolean"
+      },
+      "northEasternFocus": {
+        "score": "number (0-100)",
+        "weight": 0.05,
+        "findings": "string (Located in NE region? Region-specific constraints like terrain, climate, remoteness addressed? Benefits tailored to NE socio-cultural needs?)",
+        "detailedReasoning": "string (comprehensive explanation)",
+        "evidence": {
+          "quote": "string (direct quote)",
+          "pageLocation": "string"
+        },
+        "met": "boolean"
+      },
+      "beneficiaryAlignment": {
+        "score": "number (0-100)",
+        "weight": 0.05,
+        "findings": "string (Tribal or marginalized groups included? Beneficiary numbers realistic? Impact clearly quantifiable?)",
+        "detailedReasoning": "string (comprehensive explanation)",
+        "evidence": {
+          "quote": "string (direct quote)",
+          "pageLocation": "string"
+        },
+        "met": "boolean"
+      },
+      "documentationQuality": {
+        "score": "number (0-100)",
+        "weight": 0.05,
+        "findings": "string (All required sections present? Data consistent across narrative, tables, annexures? Evidence attached - maps, surveys, certificates, DPR formats?)",
+        "detailedReasoning": "string (comprehensive explanation)",
+        "evidence": {
+          "quote": "string (direct quote)",
+          "pageLocation": "string"
+        },
+        "met": "boolean"
+      }
+    },
+    "OPTION_B_IF_projectSector_is_ANY_OTHER_SECTOR": {
       "northEasternFocus": {
         "score": "number (0-100)",
         "weight": "number (e.g., 0.25 for 25%)",

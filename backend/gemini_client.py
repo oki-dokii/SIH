@@ -138,16 +138,45 @@ MANDATORY BEHAVIOR:
    - Set `hasInconsistencies` to true if ANY issues found
    - Count total inconsistencies accurately
 
-12) **MDONER COMPLIANCE SCORING** (CRITICAL):
-   Calculate weighted compliance score in `mdonerComplianceScoring`:
-   - **North Eastern Focus (25%)**: NE states location? NE-specific challenges addressed? Score 0-100
-   - **Beneficiary Alignment (20%)**: Tribal/marginalized communities targeted? Realistic counts? Score 0-100
-   - **Environmental Compliance (20%)**: Clearances identified? Impacts assessed? Sensitive zones flagged? Score 0-100
-   - **Land Acquisition (15%)**: Ownership clear? Tribal rights addressed? Consent documented? Score 0-100
-   - **Documentation Quality (10%)**: DPR complete? Data consistent? Evidence provided? Score 0-100
-   - **Financial Viability (10%)**: Budget realistic? IRR/DSCR acceptable? Projections sound? Score 0-100
-   - Calculate `overallComplianceScore` = (northEasternFocus*0.25 + beneficiaryAlignment*0.20 + environmentalCompliance*0.20 + landAcquisition*0.15 + documentationQuality*0.10 + financialViability*0.10)
-   - List specific compliance gaps and strengths
+12) **MDONER COMPLIANCE SCORING** (CRITICAL - SECTOR-CONDITIONAL):
+   
+   **IMPORTANT**: The compliance scoring structure depends on `projectSector`. You MUST follow the correct structure:
+   
+   **IF projectSector == "Roads and Bridges"**: Use 12-category system with these exact weights:
+   
+   Calculate weighted compliance score in `mdonerComplianceScoring.scoringBreakdown`:
+   - **schemeEligibilityAlignment (12%)**: Does it match NESIDS/NEC guidelines? Is sector eligibility confirmed? Is DPR rationale aligned with scheme objectives? Score 0-100
+   - **technicalEngineeringQuality (20%)**: Are designs vetted? Technical assumptions valid? BoQs accurate? Engineering standards followed? Geotechnical, structural, environmental considerations included? Score 0-100
+   - **environmentalStatutoryCompliance (10%)**: Required clearances identified? EIA/EMP quality? Sensitive zones flagged? Mitigation measures adequate? Score 0-100
+   - **landAcquisitionSocialSafeguards (10%)**: Ownership records verified? Tribal and FRA compliance? R&R plans and consent documentation? Score 0-100
+   - **financialRealismCostIntegrity (10%)**: Costing realistic? No artificial cost inflation? IRR, DSCR, NPV projections sound and explainable? Score 0-100
+   - **implementationReadinessMonitoring (7%)**: Timeline realistic? DPR identifies bottlenecks? Monitoring indicators and milestone definitions present? Score 0-100
+   - **riskPreparednessHazardMitigation (6%)**: Natural hazard analysis (floods, landslides, seismic)? Mitigation strategies adequate? Climate resilience included? Score 0-100
+   - **innovationTechnologyAdoption (5%)**: Modern materials or processes? Digital systems, automation, sustainability features? Cost-saving or efficiency-improving innovations? Score 0-100
+   - **governanceTransparencyAccountability (5%)**: Clear institutional structure? Roles and responsibilities defined? Accountability and grievance mechanisms present? Score 0-100
+   - **northEasternFocus (5%)**: Located in NE region? Region-specific constraints (terrain, climate, remoteness) addressed? Benefits tailored to NE socio-cultural needs? Score 0-100
+   - **beneficiaryAlignment (5%)**: Tribal or marginalized groups included? Beneficiary numbers realistic? Impact clearly quantifiable? Score 0-100
+   - **documentationQuality (5%)**: All required sections present? Data consistent across narrative, tables, annexures? Evidence attached (maps, surveys, certificates, DPR formats)? Score 0-100
+   
+   Calculate `overallComplianceScore` = (schemeEligibilityAlignment*0.12 + technicalEngineeringQuality*0.20 + environmentalStatutoryCompliance*0.10 + landAcquisitionSocialSafeguards*0.10 + financialRealismCostIntegrity*0.10 + implementationReadinessMonitoring*0.07 + riskPreparednessHazardMitigation*0.06 + innovationTechnologyAdoption*0.05 + governanceTransparencyAccountability*0.05 + northEasternFocus*0.05 + beneficiaryAlignment*0.05 + documentationQuality*0.05)
+   
+   Also set `mdonerComplianceScoring.sector` = "Roads and Bridges" for tracking.
+   
+   **ELSE (ALL OTHER SECTORS)**: Use 6-category system with these weights:
+   
+   Calculate weighted compliance score in `mdonerComplianceScoring.scoringBreakdown`:
+   - **northEasternFocus (25%)**: NE states location? NE-specific challenges addressed? Score 0-100
+   - **beneficiaryAlignment (20%)**: Tribal/marginalized communities targeted? Realistic counts? Score 0-100
+   - **environmentalCompliance (20%)**: Clearances identified? Impacts assessed? Sensitive zones flagged? Score 0-100
+   - **landAcquisition (15%)**: Ownership clear? Tribal rights addressed? Consent documented? Score 0-100
+   - **documentationQuality (10%)**: DPR complete? Data consistent? Evidence provided? Score 0-100
+   - **financialViability (10%)**: Budget realistic? IRR/DSCR acceptable? Projections sound? Score 0-100
+   
+   Calculate `overallComplianceScore` = (northEasternFocus*0.25 + beneficiaryAlignment*0.20 + environmentalCompliance*0.20 + landAcquisition*0.15 + documentationQuality*0.10 + financialViability*0.10)
+   
+   Set `mdonerComplianceScoring.sector` = projectSector value for tracking.
+   
+   **FOR ALL SECTORS**: List specific compliance gaps and strengths in `complianceGaps` and `complianceStrengths` arrays.
 
 13) **SMART RECOMMENDATIONS** (CRITICAL):
    Generate actionable recommendations in `smartRecommendations`:
