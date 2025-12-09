@@ -201,6 +201,17 @@ export const api = {
     if (!response.ok) throw new Error('Failed to update feedback')
   },
 
+  async updateDPRStatus(dprId: number, status: string): Promise<void> {
+    const formData = new FormData()
+    formData.append('status', status)
+
+    const response = await fetch(`${API_BASE_URL}/dprs/${dprId}/status`, {
+      method: 'PUT',
+      body: formData,
+    })
+    if (!response.ok) throw new Error('Failed to update status')
+  },
+
 
   async getComparisons(): Promise<Comparison[]> {
     const response = await fetch(`${API_BASE_URL}/comparison-chats`)

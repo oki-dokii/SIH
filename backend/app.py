@@ -518,6 +518,35 @@ async def update_dpr_feedback_endpoint(dpr_id: int, feedback: str = Form(...)):
         raise HTTPException(status_code=500, detail=f"Failed to update feedback: {str(e)}")
 
 
+@app.put("/dprs/{dpr_id}/status")
+async def update_dpr_status_endpoint(dpr_id: int, status: str = Form(...)):
+    """Admin endpoint to update DPR status (accepted, rejected, pending)."""
+    try:
+        # Validate status
+        valid_statuses = ['pending', 'accepted', 'rejected', 'completed', 'analyzing']
+        if status not in valid_statuses:
+            raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
+        
+        # Check if DPR exists
+        dpr = db.get_dpr(dpr_id)
+        if not dpr:
+            raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+        
+        # Update status
+        db.update_dpr_status(dpr_id, status)
+        
+        return JSONResponse({
+            "success": True,
+            "message": f"DPR status updated to '{status}' successfully"
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Update status error: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"Failed to update status: {str(e)}")
+
+
+
 # ===== PROJECT API ROUTES =====
 
 @app.get("/projects")

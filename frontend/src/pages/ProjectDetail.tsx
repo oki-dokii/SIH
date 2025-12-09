@@ -23,7 +23,9 @@ import {
     Download,
     ExternalLink,
     Settings,
-    MessageSquare
+    MessageSquare,
+    Check,
+    XCircle
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -480,6 +482,45 @@ export default function ProjectDetailPage() {
                                             <Eye className="h-4 w-4 mr-2" />
                                             View Analysis
                                         </Button>
+                                    )}
+                                    {/* Accept/Reject Buttons */}
+                                    {doc.summary_json && (
+                                        <>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className={`shrink-0 ${(doc as any).status === 'accepted' ? 'bg-green-50 text-green-700 border-green-200' : 'hover:bg-green-50 hover:text-green-700'}`}
+                                                onClick={async () => {
+                                                    try {
+                                                        await api.updateDPRStatus(doc.id, 'accepted')
+                                                        if (id) loadProjectData(parseInt(id))
+                                                    } catch (err) {
+                                                        console.error('Error accepting DPR:', err)
+                                                        alert('Failed to accept DPR')
+                                                    }
+                                                }}
+                                                title="Accept DPR"
+                                            >
+                                                <Check className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className={`shrink-0 ${(doc as any).status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' : 'hover:bg-red-50 hover:text-red-700'}`}
+                                                onClick={async () => {
+                                                    try {
+                                                        await api.updateDPRStatus(doc.id, 'rejected')
+                                                        if (id) loadProjectData(parseInt(id))
+                                                    } catch (err) {
+                                                        console.error('Error rejecting DPR:', err)
+                                                        alert('Failed to reject DPR')
+                                                    }
+                                                }}
+                                                title="Reject DPR"
+                                            >
+                                                <XCircle className="h-4 w-4" />
+                                            </Button>
+                                        </>
                                     )}
                                     {/* Feedback Button */}
                                     <Button

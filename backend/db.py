@@ -399,6 +399,22 @@ def update_dpr_feedback(dpr_id: int, feedback: str, db_path: str = "data/dpr.db"
     print(f"✓ DPR {dpr_id} feedback updated")
 
 
+def update_dpr_status(dpr_id: int, status: str, db_path: str = "data/dpr.db"):
+    """Update the status of a DPR (accepted, rejected, pending, etc.)."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        UPDATE dprs 
+        SET status = ?
+        WHERE id = ?
+    """, (status, dpr_id))
+    
+    conn.commit()
+    conn.close()
+    print(f"✓ DPR {dpr_id} status updated to: {status}")
+
+
 
 def delete_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[str]:
     """
