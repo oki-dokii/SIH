@@ -481,9 +481,11 @@ def get_all_dprs(db_path: str = "data/dpr.db") -> List[Dict]:
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, original_filename, filepath, uploaded_file_ref, upload_ts, summary_json
-        FROM dprs
-        ORDER BY upload_ts DESC
+        SELECT d.id, d.filename, d.original_filename, d.filepath, d.uploaded_file_ref, 
+               d.upload_ts, d.summary_json, d.client_id, u.email as client_email
+        FROM dprs d
+        LEFT JOIN users u ON d.client_id = u.id
+        ORDER BY d.upload_ts DESC
     """)
     
     rows = cursor.fetchall()
@@ -497,7 +499,9 @@ def get_all_dprs(db_path: str = "data/dpr.db") -> List[Dict]:
             "filepath": row["filepath"],
             "uploaded_file_ref": row["uploaded_file_ref"],
             "upload_ts": row["upload_ts"],
-            "summary_json": json.loads(row["summary_json"]) if row["summary_json"] else None
+            "summary_json": json.loads(row["summary_json"]) if row["summary_json"] else None,
+            "client_id": row["client_id"],
+            "client_email": row["client_email"]
         }
         for row in rows
     ]
@@ -995,10 +999,12 @@ def get_dprs_by_project(project_id: int, db_path: str = "data/dpr.db") -> List[D
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, filename, original_filename, upload_ts, summary_json, project_id, status
-        FROM dprs
-        WHERE project_id = ?
-        ORDER BY upload_ts DESC
+        SELECT d.id, d.filename, d.original_filename, d.upload_ts, d.summary_json, 
+               d.project_id, d.status, d.client_id, u.email as client_email
+        FROM dprs d
+        LEFT JOIN users u ON d.client_id = u.id
+        WHERE d.project_id = ?
+        ORDER BY d.upload_ts DESC
     """, (project_id,))
     
     rows = cursor.fetchall()

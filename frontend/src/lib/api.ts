@@ -8,6 +8,8 @@ export interface DPR {
   upload_ts: string
   summary_json: any | null
   project_id?: number
+  client_id?: number
+  client_email?: string
 }
 
 export interface Message {

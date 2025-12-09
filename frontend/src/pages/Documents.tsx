@@ -44,7 +44,7 @@ export default function DocumentsPage() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this document?')) return
-    
+
     try {
       await api.deleteDPR(id)
       setDocuments(documents.filter(doc => doc.id !== id))
@@ -82,7 +82,7 @@ export default function DocumentsPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      
+
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
@@ -168,12 +168,21 @@ export default function DocumentsPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     {formatDate(doc.upload_ts)}
                   </div>
+                  {doc.client_email && (
+                    <div className="flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect width="20" height="16" x="2" y="4" rx="2" />
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                      </svg>
+                      <span className="truncate max-w-[200px]" title={doc.client_email}>{doc.client_email}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
@@ -185,8 +194,8 @@ export default function DocumentsPage() {
                     <Eye className="h-4 w-4" />
                     View Analysis
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => handleDelete(doc.id)}
                   >
