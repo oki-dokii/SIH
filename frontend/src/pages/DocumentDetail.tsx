@@ -292,17 +292,17 @@ export default function DocumentDetailPage() {
           </div>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-2 gap-6">
           <div className="lg:col-span-1">
             <Card>
-              <div className="border-b">
-                <div className="flex">
+              <div className="border-b overflow-x-auto">
+                <div className="flex min-w-max">
                   {tabs.map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={cn(
-                        'px-6 py-3 font-medium transition-colors',
+                        'px-4 py-3 font-medium transition-colors whitespace-nowrap',
                         activeTab === tab.id
                           ? 'text-primary border-b-2 border-primary'
                           : 'text-muted-foreground hover:text-foreground'
@@ -348,19 +348,19 @@ export default function DocumentDetailPage() {
             </Card>
           </div>
 
-          <div className="lg:col-span-2 flex flex-col gap-4">
+          <div className="lg:col-span-1 flex flex-col gap-4">
             {/* PDF Viewer */}
             <div id="pdf-viewer-container">
               <PDFViewer
                 pdfUrl={`http://127.0.0.1:8000/dpr/${id}/pdf`}
                 initialPage={pdfPage}
                 onPageChange={(page) => setPdfPage(page)}
-                className="h-[700px]"
+                className="h-[550px]"
               />
             </div>
 
             {/* Chat Window */}
-            <Card className="h-[700px] flex flex-col">
+            <Card className="h-[550px] flex flex-col">
               <div className="border-b p-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="h-5 w-5 text-primary" />
