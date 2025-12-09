@@ -13,8 +13,17 @@ import {
     MessageSquare,
     Send,
     Trash2,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react'
 import { ChatMessageFormatter } from '@/components/ChatMessageFormatter'
+import { ChunkText } from '@/components/ChunkText'
+import { Document, Page, pdfjs } from 'react-pdf'
+import 'react-pdf/dist/Page/AnnotationLayer.css'
+import 'react-pdf/dist/Page/TextLayer.css'
+
+// Setup PDF.js worker - use jsDelivr which is more reliable than unpkg
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 type AnalysisData = {
     projectName: string
@@ -75,6 +84,25 @@ export default function PDFAnalysis() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
+    // PDF viewer state
+    const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+    const [numPages, setNumPages] = useState<number>(0)
+    const [currentPage, setCurrentPage] = useState<number>(1)
+    const [pdfScale, setPdfScale] = useState<number>(1.0)
+    const pdfContainerRef = useRef<HTMLDivElement>(null)
+
+    // PDF navigation function - now actually works!
+    const handlePageNavigate = (pageNumber: number) => {
+        console.log('Navigate to page:', pageNumber)
+        if (pageNumber > 0 && pageNumber <= numPages) {
+            setCurrentPage(pageNumber)
+            // Scroll PDF viewer into view
+            setTimeout(() => {
+                pdfContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }, 100)
+        }
+    }
+
     // Chat state
     const [chatMessage, setChatMessage] = useState('')
     const [chatHistory, setChatHistory] = useState<Message[]>([])
@@ -85,6 +113,7 @@ export default function PDFAnalysis() {
         if (id) {
             loadAnalysis(parseInt(id))
             loadChatHistory(parseInt(id))
+            loadPdfUrl(parseInt(id))
         }
     }, [id])
 
@@ -125,6 +154,22 @@ export default function PDFAnalysis() {
             }
         } catch (err) {
             console.error('Failed to load chat history:', err)
+        }
+    }
+
+    async function loadPdfUrl(pdfId: number) {
+        try {
+            const response = await fetch(`/api/pdf/${pdfId}`)
+            if (response.ok) {
+                const data = await response.json()
+                if (data.filepath) {
+                    // Use relative URL that will work with Vite proxy
+                    setPdfUrl(`/api/pdf/${pdfId}/file`)
+                    console.log('PDF URL set:', `/api/pdf/${pdfId}/file`)
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load PDF URL:', err)
         }
     }
 
@@ -311,10 +356,10 @@ export default function PDFAnalysis() {
                     </div>
                 </div>
 
-                {/* Main Grid: Tabs + Chat */}
+                {/* Main Grid: Analysis (left) | PDF+Chat (right) */}
                 <div className="grid lg:grid-cols-3 gap-6">
-                    {/* Analysis Tabs - 2/3 width */}
-                    <div className="lg:col-span-2">
+                    {/* Analysis Tabs - 1/3 width (left) */}
+                    <div className="lg:col-span-1">
                         <div className="bg-white rounded-lg shadow">
                             <div className="border-b">
                                 <div className="flex overflow-x-auto">
@@ -335,16 +380,110 @@ export default function PDFAnalysis() {
 
                             <div className="p-6">
                                 {activeTab === 'overview' && <OverviewTab data={analysis} />}
-                                {activeTab === 'risks' && <RisksTab data={analysis} />}
-                                {activeTab === 'inconsistencies' && <InconsistenciesTab data={analysis} />}
+                                {activeTab === 'risks' && <RisksTab data={analysis} pdfId={parseInt(id!)} onPageNavigate={handlePageNavigate} />}
+                                {activeTab === 'inconsistencies' && <InconsistenciesTab data={analysis} pdfId={parseInt(id!)} onPageNavigate={handlePageNavigate} />}
                                 {activeTab === 'compliance' && <ComplianceTab data={analysis} />}
                             </div>
                         </div>
                     </div>
 
-                    {/* Chat Sidebar - 1/3 width */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-white rounded-lg shadow h-[600px] flex flex-col sticky top-4">
+                    {/* PDF Viewer + Chat Stack - 2/3 width (right) */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* PDF Viewer */}
+                        <div className="bg-white rounded-lg shadow" ref={pdfContainerRef}>
+                            <div className="border-b p-4 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <FileText className="h-5 w-5 text-blue-600" />
+                                    <h3 className="font-semibold">PDF Viewer</h3>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setPdfScale(s => Math.max(0.5, s - 0.1))}
+                                        className="px-2 py-1 text-sm border rounded hover:bg-gray-50"
+                                        title="Zoom out"
+                                    >
+                                        -
+                                    </button>
+                                    <span className="text-sm text-gray-600">{Math.round(pdfScale * 100)}%</span>
+                                    <button
+                                        onClick={() => setPdfScale(s => Math.min(2.0, s + 0.1))}
+                                        className="px-2 py-1 text-sm border rounded hover:bg-gray-50"
+                                        title="Zoom in"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="h-[600px] overflow-auto bg-gray-100 flex flex-col items-center p-4">
+                                {pdfUrl ? (
+                                    <>
+                                        <div className="text-xs text-gray-500 mb-2">PDF URL: {pdfUrl}</div>
+                                        <Document
+                                            file={pdfUrl}
+                                            onLoadSuccess={({ numPages }) => {
+                                                console.log('PDF loaded successfully, pages:', numPages)
+                                                setNumPages(numPages)
+                                            }}
+                                            onLoadError={(error) => {
+                                                console.error('PDF load error:', error)
+                                                alert(`PDF Error: ${error.message}`)
+                                            }}
+                                            loading={
+                                                <div className="flex items-center justify-center h-full">
+                                                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                                                </div>
+                                            }
+                                            error={
+                                                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                                                    <XCircle className="h-12 w-12 mb-2" />
+                                                    <p>Failed to load PDF</p>
+                                                    <p className="text-xs mt-2">URL: {pdfUrl}</p>
+                                                </div>
+                                            }
+                                        >
+                                            <Page
+                                                pageNumber={currentPage}
+                                                scale={pdfScale}
+                                                renderTextLayer={true}
+                                                renderAnnotationLayer={true}
+                                            />
+                                        </Document>
+                                    </>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-gray-500">
+                                        <p>Loading PDF...</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {numPages > 0 && (
+                                <div className="border-t p-3 flex items-center justify-between">
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage <= 1}
+                                        className="px-3 py-1.5 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                        Prev
+                                    </button>
+                                    <span className="text-sm text-gray-600">
+                                        Page {currentPage} of {numPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(numPages, p + 1))}
+                                        disabled={currentPage >= numPages}
+                                        className="px-3 py-1.5 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
+                                    >
+                                        Next
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Chat Sidebar */}
+                        <div className="bg-white rounded-lg shadow">
                             <div className="border-b p-4 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <MessageSquare className="h-5 w-5 text-blue-600" />
@@ -361,7 +500,7 @@ export default function PDFAnalysis() {
                                 )}
                             </div>
 
-                            <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                            <div className="h-[400px] overflow-y-auto p-4 space-y-4">
                                 {chatHistory.length === 0 && (
                                     <div className="p-3 rounded-lg bg-blue-50 text-sm text-gray-700">
                                         👋 Hello! Ask me anything about this PDF analysis.
@@ -469,7 +608,7 @@ function OverviewTab({ data }: { data: AnalysisData }) {
     )
 }
 
-function RisksTab({ data }: { data: AnalysisData }) {
+function RisksTab({ data, pdfId, onPageNavigate }: { data: AnalysisData; pdfId: number; onPageNavigate: (page: number) => void }) {
     const severityColors = {
         HIGH: 'bg-red-50 border-red-300',
         MEDIUM: 'bg-orange-50 border-orange-300',
@@ -505,16 +644,26 @@ function RisksTab({ data }: { data: AnalysisData }) {
                         </span>
                     </div>
                     <p className="text-sm text-gray-700 mb-2">
-                        <strong>Mitigation:</strong> {risk.mitigation}
+                        <strong>Mitigation:</strong> <ChunkText
+                            text={risk.mitigation}
+                            pdfId={pdfId}
+                            onPageNavigate={onPageNavigate}
+                        />
                     </p>
-                    <p className="text-xs text-gray-600 italic">{risk.evidence}</p>
+                    <p className="text-xs text-gray-600 italic">
+                        <ChunkText
+                            text={risk.evidence}
+                            pdfId={pdfId}
+                            onPageNavigate={onPageNavigate}
+                        />
+                    </p>
                 </div>
             ))}
         </div>
     )
 }
 
-function InconsistenciesTab({ data }: { data: AnalysisData }) {
+function InconsistenciesTab({ data, pdfId, onPageNavigate }: { data: AnalysisData; pdfId: number; onPageNavigate: (page: number) => void }) {
     const inconsistencies = data.inconsistencyDetection
 
     if (!inconsistencies.hasInconsistencies) {
@@ -547,9 +696,21 @@ function InconsistenciesTab({ data }: { data: AnalysisData }) {
                             {issue.severity}
                         </span>
                     </div>
-                    <p className="text-sm text-gray-700 mb-2">{issue.description}</p>
+                    <p className="text-sm text-gray-700 mb-2">
+                        <ChunkText
+                            text={issue.description}
+                            pdfId={pdfId}
+                            onPageNavigate={onPageNavigate}
+                        />
+                    </p>
                     {issue.location && (
-                        <p className="text-xs text-gray-600 mb-1">📍 Location: {issue.location}</p>
+                        <p className="text-xs text-gray-600 mb-1">
+                            📍 Location: <ChunkText
+                                text={issue.location}
+                                pdfId={pdfId}
+                                onPageNavigate={onPageNavigate}
+                            />
+                        </p>
                     )}
                     {issue.impact && (
                         <p className="text-xs mt-2 p-2 bg-white rounded italic">Impact: {issue.impact}</p>

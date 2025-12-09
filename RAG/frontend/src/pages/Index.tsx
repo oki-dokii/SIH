@@ -1,66 +1,13 @@
 import { Header } from '@/components/Header'
-import { UploadZone } from '@/components/UploadZone'
-import { FeatureCard } from '@/components/FeatureCard'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Sparkles, Zap, Lock, BarChart3, ArrowRight, CheckCircle2 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { api } from '@/lib/api'
-import { useState } from 'react'
+import { BarChart3, ArrowRight, CheckCircle2, FileText, Layers, Sparkles } from 'lucide-react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { ProjectSelectionModal } from '@/components/ProjectSelectionModal'
 
 export default function IndexPage() {
   const navigate = useNavigate()
-  const { t, language } = useLanguage()
-  const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [processing, setProcessing] = useState(false)
-  const [uploadSuccess, setUploadSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // Project Selection State
-  const [pendingFile, setPendingFile] = useState<File | null>(null)
-  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false)
-
-  const handleUpload = async (file: File) => {
-    // Show project selection modal
-    setPendingFile(file)
-    setIsProjectModalOpen(true)
-  }
-
-  const handleProjectSelect = async (projectId: number) => {
-    if (!pendingFile) return
-
-    setIsProjectModalOpen(false)
-    setUploading(true)
-    setProcessing(false)
-    setUploadSuccess(false)
-    setError(null)
-    setUploadProgress(0)
-
-    try {
-      const result = await api.uploadDPR(pendingFile, language, projectId, (progress) => {
-        setUploadProgress(progress)
-        if (progress === 100) {
-          setProcessing(true)
-        }
-      })
-
-      setUploadSuccess(true)
-      // Small delay to show success message before redirect
-      setTimeout(() => {
-        navigate(`/documents/${result.id}`)
-      }, 1500)
-    } catch (err) {
-      setError('Failed to upload file. Please try again.')
-      console.error('Upload error:', err)
-      setUploading(false)
-      setProcessing(false)
-    } finally {
-      setPendingFile(null)
-    }
-  }
+  const { t } = useLanguage()
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -72,7 +19,7 @@ export default function IndexPage() {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">
                 <Sparkles className="h-4 w-4" />
-                {t('landing.subtitle')}
+                AI-Powered Governance
               </div>
 
               <h1 className="text-5xl md:text-6xl font-bold leading-tight">
@@ -85,7 +32,7 @@ export default function IndexPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" onClick={() => navigate('/documents')}>
+                <Button size="lg" onClick={() => navigate('/projects')}>
                   {t('landing.getStarted')} <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button size="lg" variant="outline">
@@ -95,121 +42,108 @@ export default function IndexPage() {
             </div>
 
             <div>
-              {uploading ? (
-                <Card className="p-8">
-                  <div className="text-center">
-                    {uploadSuccess ? (
-                      <div className="animate-in fade-in zoom-in duration-300">
-                        <div className="mb-4 flex justify-center">
-                          <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-                            <CheckCircle2 className="h-8 w-8 text-green-600" />
-                          </div>
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2 text-green-600">Upload Complete!</h3>
-                        <p className="text-muted-foreground">Redirecting to analysis...</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="mb-4">
-                          <div className="w-16 h-16 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                        <h3 className="text-lg font-semibold mb-2">
-                          {processing ? 'Processing Document...' : t('common.loading')}
-                        </h3>
-                        <p className="text-muted-foreground mb-4">
-                          {processing
-                            ? 'Analyzing content with AI. This may take a moment.'
-                            : t('landing.uploadPrompt')}
-                        </p>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-primary h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${uploadProgress}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {processing ? '100%' : `${Math.round(uploadProgress)}%`}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </Card>
-              ) : (
-                <>
-                  <UploadZone onUpload={handleUpload} />
-                  {error && (
-                    <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
-                      {error}
+              <Card className="p-8 border-primary/20 bg-gradient-to-br from-background to-muted/20">
+                <div className="text-center space-y-4">
+                  <div className="flex justify-center">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <FileText className="h-8 w-8 text-primary" />
                     </div>
-                  )}
-                </>
-              )}
+                  </div>
+                  <h3 className="text-2xl font-bold">DPR Analysis Dashboard</h3>
+                  <p className="text-muted-foreground max-w-2xl mx-auto">
+                    Welcome to the admin dashboard. Manage and analyze Detailed Project Reports (DPRs)
+                    organized by project. Navigate to the{' '}
+                    <Link to="/projects" className="text-primary hover:underline font-medium">
+                      Projects
+                    </Link>{' '}
+                    section to view and analyze DPRs.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 text-left">
+                    <div className="p-4 rounded-lg bg-background border">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        Review DPRs
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Access DPRs organized by project
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-background border">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5 text-blue-600" />
+                        AI Analysis
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Trigger AI-powered analysis on documents
+                      </p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-background border">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <Layers className="h-5 w-5 text-purple-600" />
+                        Compare Projects
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Compare multiple DPRs side-by-side for insights
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             </div>
           </div>
         </section>
 
-        <section className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="p-6 border-primary/20 hover:border-primary/40">
-              <div className="text-3xl font-bold text-primary mb-2">10K+</div>
-              <div className="text-sm text-muted-foreground">{t('landing.stats1')}</div>
-            </Card>
-            <Card className="p-6 border-accent/20 hover:border-accent/40">
-              <div className="text-3xl font-bold text-accent mb-2">99.9%</div>
-              <div className="text-sm text-muted-foreground">{t('landing.stats2')}</div>
-            </Card>
-            <Card className="p-6 border-primary/20 hover:border-primary/40">
-              <div className="text-3xl font-bold text-primary mb-2">24/7</div>
-              <div className="text-sm text-muted-foreground">{t('landing.stats3')}</div>
-            </Card>
-          </div>
-        </section>
-
-        <section className="container mx-auto px-4 py-16 md:py-24">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">{t('landing.keyFeatures')}</h2>
-            <p className="text-xl text-muted-foreground">
-              {t('landing.keyFeaturesDesc')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FeatureCard
-              icon={Sparkles}
-              title={t('landing.feature1Title')}
-              description={t('landing.feature1Desc')}
-            />
-            <FeatureCard
-              icon={Zap}
-              title={t('landing.feature2Title')}
-              description={t('landing.feature2Desc')}
-            />
-            <FeatureCard
-              icon={Lock}
-              title={t('landing.feature3Title')}
-              description={t('landing.feature3Desc')}
-            />
-            <FeatureCard
-              icon={BarChart3}
-              title={t('landing.feature4Title')}
-              description={t('landing.feature4Desc')}
-            />
-          </div>
-        </section>
-
-        <section className="container mx-auto px-4 py-16 mb-16">
-          <div className="bg-gradient-to-r from-primary to-accent rounded-lg p-12 text-center text-white">
-            <h2 className="text-4xl font-bold mb-4">{t('landing.ctaTitle')}</h2>
-            <p className="text-xl mb-8 opacity-90">
-              {t('landing.ctaDesc')}
-            </p>
-            <Button
-              size="lg"
-              variant="secondary"
-              onClick={() => navigate('/documents')}
+        <section className="container mx-auto px-4 py-12 mb-16">
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card
+              className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-primary/30"
+              onClick={() => navigate('/projects')}
             >
-              {t('landing.ctaButton')} <ArrowRight className="h-4 w-4" />
-            </Button>
+              <div className="flex items-start gap-4">
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Projects</h3>
+                  <p className="text-sm text-muted-foreground">
+                    View and manage all DPR submissions organized by project
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card
+              className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-accent/30"
+              onClick={() => navigate('/comparisons')}
+            >
+              <div className="flex items-start gap-4">
+                <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <Layers className="h-6 w-6 text-accent" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Comparisons</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Compare multiple DPRs side-by-side for informed decisions
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card
+              className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-blue-500/30"
+            >
+              <div className="flex items-start gap-4">
+                <div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                  <BarChart3 className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">AI Analysis</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Leverage AI-powered insights for comprehensive DPR evaluation
+                  </p>
+                </div>
+              </div>
+            </Card>
           </div>
         </section>
       </main>
@@ -235,15 +169,6 @@ export default function IndexPage() {
           </div>
         </div>
       </footer>
-
-      <ProjectSelectionModal
-        isOpen={isProjectModalOpen}
-        onClose={() => {
-          setIsProjectModalOpen(false)
-          setPendingFile(null)
-        }}
-        onSelect={handleProjectSelect}
-      />
     </div>
   )
 }

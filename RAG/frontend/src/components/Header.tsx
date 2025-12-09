@@ -1,9 +1,10 @@
-import { FileText, Moon, Sun, Languages, CheckCircle2 } from 'lucide-react'
+import { FileText, Moon, Sun, Languages, CheckCircle2, LogOut } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from './ui/Button'
 import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '../contexts/LanguageContext'
+import { useRole } from '../contexts/RoleContext'
 import { api } from '@/lib/api'
 import { ProjectSelectionModal } from './ProjectSelectionModal'
 import { Card } from './ui/Card'
@@ -13,6 +14,7 @@ export function Header() {
   const location = useLocation()
   const navigate = useNavigate()
   const { language, setLanguage, t } = useLanguage()
+  const { logout } = useRole()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Project Selection & Upload State
@@ -37,6 +39,11 @@ export function Header() {
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'hi' : 'en')
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
   }
 
   const handleUploadClick = () => {
@@ -145,6 +152,10 @@ export function Header() {
               <FileText className="h-4 w-4" />
               {t('common.upload')}
             </Button>
+            <Button variant="outline" onClick={handleLogout} size="sm">
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
             <input
               ref={fileInputRef}
               type="file"
@@ -155,6 +166,7 @@ export function Header() {
           </div>
         </div>
       </header>
+
 
       <ProjectSelectionModal
         isOpen={isProjectModalOpen}

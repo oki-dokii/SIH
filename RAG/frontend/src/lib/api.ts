@@ -269,4 +269,19 @@ export const api = {
     })
     if (!response.ok) throw new Error('Failed to remove DPR from comparison')
   },
+
+  async getChunk(pdfId: number, chunkIndex: number): Promise<ChunkData> {
+    const response = await fetch(`${API_BASE_URL}/pdf/${pdfId}/chunk/${chunkIndex}`)
+    if (!response.ok) throw new Error('Failed to fetch chunk')
+    return response.json()
+  },
+}
+
+export interface ChunkData {
+  chunk_index: number
+  content: string
+  metadata: {
+    page?: number
+    type?: string
+  }
 }
