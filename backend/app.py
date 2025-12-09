@@ -495,7 +495,7 @@ async def delete_client_dpr(dpr_id: int, client_id: int):
 
 # ===== DPR FEEDBACK API ROUTE =====
 
-@app.put("/api/dprs/{dpr_id}/feedback")
+@app.put("/dprs/{dpr_id}/feedback")
 async def update_dpr_feedback_endpoint(dpr_id: int, feedback: str = Form(...)):
     """Admin endpoint to add/update feedback for a DPR."""
     try:
