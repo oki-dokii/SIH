@@ -13,6 +13,8 @@ interface ClientDPR {
     original_filename: string
     status: string
     created_at: string
+    admin_feedback?: string
+    feedback_timestamp?: string
 }
 
 interface Project {
@@ -385,6 +387,7 @@ export default function ClientDashboard() {
                                         <th className="text-left py-3 px-4 font-semibold">DPR Uploaded</th>
                                         <th className="text-left py-3 px-4 font-semibold">Status</th>
                                         <th className="text-left py-3 px-4 font-semibold">Uploaded On</th>
+                                        <th className="text-left py-3 px-4 font-semibold">Admin Feedback</th>
                                         <th className="text-center py-3 px-4 font-semibold">Actions</th>
                                     </tr>
                                 </thead>
@@ -406,6 +409,22 @@ export default function ClientDashboard() {
                                             </td>
                                             <td className="py-4 px-4 text-sm text-muted-foreground">
                                                 {formatDate(dpr.created_at)}
+                                            </td>
+                                            <td className="py-4 px-4">
+                                                {dpr.admin_feedback ? (
+                                                    <div className="max-w-xs">
+                                                        <p className="text-sm text-foreground line-clamp-2" title={dpr.admin_feedback}>
+                                                            {dpr.admin_feedback}
+                                                        </p>
+                                                        {dpr.feedback_timestamp && (
+                                                            <p className="text-xs text-muted-foreground mt-1">
+                                                                {new Date(dpr.feedback_timestamp).toLocaleDateString()}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-sm text-muted-foreground italic">No feedback yet</span>
+                                                )}
                                             </td>
                                             <td className="py-4 px-4 text-center">
                                                 <div className="flex items-center justify-center gap-2">

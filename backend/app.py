@@ -393,6 +393,7 @@ async def get_client_dprs_list(client_id: int):
             SELECT d.id, d.project_id, d.client_id, d.original_filename, 
                    d.filename as dpr_filename,
                    d.upload_ts as created_at, d.status,
+                   d.admin_feedback, d.feedback_timestamp,
                    p.name as project_name
             FROM dprs d
             LEFT JOIN projects p ON d.project_id = p.id
