@@ -1,5 +1,6 @@
 import sqlite3
 import json
+import hashlib
 from datetime import datetime
 from typing import Optional, Dict, List
 from pathlib import Path
@@ -43,6 +44,20 @@ def init_db(db_path: str = "data/cloud.db"):
         )
     """)
     
+    # DPRs table - stores uploaded PDF metadata
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS dprs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            original_filename TEXT NOT NULL,
+            file_size INTEGER,
+            file_hash TEXT,
+            filepath TEXT NOT NULL,
+            upload_ts TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+        )
+    """)
+    
     # Create indexes for faster sync queries
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_projects_updated 
@@ -57,6 +72,11 @@ def init_db(db_path: str = "data/cloud.db"):
     cursor.execute("""
         CREATE INDEX IF NOT EXISTS idx_files_project 
         ON files(project_id)
+    """)
+    
+    cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_dprs_project 
+        ON dprs(project_id)
     """)
     
     conn.commit()
@@ -136,18 +156,18 @@ def get_all_projects(since: Optional[str] = None,
     
     if since:
         cursor.execute("""
-            SELECT p.*, COUNT(f.id) as file_count
+            SELECT p.*, COUNT(d.id) as dpr_count
             FROM projects p
-            LEFT JOIN files f ON p.id = f.project_id
+            LEFT JOIN dprs d ON p.id = d.project_id
             WHERE p.updated_ts > ?
             GROUP BY p.id
             ORDER BY p.updated_ts DESC
         """, (since,))
     else:
         cursor.execute("""
-            SELECT p.*, COUNT(f.id) as file_count
+            SELECT p.*, COUNT(d.id) as dpr_count
             FROM projects p
-            LEFT JOIN files f ON p.id = f.project_id
+            LEFT JOIN dprs d ON p.id = d.project_id
             GROUP BY p.id
             ORDER BY p.updated_ts DESC
         """)
@@ -158,7 +178,118 @@ def get_all_projects(since: Optional[str] = None,
     return [dict(row) for row in rows]
 
 
-# ===== FILE OPERATIONS =====
+# ===== DPR OPERATIONS =====
+
+def create_dpr(project_id: int, original_filename: str, filepath: str,
+               file_size: int, file_hash: str, db_path: str = "data/cloud.db") -> int:
+    """Create a new DPR record and return its ID."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        INSERT INTO dprs (project_id, original_filename, filepath, file_size, file_hash)
+        VALUES (?, ?, ?, ?, ?)
+    """, (project_id, original_filename, filepath, file_size, file_hash))
+    
+    dpr_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    
+    return dpr_id
+
+
+def get_dpr(dpr_id: int, db_path: str = "data/cloud.db") -> Optional[Dict]:
+    """Retrieve a DPR by ID."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT * FROM dprs WHERE id = ?
+    """, (dpr_id,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return dict(row)
+    return None
+
+
+def get_project_dprs(project_id: int, db_path: str = "data/cloud.db") -> List[Dict]:
+    """Retrieve all DPRs for a specific project."""
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT * FROM dprs 
+        WHERE project_id = ?
+        ORDER BY upload_ts DESC
+    """, (project_id,))
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in rows]
+
+
+def get_all_dprs(since: Optional[str] = None, 
+                 db_path: str = "data/cloud.db") -> List[Dict]:
+    """
+    Retrieve all DPRs, optionally filtered by upload timestamp.
+    
+    Args:
+        since: ISO timestamp string - only return DPRs uploaded after this time
+    """
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    if since:
+        cursor.execute("""
+            SELECT * FROM dprs 
+            WHERE upload_ts > ?
+            ORDER BY upload_ts DESC
+        """, (since,))
+    else:
+        cursor.execute("""
+            SELECT * FROM dprs 
+            ORDER BY upload_ts DESC
+        """)
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    return [dict(row) for row in rows]
+
+
+def delete_dpr(dpr_id: int, db_path: str = "data/cloud.db") -> Optional[str]:
+    """
+    Delete a DPR record and return its filepath.
+    Returns None if DPR not found.
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    # Get filepath before deleting
+    cursor.execute("SELECT filepath FROM dprs WHERE id = ?", (dpr_id,))
+    row = cursor.fetchone()
+    
+    if not row:
+        conn.close()
+        return None
+    
+    filepath = row[0]
+    
+    cursor.execute("DELETE FROM dprs WHERE id = ?", (dpr_id,))
+    conn.commit()
+    conn.close()
+    
+    return filepath
+
+
+# ===== LEGACY FILE OPERATIONS (keep for backward compatibility) =====
 
 def create_file(project_id: int, filename: str, original_filename: str, 
                 filepath: str, db_path: str = "data/cloud.db") -> int:

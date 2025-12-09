@@ -223,6 +223,103 @@ def delete_file(file_id: int):
     return {"message": "File deleted successfully"}
 
 
+# ===== DPR ENDPOINTS =====
+
+@app.post("/projects/{project_id}/upload_pdf")
+async def upload_pdf_to_cloud(project_id: int, file: UploadFile = File(...)):
+    """
+    Upload a PDF file to a project (from online version).
+    Stores file and creates DPR record.
+    """
+    import hashlib
+    
+    # Verify project exists
+    project = db.get_project(project_id, db_path=DB_PATH)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Validate file type
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files allowed")
+    
+    # Create upload directory
+    upload_dir = UPLOAD_DIR / str(project_id)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Save file
+    filepath = upload_dir / file.filename
+    try:
+        content = await file.read()
+        with open(filepath, "wb") as f:
+            f.write(content)
+        
+        # Calculate hash
+        file_hash = hashlib.md5(content).hexdigest()
+        file_size = len(content)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+    
+    # Create DPR record
+    dpr_id = db.create_dpr(
+        project_id=project_id,
+        original_filename=file.filename,
+        filepath=str(filepath),
+        file_size=file_size,
+        file_hash=file_hash,
+        db_path=DB_PATH
+    )
+    
+    return {
+        "id": dpr_id,
+        "filename": file.filename,
+        "message": "PDF uploaded successfully"
+    }
+
+
+@app.get("/dprs/all")
+def list_all_dprs(since: Optional[str] = None):
+    """
+    List all DPRs across all projects.
+    Used by offline version for syncing.
+    """
+    dprs = db.get_all_dprs(since=since, db_path=DB_PATH)
+    return {"dprs": dprs}
+
+
+@app.get("/projects/{project_id}/dprs")
+def list_project_dprs(project_id: int):
+    """
+    List all DPRs for a specific project.
+    """
+    dprs = db.get_project_dprs(project_id, db_path=DB_PATH)
+    return {"dprs": dprs}
+
+
+@app.get("/dprs/{dpr_id}/download")
+async def download_pdf(dpr_id: int):
+    """
+    Download a PDF file.
+    Used by offline version to download PDFs.
+    """
+    from fastapi.responses import FileResponse
+    import os
+    
+    dpr = db.get_dpr(dpr_id, db_path=DB_PATH)
+    if not dpr:
+        raise HTTPException(status_code=404, detail="DPR not found")
+    
+    filepath = dpr['filepath']
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="PDF file not found on disk")
+    
+    return FileResponse(
+        filepath,
+        media_type="application/pdf",
+        filename=dpr['original_filename']
+    )
+
+
 # ===== ADMIN SYNC ENDPOINTS =====
 
 @app.post("/sync/projects/batch")

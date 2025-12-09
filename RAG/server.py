@@ -28,6 +28,9 @@ DATA_DIR.mkdir(exist_ok=True)
 # Initialize database
 db.init_db(str(DATA_DIR / "chat.db"))
 
+# Run cloud sync migration
+db.migrate_for_cloud_sync(str(DATA_DIR / "chat.db"))
+
 # Initialize RAG Engine
 print("🤖 Initializing RAG Engine...")
 rag_engine = RAGEngine()
@@ -464,6 +467,69 @@ async def get_pdf_details(pdf_id: int):
         raise HTTPException(status_code=404, detail=f"PDF {pdf_id} not found")
     
     return JSONResponse(pdf)
+
+
+@app.get("/api/pdf/{pdf_id}/chunk/{chunk_index}")
+async def get_chunk_by_index(pdf_id: int, chunk_index: int):
+    """
+    Get a specific chunk by its index for a PDF.
+    Returns chunk content and metadata (including page number if available).
+    """
+    # Verify PDF exists
+    pdf = db.get_pdf(pdf_id, str(DATA_DIR / "chat.db"))
+    if not pdf:
+        raise HTTPException(status_code=404, detail=f"PDF {pdf_id} not found")
+    
+    # Get all chunks for this PDF
+    chunks = db.get_pdf_chunks(pdf_id, str(DATA_DIR / "chat.db"))
+    
+    # Find chunk by index
+    chunk = next((c for c in chunks if c['chunk_index'] == chunk_index), None)
+    
+    if not chunk:
+        raise HTTPException(status_code=404, detail=f"Chunk {chunk_index} not found for PDF {pdf_id}")
+    
+    return JSONResponse({
+        "chunk_index": chunk['chunk_index'],
+        "content": chunk['content'],
+        "metadata": chunk.get('metadata', {})
+    })
+
+
+@app.get("/api/pdf/{pdf_id}/file")
+async def serve_pdf_file(pdf_id: int):
+    """
+    Serve the actual PDF file for viewing in the browser.
+    """
+    from fastapi.responses import FileResponse
+    import os
+    
+    print(f"📄 Serving PDF file for ID: {pdf_id}")
+    
+    # Get PDF info
+    pdf = db.get_pdf(pdf_id, str(DATA_DIR / "chat.db"))
+    if not pdf:
+        print(f"❌ PDF {pdf_id} not found in database")
+        raise HTTPException(status_code=404, detail=f"PDF {pdf_id} not found")
+    
+    filepath = pdf.get("filepath")
+    print(f"   Filepath from DB: {filepath}")
+    
+    if not filepath or not os.path.exists(filepath):
+        print(f"❌ PDF file not found on disk: {filepath}")
+        raise HTTPException(status_code=404, detail="PDF file not found on disk")
+    
+    print(f"✓ Serving PDF: {filepath}")
+    
+    return FileResponse(
+        filepath,
+        media_type="application/pdf",
+        filename=pdf.get("original_filename", "document.pdf"),
+        headers={
+            "Cache-Control": "no-cache"
+        }
+    )
+
 
 
 @app.get("/api/pdf/{pdf_id}/analysis")

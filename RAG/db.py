@@ -109,6 +109,56 @@ def init_db(db_path: str = "data/chat.db"):
     print(f"✓ Database initialized: {db_path}")
 
 
+def migrate_for_cloud_sync(db_path: str = "data/chat.db"):
+    """
+    Add cloud sync columns to existing database.
+    Safe to run multiple times (uses ALTER TABLE IF NOT EXISTS pattern).
+    """
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    print("🔄 Migrating database for cloud sync...")
+    
+    # Add columns to projects table
+    columns_to_add = {
+        'state': 'TEXT',
+        'scheme': 'TEXT',
+        'sector': 'TEXT',
+        'cloud_id': 'INTEGER',
+        'last_sync_ts': 'TEXT'
+    }
+    
+    for col_name, col_type in columns_to_add.items():
+        try:
+            cursor.execute(f"ALTER TABLE projects ADD COLUMN {col_name} {col_type}")
+            print(f"  ✓ Added projects.{col_name}")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+    
+    # Add columns to pdfs table
+    pdf_columns = {
+        'cloud_id': 'INTEGER',
+        'cloud_url': 'TEXT',
+        'downloaded': 'INTEGER DEFAULT 1',  # 1=downloaded, 0=pending
+        'last_sync_ts': 'TEXT'
+    }
+    
+    for col_name, col_type in pdf_columns.items():
+        try:
+            cursor.execute(f"ALTER TABLE pdfs ADD COLUMN {col_name} {col_type}")
+            print(f"  ✓ Added pdfs.{col_name}")
+        except sqlite3.OperationalError:
+            pass
+    
+    # Mark all existing PDFs as downloaded (local uploads)
+    cursor.execute("UPDATE pdfs SET downloaded = 1 WHERE downloaded IS NULL")
+    
+    conn.commit()
+    conn.close()
+    print("✅ Database migration complete")
+
+
+
 # ===== PROJECT CRUD OPERATIONS =====
 
 def create_project(name: str, state: str, scheme: str, sector: str, db_path: str = "data/chat.db") -> int:
