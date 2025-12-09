@@ -114,6 +114,11 @@ def init_db(db_path: str = "data/dpr.db"):
         cursor.execute("ALTER TABLE dprs ADD COLUMN feedback_timestamp TEXT")
         print("✓ Database migration complete (feedback_timestamp)")
     
+    if 'validation_flags' not in columns:
+        print("⏳ Migrating database: adding validation_flags column...")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN validation_flags TEXT")
+        print("✓ Database migration complete (validation_flags)")
+    
     
     # Create index on original_filename for faster lookups
     cursor.execute("""
@@ -347,18 +352,26 @@ def insert_dpr(filename: str, original_filename: str, filepath: str, file_ref: s
     return dpr_id
 
 
-def update_dpr(dpr_id: int, summary_json: dict, db_path: str = "data/dpr.db"):
-    """Update an existing DPR record with analysis results."""
+def update_dpr(dpr_id: int, summary_json: dict, validation_flags: dict = None, db_path: str = "data/dpr.db"):
+    """Update an existing DPR record with analysis results and validation flags."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
     json_str = json.dumps(summary_json, indent=2)
     
-    cursor.execute("""
-        UPDATE dprs 
-        SET summary_json = ?
-        WHERE id = ?
-    """, (json_str, dpr_id))
+    if validation_flags is not None:
+        validation_flags_str = json.dumps(validation_flags)
+        cursor.execute("""
+            UPDATE dprs 
+            SET summary_json = ?, validation_flags = ?
+            WHERE id = ?
+        """, (json_str, validation_flags_str, dpr_id))
+    else:
+        cursor.execute("""
+            UPDATE dprs 
+            SET summary_json = ?
+            WHERE id = ?
+        """, (json_str, dpr_id))
     
     conn.commit()
     conn.close()
@@ -415,6 +428,57 @@ def update_dpr_status(dpr_id: int, status: str, db_path: str = "data/dpr.db"):
     print(f"✓ DPR {dpr_id} status updated to: {status}")
 
 
+def validate_dpr_against_project(dpr_id: int, project_id: int, summary_json: dict, db_path: str = "data/dpr.db") -> dict:
+    """
+    Validate DPR against project requirements and return validation flags.
+    Checks if DPR state and sector match the project.
+    
+    Args:
+        dpr_id: DPR ID
+        project_id: Project ID
+        summary_json: Parsed DPR analysis JSON
+        db_path: Database path
+        
+    Returns:
+        Validation flags dict with hasFlags boolean and flags array
+    """
+    # Get project details
+    project = get_project(project_id, db_path)
+    if not project or not summary_json:
+        return {"hasFlags": False, "flags": []}
+    
+    flags = []
+    
+    # Extract DPR state and sector
+    dpr_state = summary_json.get("projectLocation", {}).get("state", "").strip()
+    dpr_sector = summary_json.get("projectSector", "").strip()
+    
+    project_state = project.get("state", "").strip()
+    project_sector = project.get("sector", "").strip()
+    
+    # Check state mismatch (case-insensitive)
+    if dpr_state and project_state and dpr_state.lower() != project_state.lower():
+        flags.append({
+            "type": "state_mismatch",
+            "message": f"DPR state ({dpr_state}) doesn't match project state ({project_state})",
+            "severity": "warning"
+        })
+    
+    # Check sector mismatch (case-insensitive)
+    if dpr_sector and project_sector and dpr_sector.lower() != project_sector.lower():
+        flags.append({
+            "type": "sector_mismatch",
+            "message": f"DPR sector ({dpr_sector}) doesn't match project sector ({project_sector})",
+            "severity": "warning"
+        })
+    
+    return {
+        "hasFlags": len(flags) > 0,
+        "flags": flags
+    }
+
+
+
 
 def delete_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[str]:
     """
@@ -454,7 +518,7 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
     cursor.execute("""
         SELECT id, filename, original_filename, filepath, uploaded_file_ref, 
                upload_ts, summary_json, project_id, status, client_id,
-               admin_feedback, feedback_timestamp
+               admin_feedback, feedback_timestamp, validation_flags
         FROM dprs 
         WHERE id = ?
     """, (dpr_id,))
@@ -495,6 +559,15 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
                 result["summary_json"] = None
         else:
             result["summary_json"] = None
+        
+        # Parse validation_flags if it exists and is not None
+        if "validation_flags" in row.keys() and row["validation_flags"]:
+            try:
+                result["validation_flags"] = json.loads(row["validation_flags"])
+            except:
+                result["validation_flags"] = None
+        else:
+            result["validation_flags"] = None
             
         return result
     return None
@@ -1053,7 +1126,7 @@ def get_dprs_by_project(project_id: int, db_path: str = "data/dpr.db") -> List[D
     
     cursor.execute("""
         SELECT d.id, d.filename, d.original_filename, d.upload_ts, d.summary_json, 
-               d.project_id, d.status, d.client_id, u.email as client_email
+               d.project_id, d.status, d.client_id, d.validation_flags, u.email as client_email
         FROM dprs d
         LEFT JOIN users u ON d.client_id = u.id
         WHERE d.project_id = ?
@@ -1071,6 +1144,13 @@ def get_dprs_by_project(project_id: int, db_path: str = "data/dpr.db") -> List[D
                 dpr['summary_json'] = json.loads(dpr['summary_json'])
             except:
                 dpr['summary_json'] = None
+        
+        if dpr.get('validation_flags'):
+            try:
+                dpr['validation_flags'] = json.loads(dpr['validation_flags'])
+            except:
+                dpr['validation_flags'] = None
+        
         dprs.append(dpr)
         
     return dprs

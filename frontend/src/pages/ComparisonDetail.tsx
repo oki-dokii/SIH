@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { useLanguage } from '../contexts/LanguageContext'
 import { ChatMessageFormatter } from '../components/ChatMessageFormatter'
+import { formatIndianCurrency } from '../lib/currency'
 
 export default function ComparisonDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -342,7 +343,7 @@ export default function ComparisonDetailPage() {
                           </td>
                           <td className="p-3 text-center">
                             <span className="text-gray-900 dark:text-white font-medium">
-                              {cost !== null ? `₹${cost}L` : '-'}
+                              {cost !== null ? formatIndianCurrency(cost) : '-'}
                             </span>
                           </td>
                         </tr>

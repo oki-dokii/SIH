@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Card } from './ui/Card'
 import { DollarSign } from 'lucide-react'
+import { formatIndianCurrency, formatChartCurrency } from '@/lib/currency'
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658']
 
@@ -24,11 +25,7 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
     return isNaN(num) ? 0 : num
   }
 
-  // Format currency for display
-  const formatCurrency = (val: number): string => {
-    if (val >= 100) return `₹${val.toFixed(0)}L`
-    return `₹${val.toFixed(2)}L`
-  }
+
 
   const projectCostData = []
   if (projectCost?.capitalExpenditureLakhINR) {
@@ -111,7 +108,7 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
       return (
         <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-700 rounded shadow-lg">
           <p className="font-semibold text-sm text-gray-900 dark:text-gray-100">{payload[0].name}</p>
-          <p className="text-primary font-bold">₹{value.toFixed(2)} Lakh</p>
+          <p className="text-primary font-bold">{formatIndianCurrency(value)}</p>
         </div>
       )
     }
@@ -143,7 +140,7 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
                       <span className="font-medium text-gray-800 dark:text-gray-200">{item.component}</span>
                     </td>
                     <td className="text-right py-3 px-2 font-semibold text-gray-900 dark:text-gray-100">
-                      {formatCurrency(safeNumber(item.amountLakhINR))}
+                      {formatChartCurrency(safeNumber(item.amountLakhINR))}
                     </td>
                     <td className="text-right py-3 px-2 text-indigo-600 dark:text-indigo-400 font-semibold">
                       {safeNumber(item.percent) > 0 ? `${safeNumber(item.percent).toFixed(1)}%` : '—'}
@@ -155,7 +152,7 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
                 <tr className="border-t-2 border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950">
                   <td className="py-3 px-2 font-bold text-gray-800 dark:text-gray-200">Total</td>
                   <td className="text-right py-3 px-2 font-bold text-gray-900 dark:text-gray-100">
-                    {formatCurrency(validCostBreakdown.reduce((sum: number, item: any) => sum + safeNumber(item.amountLakhINR), 0))}
+                    {formatChartCurrency(validCostBreakdown.reduce((sum: number, item: any) => sum + safeNumber(item.amountLakhINR), 0))}
                   </td>
                   <td className="text-right py-3 px-2 font-bold text-indigo-600 dark:text-indigo-400">
                     {validCostBreakdown.reduce((sum: number, item: any) => sum + safeNumber(item.percent), 0).toFixed(1)}%
@@ -201,7 +198,7 @@ export function FinancialCharts({ data }: FinancialChartsProps) {
               <div className="mt-4 text-center p-3 bg-primary/10 rounded">
                 <p className="text-sm text-muted-foreground">Total Investment</p>
                 <p className="text-2xl font-bold text-primary">
-                  ₹{safeNumber(projectCost.totalInitialInvestmentLakhINR).toFixed(2)} Lakh
+                  {formatIndianCurrency(safeNumber(projectCost.totalInitialInvestmentLakhINR))}
                 </p>
               </div>
             )}

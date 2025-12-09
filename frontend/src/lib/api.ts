@@ -12,6 +12,14 @@ export interface DPR {
   client_email?: string
   admin_feedback?: string
   feedback_timestamp?: string
+  validation_flags?: {
+    hasFlags: boolean
+    flags: Array<{
+      type: string
+      message: string
+      severity: string
+    }>
+  }
 }
 
 export interface Message {

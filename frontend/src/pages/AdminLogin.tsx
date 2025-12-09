@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useRole } from '@/contexts/RoleContext'
 import { Card } from '@/components/ui/Card'
 import { Shield, Lock, User, AlertCircle } from 'lucide-react'
+import { LanguageDropdown } from '@/components/LanguageDropdown'
 
 export default function AdminLogin() {
     const [adminId, setAdminId] = useState('')
@@ -69,6 +70,7 @@ export default function AdminLogin() {
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-cyan-600">
                             <Shield className="h-6 w-6 text-white" />
                         </div>
+                        <LanguageDropdown />
                         <span className="text-xl font-bold text-primary">DPR Analyzer</span>
                     </div>
                 </div>

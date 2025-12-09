@@ -1,12 +1,12 @@
 {
   "projectName": "string",
   "projectLocation": {
-    "state": "string",
+    "state": "ENUM: Must be one of: ['Arunachal Pradesh', 'Assam', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Sikkim', 'Tripura']",
     "districts": [
       "array of strings"
     ]
   },
-  "projectSector": "string",
+  "projectSector": "ENUM: Must be EXACTLY one of these 14 sectors ONLY: ['Agriculture and Allied', 'Roads and Bridges', 'Power and Energy', 'Water Supply and Sanitation', 'Education', 'Health', 'Tourism', 'Industries', 'Information Technology', 'Sports and Youth Affairs', 'Art and Culture', 'Social Welfare', 'Urban Development', 'Rural Development']",
   "executiveSummary": "string (3-5 sentences)",
   "overallScore": "number (0-100)",
   "recommendation": "string (e.g., 'Approve with Conditions', 'Approve', 'Reject', 'Review')",

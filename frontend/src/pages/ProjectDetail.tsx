@@ -3,12 +3,8 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import {
     Search,
-    Filter,
-    ChevronDown,
     FileText,
     Eye,
-    Trash2,
-    Upload,
     Calendar,
     Loader2,
     ArrowLeft,
@@ -27,7 +23,7 @@ import {
     Check,
     XCircle
 } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api, type DPR, type Project } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -43,12 +39,6 @@ export default function ProjectDetailPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [uploadProgress, setUploadProgress] = useState(0)
-    const [uploading, setUploading] = useState(false)
-    const fileInputRef = useRef<HTMLInputElement>(null)
-
-    // Delete Modal State
-    const [dprToDelete, setDprToDelete] = useState<number | null>(null)
 
     // Analyzing state
     const [analyzingDpr, setAnalyzingDpr] = useState<number | null>(null)
@@ -149,65 +139,7 @@ export default function ProjectDetailPage() {
     // Count analyzed DPRs
     const analyzedDprsCount = documents.filter(doc => doc.summary_json).length
 
-    const handleUploadClick = () => {
-        fileInputRef.current?.click()
-    }
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-
-        if (!file || !id) {
-            return
-        }
-
-        if (!file.name.toLowerCase().endsWith('.pdf')) {
-            alert(t('projectDetail.uploadPdfOnly'))
-            return
-        }
-
-        setUploading(true)
-        setUploadProgress(0)
-
-        try {
-            await api.uploadDPR(file, parseInt(id), (progress) => {
-                setUploadProgress(progress)
-            })
-
-            // Reload to get new DPR
-            await loadProjectData(parseInt(id))
-        } catch (err) {
-            console.error('Upload error:', err)
-            alert(t('projectDetail.uploadingError'))
-        } finally {
-            setUploading(false)
-            setUploadProgress(0)
-        }
-
-        // Reset input
-        if (fileInputRef.current) {
-            fileInputRef.current.value = ''
-        }
-    }
-
-    const confirmDelete = async () => {
-        if (!dprToDelete) return
-
-        try {
-            console.log('Calling deleteDPR API for:', dprToDelete)
-            await api.deleteDPR(dprToDelete)
-            console.log('Delete successful, updating state')
-            setDocuments(documents.filter(doc => doc.id !== dprToDelete))
-            setDprToDelete(null)
-        } catch (err) {
-            alert(t('projectDetail.deleteDocumentFailed'))
-            console.error('Error deleting document:', err)
-        }
-    }
-
-    const handleDeleteClick = (e: React.MouseEvent, dprId: number) => {
-        e.stopPropagation()
-        setDprToDelete(dprId)
-    }
 
     const getDocumentStatus = (doc: DPR) => {
         // Check status field first (if it exists)
@@ -358,8 +290,8 @@ export default function ProjectDetailPage() {
                     </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-4 mb-8">
-                    <div className="relative flex-1">
+                <div className="mb-8">
+                    <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <input
                             type="text"
@@ -369,11 +301,6 @@ export default function ProjectDetailPage() {
                             className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                         />
                     </div>
-                    <Button variant="outline">
-                        <Filter className="h-4 w-4 mr-2" />
-                        Filter
-                        <ChevronDown className="h-4 w-4 ml-2" />
-                    </Button>
                 </div>
 
                 {filteredDocuments.length === 0 && (
@@ -392,18 +319,72 @@ export default function ProjectDetailPage() {
                 <div className="flex flex-col gap-4">
                     {filteredDocuments.map((doc) => {
                         const status = getDocumentStatus(doc)
+                        const hasFlags = doc.validation_flags?.hasFlags || false
+                        const overallScore = doc.summary_json?.overallScore
+
+                        // Determine score color based on value (force red if flagged)
+                        const getScoreColor = () => {
+                            if (hasFlags) {
+                                return {
+                                    bg: 'bg-red-100 dark:bg-red-900/50',
+                                    text: 'text-red-700 dark:text-red-400',
+                                    border: 'border-red-300 dark:border-red-700'
+                                }
+                            }
+                            if (!overallScore) return null
+                            if (overallScore >= 75) {
+                                return {
+                                    bg: 'bg-green-100 dark:bg-green-900/50',
+                                    text: 'text-green-700 dark:text-green-400',
+                                    border: 'border-green-300 dark:border-green-700'
+                                }
+                            }
+                            if (overallScore >= 50) {
+                                return {
+                                    bg: 'bg-yellow-100 dark:bg-yellow-900/50',
+                                    text: 'text-yellow-700 dark:text-yellow-400',
+                                    border: 'border-yellow-300 dark:border-yellow-700'
+                                }
+                            }
+                            return {
+                                bg: 'bg-red-100 dark:bg-red-900/50',
+                                text: 'text-red-700 dark:text-red-400',
+                                border: 'border-red-300 dark:border-red-700'
+                            }
+                        }
+
+                        const scoreColor = getScoreColor()
+
                         return (
-                            <Card key={doc.id} className="p-4 hover:border-primary/40 transition-all flex flex-col md:flex-row items-start md:items-center gap-4">
+                            <Card
+                                key={doc.id}
+                                className={`p-4 transition-all flex flex-col md:flex-row items-start md:items-center gap-4 ${hasFlags
+                                    ? 'border-red-500 dark:border-red-600 border-2 bg-red-50 dark:bg-red-950/20'
+                                    : 'hover:border-primary/40'
+                                    }`}
+                            >
                                 <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                                     <FileText className="h-5 w-5 text-primary" />
                                 </div>
 
-                                <div className="flex-1 min-w-0">
+                                <div className="flex-1 min-w-0 w-full">
                                     <h3 className="font-semibold truncate" title={doc.original_filename}>{doc.original_filename}</h3>
-                                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
                                         <span className={`inline-flex px-2 py-0.5 rounded-full ${status.bg} ${status.color} font-medium`}>
                                             {status.label}
                                         </span>
+                                        {hasFlags && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-700 font-medium">
+                                                <AlertCircle className="h-3 w-3" />
+                                                Flagged ({doc.validation_flags?.flags.length || 0})
+                                            </span>
+                                        )}
+                                        {scoreColor && overallScore !== undefined && (
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${scoreColor.bg} ${scoreColor.text} border ${scoreColor.border} font-medium`}>
+                                                <Scale className="h-3 w-3" />
+                                                Score: {overallScore}/100
+                                            </span>
+                                        )}
                                         <span>•</span>
                                         <span className="flex items-center gap-1">
                                             <Calendar className="h-3 w-3" />
@@ -422,6 +403,20 @@ export default function ProjectDetailPage() {
                                             </>
                                         )}
                                     </div>
+
+                                    {/* Validation Flags Details */}
+                                    {hasFlags && doc.validation_flags && doc.validation_flags.flags.length > 0 && (
+                                        <div className="mt-2 p-2 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800">
+                                            <div className="space-y-1">
+                                                {doc.validation_flags.flags.map((flag, idx) => (
+                                                    <div key={idx} className="flex items-start gap-2 text-xs text-red-700 dark:text-red-300">
+                                                        <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                                        <span>{flag.message}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
@@ -532,15 +527,6 @@ export default function ProjectDetailPage() {
                                     >
                                         <MessageSquare className="h-4 w-4" />
                                     </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="shrink-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                        onClick={(e) => handleDeleteClick(e, doc.id)}
-                                        title={t('projectDetail.deleteDocument')}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
                                 </div>
                             </Card>
                         )
@@ -548,32 +534,7 @@ export default function ProjectDetailPage() {
                 </div>
             </main>
 
-            {/* Delete Confirmation Modal */}
-            {dprToDelete && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <Card className="w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-red-600">{t('projectDetail.deleteDocument')}</h2>
-                            <button onClick={() => setDprToDelete(null)} className="text-muted-foreground hover:text-foreground">
-                                <X className="h-5 w-5" />
-                            </button>
-                        </div>
 
-                        <p className="text-muted-foreground mb-6">
-                            Are you sure you want to delete this document? This action cannot be undone.
-                        </p>
-
-                        <div className="flex gap-3">
-                            <Button type="button" variant="outline" className="flex-1" onClick={() => setDprToDelete(null)}>
-                                Cancel
-                            </Button>
-                            <Button type="button" className="flex-1 bg-red-600 hover:bg-red-700" onClick={confirmDelete}>
-                                Delete Document
-                            </Button>
-                        </div>
-                    </Card>
-                </div>
-            )}
 
             {/* Comparison Results Modal */}
             {showComparisonModal && (

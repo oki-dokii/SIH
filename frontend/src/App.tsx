@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { RoleProvider, useRole } from './contexts/RoleContext'
+import { loadGoogleTranslateScript, initGoogleTranslate } from './lib/googleTranslate'
+import { useEffect } from 'react'
 import RoleSelectionPage from './pages/RoleSelection'
 import DPRLandingPage from './pages/DPRLandingPage'
 import AdminLogin from './pages/AdminLogin'
@@ -103,10 +105,25 @@ function AppRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    // Load Google Translate script on app mount
+    loadGoogleTranslateScript()
+      .then(() => {
+        console.log('✓ Google Translate loaded')
+        initGoogleTranslate()
+      })
+      .catch((err: Error) => {
+        console.error('✗ Failed to load Google Translate:', err)
+      })
+  }, [])
+
   return (
     <RoleProvider>
       <LanguageProvider>
         <BrowserRouter>
+          {/* Hidden Google Translate widget */}
+          <div id="google_translate_element" style={{ display: 'none' }}></div>
+
           <AppRoutes />
         </BrowserRouter>
       </LanguageProvider>

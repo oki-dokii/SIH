@@ -4,6 +4,7 @@ import { useRole } from '@/contexts/RoleContext'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Upload, FileText, Download, Clock, Trash2, MessageSquare, X } from 'lucide-react'
+import { LanguageDropdown } from '@/components/LanguageDropdown'
 
 interface ClientDPR {
     id: number
@@ -255,6 +256,7 @@ export default function ClientDashboard() {
                     </div>
 
                     <div className="flex items-center gap-4">
+                        <LanguageDropdown />
                         <span className="text-sm text-muted-foreground">
                             Welcome, <span className="font-medium text-foreground">{userInfo?.name || 'User'}</span>
                         </span>
@@ -401,12 +403,12 @@ export default function ClientDashboard() {
                                             </td>
                                             <td className="py-4 px-4">
                                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${dpr.status === 'accepted'
-                                                        ? 'bg-green-100 text-green-800 border border-green-200'
-                                                        : dpr.status === 'rejected'
-                                                            ? 'bg-red-100 text-red-800 border border-red-200'
-                                                            : dpr.status === 'pending'
-                                                                ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                                                                : 'bg-blue-100 text-blue-800 border border-blue-200'
+                                                    ? 'bg-green-100 text-green-800 border border-green-200'
+                                                    : dpr.status === 'rejected'
+                                                        ? 'bg-red-100 text-red-800 border border-red-200'
+                                                        : dpr.status === 'pending'
+                                                            ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                                                            : 'bg-blue-100 text-blue-800 border border-blue-200'
                                                     }`}>
                                                     <Clock className="h-3 w-3 mr-1" />
                                                     {dpr.status === 'accepted' ? 'Accepted'

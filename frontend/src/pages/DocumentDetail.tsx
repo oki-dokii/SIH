@@ -7,6 +7,7 @@ import { ChatMessageFormatter } from '@/components/ChatMessageFormatter'
 import { LocationMap } from '@/components/LocationMap'
 import { PDFViewer } from '@/components/PDFViewer'
 import { createClickablePageLinks } from '@/utils/parsePageReferences'
+import { formatIndianCurrency } from '@/lib/currency'
 import {
   ArrowLeft,
   Download,
@@ -28,6 +29,7 @@ import {
   Copy,
   Check,
   Trash2,
+  X,
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
@@ -51,6 +53,10 @@ export default function DocumentDetailPage() {
   const [showClearChatConfirm, setShowClearChatConfirm] = useState(false)
   const [pdfPage, setPdfPage] = useState(1)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const [isPdfCollapsed, setIsPdfCollapsed] = useState(true)
+  const [isChatCollapsed, setIsChatCollapsed] = useState(true)
+  const [leftWidth, setLeftWidth] = useState(50) // Percentage width of left panel
+  const [isResizing, setIsResizing] = useState(false)
 
   // Get project_id from navigation state or document
   const projectId = (location.state as any)?.projectId || document?.project_id
@@ -152,12 +158,51 @@ export default function DocumentDetailPage() {
 
   function handlePageClick(page: number) {
     setPdfPage(page)
-    // Scroll PDF viewer into view if needed
-    const pdfViewerElement = window.document.getElementById('pdf-viewer-container')
-    if (pdfViewerElement) {
-      pdfViewerElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    // Open PDF viewer if it's collapsed
+    if (isPdfCollapsed) {
+      setIsPdfCollapsed(false)
     }
+    // Scroll PDF viewer into view if needed
+    setTimeout(() => {
+      const pdfViewerElement = window.document.getElementById('pdf-viewer-container')
+      if (pdfViewerElement) {
+        pdfViewerElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }
+    }, 100) // Small delay to allow PDF viewer to render if it was collapsed
   }
+
+  // Resize handler for draggable divider
+  const startResize = () => {
+    setIsResizing(true)
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return
+
+      const containerWidth = window.innerWidth - 100 // Account for padding
+      const newLeftWidth = (e.clientX / containerWidth) * 100
+
+      // Limit between 30% and 70%
+      if (newLeftWidth >= 30 && newLeftWidth <= 70) {
+        setLeftWidth(newLeftWidth)
+      }
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    if (isResizing) {
+      window.document.addEventListener('mousemove', handleMouseMove)
+      window.document.addEventListener('mouseup', handleMouseUp)
+    }
+
+    return () => {
+      window.document.removeEventListener('mousemove', handleMouseMove)
+      window.document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing])
 
   const tabs = [
     { id: 'overview', label: t('documentDetail.overview') },
@@ -244,7 +289,7 @@ export default function DocumentDetailPage() {
                   <DollarSign className="h-4 w-4" />
                   {t('documentDetail.totalInvestment')}
                 </div>
-                <div className="text-xl font-bold">₹{data.financialAnalysis.projectCost.totalInitialInvestmentLakhINR}L</div>
+                <div className="text-xl font-bold">{formatIndianCurrency(data.financialAnalysis.projectCost.totalInitialInvestmentLakhINR)}</div>
               </Card>
             )}
             {data.timelineAnalysis?.implementationDurationMonths && (
@@ -292,8 +337,8 @@ export default function DocumentDetailPage() {
           </div>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="lg:col-span-1">
+        <div className="grid gap-6 relative" style={{ gridTemplateColumns: isPdfCollapsed && isChatCollapsed ? '1fr' : `${leftWidth}% 4px ${100 - leftWidth}%` }}>
+          <div>
             <Card>
               <div className="border-b overflow-x-auto">
                 <div className="flex min-w-max">
@@ -348,72 +393,131 @@ export default function DocumentDetailPage() {
             </Card>
           </div>
 
-          <div className="lg:col-span-1 flex flex-col gap-4">
-            {/* PDF Viewer */}
-            <div id="pdf-viewer-container">
-              <PDFViewer
-                pdfUrl={`http://127.0.0.1:8000/dpr/${id}/pdf`}
-                initialPage={pdfPage}
-                onPageChange={(page) => setPdfPage(page)}
-                className="h-[550px]"
-              />
+          {/* Draggable Resize Handle */}
+          {!(isPdfCollapsed && isChatCollapsed) && (
+            <div
+              onMouseDown={startResize}
+              className={`cursor-col-resize flex items-center justify-center group ${isResizing ? 'bg-primary' : 'hover:bg-primary/20'} transition-colors`}
+              title="Drag to resize"
+            >
+              <div className="w-1 h-full bg-border group-hover:bg-primary transition-colors rounded-full"></div>
             </div>
+          )}
 
-            {/* Chat Window */}
-            <Card className="h-[550px] flex flex-col">
-              <div className="border-b p-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold">{t('documentDetail.chat')}</h3>
-                </div>
-                {chatHistory.length > 0 && (
+          {!(isPdfCollapsed && isChatCollapsed) && (
+            <div className="lg:col-span-1 flex flex-col gap-4">
+              {/* PDF Viewer */}
+              {!isPdfCollapsed ? (
+                <div id="pdf-viewer-container" className="relative animate-in fade-in slide-in-from-right duration-300">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleClearChat}
-                    className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
-                    title={t('common.clearChat')}
+                    onClick={() => setIsPdfCollapsed(true)}
+                    className="absolute top-2 left-2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background"
+                    title="Hide PDF Viewer"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <X className="h-4 w-4" />
                   </Button>
-                )}
-              </div>
+                  <PDFViewer
+                    pdfUrl={`http://127.0.0.1:8000/dpr/${id}/pdf`}
+                    initialPage={pdfPage}
+                    onPageChange={(page) => setPdfPage(page)}
+                    className="h-[550px]"
+                  />
+                </div>
+              ) : null}
 
-              <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                {chatHistory.length === 0 && (
-                  <div className="p-3 rounded-lg bg-muted">
-                    <p className="text-sm">
-                      Hello! I'm your DPR analysis assistant. Ask me anything about this document.
-                    </p>
+              {/* Chat Window */}
+              {!isChatCollapsed ? (
+                <Card className="h-[550px] flex flex-col relative animate-in fade-in slide-in-from-right duration-300">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsChatCollapsed(true)}
+                    className="absolute top-2 left-2 z-10 bg-background/80 backdrop-blur-sm hover:bg-background"
+                    title="Hide Chat"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  <div className="border-b p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold">{t('documentDetail.chat')}</h3>
+                    </div>
+                    {chatHistory.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearChat}
+                        className="text-muted-foreground hover:text-destructive h-8 w-8 p-0"
+                        title={t('common.clearChat')}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
-                )}
-                {chatHistory.map((msg, index) => (
-                  <ChatMessageFormatter key={index} text={msg.text} isUser={msg.role === 'user'} />
-                ))}
-                {chatLoading && (
-                  <div className="p-3 rounded-lg bg-muted mr-8 flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">Thinking...</span>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
 
-              <form onSubmit={sendMessage} className="border-t p-4 flex gap-2">
-                <input
-                  type="text"
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                  placeholder={t('documentDetail.askQuestion')}
-                  className="flex-1 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  disabled={chatLoading}
-                />
-                <Button type="submit" disabled={chatLoading || !chatMessage.trim()}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </form>
-            </Card>
-          </div>
+                  <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                    {chatHistory.length === 0 && (
+                      <div className="p-3 rounded-lg bg-muted">
+                        <p className="text-sm">
+                          Hello! I'm your DPR analysis assistant. Ask me anything about this document.
+                        </p>
+                      </div>
+                    )}
+                    {chatHistory.map((msg, index) => (
+                      <ChatMessageFormatter key={index} text={msg.text} isUser={msg.role === 'user'} />
+                    ))}
+                    {chatLoading && (
+                      <div className="p-3 rounded-lg bg-muted mr-8 flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm">Thinking...</span>
+                      </div>
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+
+                  <form onSubmit={sendMessage} className="border-t p-4 flex gap-2">
+                    <input
+                      type="text"
+                      value={chatMessage}
+                      onChange={(e) => setChatMessage(e.target.value)}
+                      placeholder={t('documentDetail.askQuestion')}
+                      className="flex-1 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      disabled={chatLoading}
+                    />
+                    <Button type="submit" disabled={chatLoading || !chatMessage.trim()}>
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </form>
+                </Card>
+              ) : null}
+            </div>
+          )}
+        </div>
+
+        {/* Collapsed Buttons - Fixed on right side */}
+        <div className="fixed right-4 top-24 flex flex-col gap-2 z-40">
+          {isPdfCollapsed && (
+            <Button
+              onClick={() => setIsPdfCollapsed(false)}
+              className="shadow-lg"
+              title="Show PDF Viewer"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
+          )}
+          {isChatCollapsed && (
+            <Button
+              onClick={() => setIsChatCollapsed(false)}
+              className="shadow-lg"
+              title="Show Chat"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Chat
+            </Button>
+          )}
         </div>
       </main>
 
@@ -650,20 +754,20 @@ function RiskAssessmentTab({ data, onPageClick }: { data: any; onPageClick: (pag
               )}>
                 <div className="flex items-start gap-3">
                   <div className={cn(
-                    'px-2 py-1 rounded text-xs font-semibold',
-                    risk.severity === 'High' ? 'bg-red-200 text-red-800' :
-                      risk.severity === 'Medium' ? 'bg-orange-200 text-orange-800' :
-                        'bg-green-200 text-green-800'
+                    'px-2 py-1 rounded text-xs font-bold',
+                    risk.severity === 'High' ? 'bg-red-200 text-red-900 ring-2 ring-red-500' :
+                      risk.severity === 'Medium' ? 'bg-orange-200 text-orange-900' :
+                        'bg-green-200 text-green-900'
                   )}>
                     {risk.severity}
                   </div>
                   <div className="flex-1">
-                    <h5 className="font-semibold mb-1 dark:text-gray-100">{risk.riskCategory}</h5>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                    <h5 className="font-bold text-base mb-1 dark:text-gray-100">{risk.riskCategory}</h5>
+                    <p className="text-base text-gray-700 dark:text-gray-300 mb-2">
                       {createClickablePageLinks(risk.description, onPageClick)}
                     </p>
                     {risk.evidence && (
-                      <p className="text-xs text-gray-600 dark:text-gray-400 italic">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 italic">
                         Evidence: {createClickablePageLinks(risk.evidence, onPageClick)}
                       </p>
                     )}
@@ -730,22 +834,27 @@ function InconsistenciesTab({ data, onPageClick }: { data: any; onPageClick: (pa
                 <Icon className="h-5 w-5 mt-1 flex-shrink-0" />
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold dark:text-gray-100">{issue.category}</h4>
-                    <span className="text-xs px-2 py-1 rounded bg-white dark:bg-gray-800 dark:text-gray-200">{issue.severity}</span>
+                    <h4 className="font-bold text-base dark:text-gray-100">{issue.category}</h4>
+                    <span className={cn(
+                      'text-xs px-2 py-1 rounded font-bold',
+                      issue.severity === 'Critical' ? 'bg-red-600 text-white ring-2 ring-red-500' :
+                        issue.severity === 'High' ? 'bg-orange-600 text-white' :
+                          'bg-white dark:bg-gray-800 dark:text-gray-200'
+                    )}>{issue.severity}</span>
                   </div>
-                  <p className="text-sm mb-2 text-gray-700 dark:text-gray-300">
+                  <p className="text-base mb-2 text-gray-700 dark:text-gray-300">
                     {createClickablePageLinks(issue.description, onPageClick)}
                   </p>
                   {issue.location && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                       📍 Location: {createClickablePageLinks(issue.location, onPageClick)}
                     </p>
                   )}
                   {issue.detectedValues && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">🔍 Detected: {issue.detectedValues}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">🔍 Detected: <span className="font-bold text-gray-900 dark:text-gray-100">{issue.detectedValues}</span></p>
                   )}
                   {issue.impact && (
-                    <p className="text-xs mt-2 p-2 bg-white dark:bg-gray-800 rounded italic text-gray-700 dark:text-gray-300">
+                    <p className="text-sm mt-2 p-2 bg-white dark:bg-gray-800 rounded italic text-gray-700 dark:text-gray-300">
                       Impact: {createClickablePageLinks(issue.impact, onPageClick)}
                     </p>
                   )}

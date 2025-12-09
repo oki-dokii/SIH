@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
-import { ChevronLeft, ChevronRight, Loader2, ZoomIn, ZoomOut, FileX } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, ZoomIn, ZoomOut, FileX, Maximize2, Minimize2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 // CSS imports commented out - causing module resolution errors
@@ -23,6 +23,7 @@ export function PDFViewer({ pdfUrl, initialPage = 1, onPageChange, className = '
     const [scale, setScale] = useState<number>(1.0)
     const [error, setError] = useState<string | null>(null)
     const [pageInput, setPageInput] = useState<string>('1')
+    const [isMaximized, setIsMaximized] = useState<boolean>(false)
 
     // Debug logging
     useEffect(() => {
@@ -111,8 +112,12 @@ export function PDFViewer({ pdfUrl, initialPage = 1, onPageChange, className = '
         setScale(prev => Math.max(prev - 0.2, 0.5))
     }
 
-    return (
-        <Card className={`flex flex-col ${className}`}>
+    function toggleMaximize() {
+        setIsMaximized(prev => !prev)
+    }
+
+    const pdfContent = (
+        <Card className={`flex flex-col ${isMaximized ? 'h-full' : className}`}>
             {/* Header */}
             <div className="border-b p-3 flex items-center justify-between bg-muted/30">
                 <div className="flex items-center gap-2">
@@ -124,49 +129,67 @@ export function PDFViewer({ pdfUrl, initialPage = 1, onPageChange, className = '
                     )}
                 </div>
 
-                {/* Zoom controls */}
-                {numPages > 0 && (
-                    <div className="flex items-center gap-1">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleZoomOut}
-                            disabled={scale <= 0.5}
-                            className="h-7 w-7 p-0"
-                            title="Zoom out"
-                        >
-                            <ZoomOut className="h-3.5 w-3.5" />
-                        </Button>
-                        <span className="text-xs text-muted-foreground px-2">{Math.round(scale * 100)}%</span>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleZoomIn}
-                            disabled={scale >= 2.0}
-                            className="h-7 w-7 p-0"
-                            title="Zoom in"
-                        >
-                            <ZoomIn className="h-3.5 w-3.5" />
-                        </Button>
-                    </div>
-                )}
+                {/* Controls */}
+                <div className="flex items-center gap-1">
+                    {/* Zoom controls */}
+                    {numPages > 0 && (
+                        <>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleZoomOut}
+                                disabled={scale <= 0.5}
+                                className="h-7 w-7 p-0"
+                                title="Zoom out"
+                            >
+                                <ZoomOut className="h-3.5 w-3.5" />
+                            </Button>
+                            <span className="text-xs text-muted-foreground px-2">{Math.round(scale * 100)}%</span>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleZoomIn}
+                                disabled={scale >= 2.0}
+                                className="h-7 w-7 p-0"
+                                title="Zoom in"
+                            >
+                                <ZoomIn className="h-3.5 w-3.5" />
+                            </Button>
+                        </>
+                    )}
+
+                    {/* Maximize/Minimize button */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleMaximize}
+                        className="h-7 w-7 p-0 ml-1"
+                        title={isMaximized ? "Minimize" : "Maximize"}
+                    >
+                        {isMaximized ? (
+                            <Minimize2 className="h-3.5 w-3.5" />
+                        ) : (
+                            <Maximize2 className="h-3.5 w-3.5" />
+                        )}
+                    </Button>
+                </div>
             </div>
 
             {/* PDF Content */}
-            <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-900 p-4">
-                {error ? (
-                    <div className="flex flex-col items-center gap-3 text-center max-w-md mx-auto mt-8">
-                        <FileX className="h-12 w-12 text-red-500" />
-                        <div>
-                            <p className="font-semibold text-sm mb-1">PDF Load Error</p>
-                            <p className="text-xs text-muted-foreground mb-2">{error}</p>
-                            <p className="text-xs text-muted-foreground">
-                                Check browser console (F12) for details
-                            </p>
+            <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-900">
+                <div className="min-h-full flex items-center justify-center p-4">
+                    {error ? (
+                        <div className="flex flex-col items-center gap-3 text-center max-w-md">
+                            <FileX className="h-12 w-12 text-red-500" />
+                            <div>
+                                <p className="font-semibold text-sm mb-1">PDF Load Error</p>
+                                <p className="text-xs text-muted-foreground mb-2">{error}</p>
+                                <p className="text-xs text-muted-foreground">
+                                    Check browser console (F12) for details
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                ) : (
-                    <div className="w-full h-full flex items-start justify-center">
+                    ) : (
                         <div className="bg-white dark:bg-gray-800 shadow-lg">
                             <Document
                                 file={pdfUrl}
@@ -183,8 +206,8 @@ export function PDFViewer({ pdfUrl, initialPage = 1, onPageChange, className = '
                                 <Page
                                     pageNumber={currentPage}
                                     scale={scale}
-                                    renderTextLayer={true}
-                                    renderAnnotationLayer={true}
+                                    renderTextLayer={false}
+                                    renderAnnotationLayer={false}
                                     loading={
                                         <div className="flex items-center justify-center p-8">
                                             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -196,8 +219,8 @@ export function PDFViewer({ pdfUrl, initialPage = 1, onPageChange, className = '
                                 />
                             </Document>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* Navigation Controls */}
@@ -247,4 +270,17 @@ export function PDFViewer({ pdfUrl, initialPage = 1, onPageChange, className = '
             )}
         </Card>
     )
+
+    // Wrap in maximized overlay if needed
+    if (isMaximized) {
+        return (
+            <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                <div className="w-full h-full max-w-7xl">
+                    {pdfContent}
+                </div>
+            </div>
+        )
+    }
+
+    return pdfContent
 }

@@ -346,30 +346,70 @@ async def client_upload_dpr(
         # Upload to Gemini Files API for future analysis
         file_ref = await gemini_client.upload_file(str(filepath))
         
-        # Insert record into dprs table WITHOUT analysis (summary_json = None)
-        # This allows admin to see it in the project and trigger analysis
+        # Insert record into dprs table WITHOUT analysis initially
         print(f"⏳ Inserting client DPR record for {filename}...")
         dpr_id = db.insert_dpr(
             filename=filename,
             original_filename=original_filename,
             filepath=str(filepath),
             file_ref=file_ref,
-            summary_json=None,  # NULL = unanalyzed, waiting for admin
+            summary_json=None,  # Will be populated after analysis
             project_id=project_id
         )
         
-        # Update the record with client_id and status
+        # Update the record with client_id and set status to 'analyzing'
         conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
         cursor = conn.cursor()
-        cursor.execute("UPDATE dprs SET client_id = ?, status = 'pending' WHERE id = ?", (client_id, dpr_id))
+        cursor.execute("UPDATE dprs SET client_id = ?, status = 'analyzing' WHERE id = ?", (client_id, dpr_id))
         conn.commit()
         conn.close()
         
-        return JSONResponse({
-            "success": True,
-            "message": "DPR uploaded successfully. An admin will analyze it soon.",
-            "dpr_id": dpr_id
-        })
+        # Automatically analyze the DPR
+        try:
+            print(f"⏳ Auto-analyzing client DPR {dpr_id}...")
+            parsed_json = await gemini_client.generate_json_from_file(file_ref, str(SCHEMA_PATH))
+            print(f"✓ Analysis complete for DPR {dpr_id}")
+            
+            # Validate DPR against project
+            validation_flags = db.validate_dpr_against_project(dpr_id, project_id, parsed_json)
+            if validation_flags.get('hasFlags'):
+                print(f"⚠ DPR {dpr_id} has validation flags: {len(validation_flags['flags'])} issue(s)")
+            
+            # Update database with analysis results and validation flags
+            db.update_dpr(dpr_id, parsed_json, validation_flags)
+            
+            conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+            cursor = conn.cursor()
+            cursor.execute("UPDATE dprs SET status = 'completed' WHERE id = ?", (dpr_id,))
+            conn.commit()
+            conn.close()
+            
+            return JSONResponse({
+                "success": True,
+                "message": "DPR uploaded and analyzed successfully!",
+                "dpr_id": dpr_id,
+                "analyzed": True
+            })
+            
+        except Exception as analysis_error:
+            # If analysis fails, set status to 'pending' so admin can retry
+            print(f"✗ Auto-analysis failed for DPR {dpr_id}: {str(analysis_error)}")
+            
+            conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))
+            cursor = conn.cursor()
+            cursor.execute("UPDATE dprs SET status = 'pending' WHERE id = ?", (dpr_id,))
+            conn.commit()
+            conn.close()
+            
+            # Still return success for upload, but note analysis failed
+            return JSONResponse({
+                "success": True,
+                "message": "DPR uploaded successfully, but analysis failed. An admin can analyze it later.",
+                "dpr_id": dpr_id,
+                "analyzed": False,
+                "analysis_error": str(analysis_error)
+            })
+    
     
     except HTTPException:
         raise
@@ -919,7 +959,15 @@ async def upload_dpr(
         try:
             parsed_json = await gemini_client.generate_json_from_file(file_ref, str(SCHEMA_PATH))
             print(f"✓ Generated analysis successfully")
-            db.update_dpr(dpr_id, parsed_json)
+            
+            # Validate DPR against project if project_id is provided
+            validation_flags = None
+            if project_id is not None:
+                validation_flags = db.validate_dpr_against_project(dpr_id, project_id, parsed_json)
+                if validation_flags.get('hasFlags'):
+                    print(f"⚠ DPR {dpr_id} has validation flags: {len(validation_flags['flags'])} issue(s)")
+            
+            db.update_dpr(dpr_id, parsed_json, validation_flags)
             
             return JSONResponse({
                 "id": dpr_id,
@@ -1096,10 +1144,15 @@ async def analyze_dpr(dpr_id: int):
         
         print(f"✓ Generated analysis successfully")
         
-        # Use the requested language as the default summary_json
+        # Validate DPR against project if project_id exists
+        validation_flags = None
+        if dpr.get('project_id'):
+            validation_flags = db.validate_dpr_against_project(dpr_id, dpr['project_id'], parsed_json)
+            if validation_flags.get('hasFlags'):
+                print(f"⚠ DPR {dpr_id} has validation flags: {len(validation_flags['flags'])} issue(s)")
         
-        # Update database with analysis results and set status to 'completed'
-        db.update_dpr(dpr_id, parsed_json)
+        # Update database with analysis results and validation flags
+        db.update_dpr(dpr_id, parsed_json, validation_flags)
         
         # Set status to 'completed'
         conn = sqlite3.connect(str(DATA_DIR / "dpr.db"))

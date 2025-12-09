@@ -36,3 +36,31 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* Hide Google Translate default UI elements */
+.goog-te-banner-frame,
+.goog-te-balloon-frame,
+.goog-logo-link,
+.goog-te-gadget,
+#goog-gt-tt,
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+
+/* Prevent body from shifting when Google Translate loads */
+body {
+  top: 0 !important;
+  position: static !important;
+}
+
+/* Hide the Google Translate toolbar at the top */
+.skiptranslate iframe {
+  visibility: hidden !important;
+  display: none !important;
+}
+
+/* Additional cleanup */
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important  ;
+}

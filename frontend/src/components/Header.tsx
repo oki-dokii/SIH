@@ -7,7 +7,7 @@ import { useRole } from '../contexts/RoleContext'
 import { api } from '@/lib/api'
 import { ProjectSelectionModal } from './ProjectSelectionModal'
 import { Card } from './ui/Card'
-
+import { LanguageDropdown } from './LanguageDropdown'
 export function Header() {
   const [isDark, setIsDark] = useState(false)
   const location = useLocation()
@@ -147,6 +147,7 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-3">
+            <LanguageDropdown />
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-lg hover:bg-muted transition-colors"

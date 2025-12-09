@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useRole } from '@/contexts/RoleContext'
 import { Card } from '@/components/ui/Card'
 import { User, Mail, Lock, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { LanguageDropdown } from '@/components/LanguageDropdown'
 
 export default function UserAuth() {
     const [mode, setMode] = useState<'signup' | 'signin'>('signup')
@@ -133,6 +134,7 @@ export default function UserAuth() {
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple-600 to-pink-600">
                             <User className="h-6 w-6 text-white" />
                         </div>
+                        <LanguageDropdown />
                         <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                             DPR Analyzer
                         </span>

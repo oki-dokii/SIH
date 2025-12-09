@@ -88,6 +88,18 @@ MANDATORY BEHAVIOR:
 3) REQUIRED NON-NULL FIELDS: The following fields MUST NOT be null (fill them or infer if missing): 
    `"projectName"`, `"projectLocation.state"`, `"projectSector"`, `"executiveSummary"`, `"overallScore"`, `"recommendation"`, and the entire `"financialAnalysis"` object.
    Note: `"projectLocation.districts"` is allowed to be an empty array or null if districts are absent.
+
+3a) **CRITICAL ENUMERATION CONSTRAINTS** (NON-NEGOTIABLE):
+   - `"projectLocation.state"` MUST be EXACTLY ONE of these 8 values ONLY: 
+     ["Arunachal Pradesh", "Assam", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Sikkim", "Tripura"]
+   - `"projectSector"` MUST be EXACTLY ONE of these 14 sectors ONLY (case-sensitive, use exact spelling): 
+     ["Agriculture and Allied", "Roads and Bridges", "Power and Energy", "Water Supply and Sanitation", 
+      "Education", "Health", "Tourism", "Industries", "Information Technology", "Sports and Youth Affairs", 
+      "Art and Culture", "Social Welfare", "Urban Development", "Rural Development"]
+   - If the DPR mentions a state or sector that doesn't match these exact values, you MUST map it to the closest matching value from the allowed list
+   - Examples: "Road Infrastructure" → "Roads and Bridges", "Maharashtra" → closest NE state or use context
+   - DO NOT return free-form text for these fields - ONLY use values from the above lists
+
 4) TRACEABILITY: If you infer or compute any field (overallScore, recommendation, any financial number, or risk severity), PREPEND a single concise explanation sentence (≤25 words) at the START of the `assumptions` array. That sentence MUST begin exactly with `INFERRED_REASON:` (example: `INFERRED_REASON: Converted 4.5/5 scale to 90/100 and used NPV>0 as supporting evidence`).
 5) PREFER TABULAR SOURCES: When numbers conflict, prefer table values (tables > paragraph text). If you choose one source over another, state that choice in an `INFERRED_REASON:` assumption.
 6) FORMATTING RULES: 
@@ -378,8 +390,26 @@ async def create_comparison_chat_session(comparison_id: int, file_refs: list[str
     print(f"⏳ Creating comparison chat session for comparison {comparison_id} with {len(file_refs)} files")
     
     def _create_session():
-        # Get all file objects
-        file_objs = [genai.get_file(ref) for ref in file_refs]
+        try:
+            # Get all file objects
+            file_objs = []
+            for ref in file_refs:
+                try:
+                    file_obj = genai.get_file(ref)
+                    # Check if file is still valid
+                    if file_obj.state.name == "FAILED":
+                        raise ValueError(f"File has expired or is no longer available: {ref}")
+                    file_objs.append(file_obj)
+                except Exception as e:
+                    error_msg = str(e)
+                    if "403" in error_msg or "404" in error_msg or "permission" in error_msg.lower() or "not found" in error_msg.lower():
+                        # Raise specific error for expiration so app.py can handle re-upload
+                        raise FileExpiredError(f"File {ref} has expired or is inaccessible.")
+                    raise ValueError(f"Cannot access file {ref}: {error_msg}")
+        except FileExpiredError:
+            raise  # Re-raise to propagate to caller
+        except Exception as e:
+            raise ValueError(f"Failed to create comparison session: {str(e)}")
         
         # Create detailed system instruction for comparison
         system_instruction = """You are an expert Detailed Project Report (DPR) Analyzer and Comparison Assistant.

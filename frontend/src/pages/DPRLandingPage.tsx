@@ -6,6 +6,7 @@ import {
     Menu, X, ChevronRight, Send
 } from 'lucide-react';
 import { AuthModal } from '@/components/AuthModal';
+import { LanguageDropdown } from '@/components/LanguageDropdown';
 
 // Assets
 import whiteLogo from './assets/WhiteLogo.png';
@@ -94,6 +95,7 @@ const DPRAnalyzerLanding: React.FC = () => {
                         {/* Logo Area */}
                         <div className="flex items-center space-x-3">
                             <img src={isDarkMode ? whiteLogo : blackLogo} alt="MoDoNER Logo" className="h-12 w-auto" onError={(e) => e.currentTarget.src = 'https://via.placeholder.com/40?text=M'} />
+                            <LanguageDropdown />
                             <div>
                                 <h1 className="text-xl font-bold tracking-tight">DPR Analyzer</h1>
                             </div>
