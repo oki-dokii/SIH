@@ -153,9 +153,9 @@ export function PDFViewer({ pdfUrl, initialPage = 1, onPageChange, className = '
             </div>
 
             {/* PDF Content */}
-            <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-900 flex items-center justify-center p-4">
+            <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-900 p-4">
                 {error ? (
-                    <div className="flex flex-col items-center gap-3 text-center max-w-md">
+                    <div className="flex flex-col items-center gap-3 text-center max-w-md mx-auto mt-8">
                         <FileX className="h-12 w-12 text-red-500" />
                         <div>
                             <p className="font-semibold text-sm mb-1">PDF Load Error</p>
@@ -166,34 +166,36 @@ export function PDFViewer({ pdfUrl, initialPage = 1, onPageChange, className = '
                         </div>
                     </div>
                 ) : (
-                    <div className="bg-white dark:bg-gray-800 shadow-lg">
-                        <Document
-                            file={pdfUrl}
-                            onLoadSuccess={onDocumentLoadSuccess}
-                            onLoadError={onDocumentLoadError}
-                            loading={
-                                <div className="flex flex-col items-center gap-3 p-8">
-                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                                    <p className="text-sm text-muted-foreground">Loading PDF...</p>
-                                    <p className="text-xs text-muted-foreground">URL: {pdfUrl.substring(0, 50)}...</p>
-                                </div>
-                            }
-                        >
-                            <Page
-                                pageNumber={currentPage}
-                                scale={scale}
-                                renderTextLayer={true}
-                                renderAnnotationLayer={true}
+                    <div className="w-full h-full flex items-start justify-center">
+                        <div className="bg-white dark:bg-gray-800 shadow-lg">
+                            <Document
+                                file={pdfUrl}
+                                onLoadSuccess={onDocumentLoadSuccess}
+                                onLoadError={onDocumentLoadError}
                                 loading={
-                                    <div className="flex items-center justify-center p-8">
-                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                    <div className="flex flex-col items-center gap-3 p-8">
+                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                        <p className="text-sm text-muted-foreground">Loading PDF...</p>
+                                        <p className="text-xs text-muted-foreground">URL: {pdfUrl.substring(0, 50)}...</p>
                                     </div>
                                 }
-                                onLoadError={(error) => {
-                                    console.error('❌ Page render error:', error)
-                                }}
-                            />
-                        </Document>
+                            >
+                                <Page
+                                    pageNumber={currentPage}
+                                    scale={scale}
+                                    renderTextLayer={true}
+                                    renderAnnotationLayer={true}
+                                    loading={
+                                        <div className="flex items-center justify-center p-8">
+                                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                        </div>
+                                    }
+                                    onLoadError={(error) => {
+                                        console.error('❌ Page render error:', error)
+                                    }}
+                                />
+                            </Document>
+                        </div>
                     </div>
                 )}
             </div>
