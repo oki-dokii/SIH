@@ -121,36 +121,66 @@
         "score": "number (0-100)",
         "weight": "number (e.g., 0.25 for 25%)",
         "findings": "string (evaluation details)",
+        "detailedReasoning": "string (comprehensive explanation of why this score was assigned)",
+        "evidence": {
+          "quote": "string (direct quote from the DPR supporting this score)",
+          "pageLocation": "string (e.g., 'Page 15, Section 3.2')"
+        },
         "met": "boolean"
       },
       "beneficiaryAlignment": {
         "score": "number (0-100)",
         "weight": "number (e.g., 0.20 for 20%)",
         "findings": "string (evaluation details)",
+        "detailedReasoning": "string (comprehensive explanation of why this score was assigned)",
+        "evidence": {
+          "quote": "string (direct quote from the DPR supporting this score)",
+          "pageLocation": "string (e.g., 'Page 15, Section 3.2')"
+        },
         "met": "boolean"
       },
       "environmentalCompliance": {
         "score": "number (0-100)",
         "weight": "number (e.g., 0.20 for 20%)",
         "findings": "string (evaluation details)",
+        "detailedReasoning": "string (comprehensive explanation of why this score was assigned)",
+        "evidence": {
+          "quote": "string (direct quote from the DPR supporting this score)",
+          "pageLocation": "string (e.g., 'Page 15, Section 3.2')"
+        },
         "met": "boolean"
       },
       "landAcquisition": {
         "score": "number (0-100)",
         "weight": "number (e.g., 0.15 for 15%)",
         "findings": "string (evaluation details)",
+        "detailedReasoning": "string (comprehensive explanation of why this score was assigned)",
+        "evidence": {
+          "quote": "string (direct quote from the DPR supporting this score)",
+          "pageLocation": "string (e.g., 'Page 15, Section 3.2')"
+        },
         "met": "boolean"
       },
       "documentationQuality": {
         "score": "number (0-100)",
         "weight": "number (e.g., 0.10 for 10%)",
         "findings": "string (evaluation details)",
+        "detailedReasoning": "string (comprehensive explanation of why this score was assigned)",
+        "evidence": {
+          "quote": "string (direct quote from the DPR supporting this score)",
+          "pageLocation": "string (e.g., 'Page 15, Section 3.2')"
+        },
         "met": "boolean"
       },
       "financialViability": {
         "score": "number (0-100)",
         "weight": "number (e.g., 0.10 for 10%)",
         "findings": "string (evaluation details)",
+        "detailedReasoning": "string (comprehensive explanation of why this score was assigned)",
+        "evidence": {
+          "quote": "string (direct quote from the DPR supporting this score)",
+          "pageLocation": "string (e.g., 'Page 15, Section 3.2')"
+        },
         "met": "boolean"
       }
     },

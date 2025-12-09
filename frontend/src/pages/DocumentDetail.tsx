@@ -887,6 +887,29 @@ function ComplianceTab({ data, onPageClick, projectId }: { data: any; onPageClic
                   {createClickablePageLinks(item.findings, onPageClick)}
                 </p>
               )}
+              {item.detailedReasoning && (
+                <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-xs font-semibold text-blue-900 dark:text-blue-100 mb-1">Detailed Reasoning:</p>
+                  <p className="text-xs text-gray-700 dark:text-gray-300">
+                    {createClickablePageLinks(item.detailedReasoning, onPageClick)}
+                  </p>
+                </div>
+              )}
+              {item.evidence && (
+                <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <p className="text-xs font-semibold text-amber-900 dark:text-amber-100 mb-1">Evidence:</p>
+                  {item.evidence.quote && (
+                    <blockquote className="text-xs italic text-gray-700 dark:text-gray-300 border-l-2 border-amber-400 pl-2 mb-2">
+                      "{item.evidence.quote}"
+                    </blockquote>
+                  )}
+                  {item.evidence.pageLocation && (
+                    <p className="text-xs text-muted-foreground">
+                      📍 Reference: {createClickablePageLinks(item.evidence.pageLocation, onPageClick)}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )
         })}
