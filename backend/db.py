@@ -104,6 +104,16 @@ def init_db(db_path: str = "data/dpr.db"):
         cursor.execute("UPDATE dprs SET status = 'pending' WHERE summary_json IS NULL")
         print("✓ Database migration complete (status)")
     
+    if 'admin_feedback' not in columns:
+        print("⏳ Migrating database: adding admin_feedback column...")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN admin_feedback TEXT")
+        print("✓ Database migration complete (admin_feedback)")
+    
+    if 'feedback_timestamp' not in columns:
+        print("⏳ Migrating database: adding feedback_timestamp column...")
+        cursor.execute("ALTER TABLE dprs ADD COLUMN feedback_timestamp TEXT")
+        print("✓ Database migration complete (feedback_timestamp)")
+    
     
     # Create index on original_filename for faster lookups
     cursor.execute("""
@@ -371,6 +381,25 @@ def update_dpr_file_ref(dpr_id: int, file_ref: str, db_path: str = "data/dpr.db"
     print(f"✓ DPR {dpr_id} file reference updated: {file_ref}")
 
 
+def update_dpr_feedback(dpr_id: int, feedback: str, db_path: str = "data/dpr.db"):
+    """Update admin feedback for a DPR."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    timestamp = datetime.now().isoformat()
+    
+    cursor.execute("""
+        UPDATE dprs 
+        SET admin_feedback = ?, feedback_timestamp = ?
+        WHERE id = ?
+    """, (feedback, timestamp, dpr_id))
+    
+    conn.commit()
+    conn.close()
+    print(f"✓ DPR {dpr_id} feedback updated")
+
+
+
 def delete_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[str]:
     """
     Delete a DPR and all associated data.
@@ -408,7 +437,8 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
     
     cursor.execute("""
         SELECT id, filename, original_filename, filepath, uploaded_file_ref, 
-               upload_ts, summary_json, project_id, status, client_id
+               upload_ts, summary_json, project_id, status, client_id,
+               admin_feedback, feedback_timestamp
         FROM dprs 
         WHERE id = ?
     """, (dpr_id,))
@@ -433,6 +463,13 @@ def get_dpr(dpr_id: int, db_path: str = "data/dpr.db") -> Optional[Dict]:
         # Add status if it exists
         if "status" in row.keys():
             result["status"] = row["status"]
+        
+        # Add feedback fields if they exist
+        if "admin_feedback" in row.keys():
+            result["admin_feedback"] = row["admin_feedback"]
+        
+        if "feedback_timestamp" in row.keys():
+            result["feedback_timestamp"] = row["feedback_timestamp"]
         
         # Parse summary_json if it exists and is not None
         if row["summary_json"]:

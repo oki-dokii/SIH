@@ -492,6 +492,31 @@ async def delete_client_dpr(dpr_id: int, client_id: int):
 
 
 
+# ===== DPR FEEDBACK API ROUTE =====
+
+@app.put("/api/dprs/{dpr_id}/feedback")
+async def update_dpr_feedback_endpoint(dpr_id: int, feedback: str = Form(...)):
+    """Admin endpoint to add/update feedback for a DPR."""
+    try:
+        # Check if DPR exists
+        dpr = db.get_dpr(dpr_id)
+        if not dpr:
+            raise HTTPException(status_code=404, detail=f"DPR {dpr_id} not found")
+        
+        # Update feedback
+        db.update_dpr_feedback(dpr_id, feedback)
+        
+        return JSONResponse({
+            "success": True,
+            "message": "Feedback updated successfully"
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"✗ Update feedback error: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"Failed to update feedback: {str(e)}")
+
+
 # ===== PROJECT API ROUTES =====
 
 @app.get("/projects")

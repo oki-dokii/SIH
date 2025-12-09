@@ -10,6 +10,8 @@ export interface DPR {
   project_id?: number
   client_id?: number
   client_email?: string
+  admin_feedback?: string
+  feedback_timestamp?: string
 }
 
 export interface Message {
@@ -187,6 +189,18 @@ export const api = {
     })
     if (!response.ok) throw new Error('Failed to delete DPR')
   },
+
+  async updateDPRFeedback(dprId: number, feedback: string): Promise<void> {
+    const formData = new FormData()
+    formData.append('feedback', feedback)
+
+    const response = await fetch(`${API_BASE_URL}/dprs/${dprId}/feedback`, {
+      method: 'PUT',
+      body: formData,
+    })
+    if (!response.ok) throw new Error('Failed to update feedback')
+  },
+
 
   async getComparisons(): Promise<Comparison[]> {
     const response = await fetch(`${API_BASE_URL}/comparison-chats`)

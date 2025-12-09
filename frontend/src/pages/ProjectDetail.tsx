@@ -22,13 +22,15 @@ import {
     AlertCircle,
     Download,
     ExternalLink,
-    Settings
+    Settings,
+    MessageSquare
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api, type DPR, type Project } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
 import ComplianceWeightsModal from '@/components/ComplianceWeightsModal'
+import FeedbackModal from '@/components/FeedbackModal'
 
 export default function ProjectDetailPage() {
     const navigate = useNavigate()
@@ -57,6 +59,9 @@ export default function ProjectDetailPage() {
 
     // Compliance Weights Modal state
     const [showComplianceWeights, setShowComplianceWeights] = useState(false)
+
+    // Feedback Modal state
+    const [feedbackDpr, setFeedbackDpr] = useState<DPR | null>(null)
 
     useEffect(() => {
         if (id) {
@@ -476,6 +481,16 @@ export default function ProjectDetailPage() {
                                             View Analysis
                                         </Button>
                                     )}
+                                    {/* Feedback Button */}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className={`shrink-0 ${doc.admin_feedback ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' : ''}`}
+                                        onClick={() => setFeedbackDpr(doc)}
+                                        title={doc.admin_feedback ? 'Edit Feedback' : 'Add Feedback'}
+                                    >
+                                        <MessageSquare className="h-4 w-4" />
+                                    </Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -676,6 +691,21 @@ export default function ProjectDetailPage() {
                     onSuccess={() => {
                         // Reload project data after weights are updated and scores recalculated
                         loadProjectData(parseInt(id))
+                    }}
+                />
+            )}
+
+            {/* Feedback Modal */}
+            {feedbackDpr && (
+                <FeedbackModal
+                    dpr={feedbackDpr}
+                    isOpen={true}
+                    onClose={() => setFeedbackDpr(null)}
+                    onSuccess={() => {
+                        // Reload project data after feedback is updated
+                        if (id) {
+                            loadProjectData(parseInt(id))
+                        }
                     }}
                 />
             )}
