@@ -124,6 +124,21 @@ def update_project(project_id: int, name: str, state: str, scheme: str,
     return success
 
 
+def delete_project(project_id: int, db_path: str = "data/cloud.db") -> bool:
+    """Delete a project and all associated DPRs."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    # Delete project (CASCADE will delete associated DPRs)
+    cursor.execute("DELETE FROM projects WHERE id = ?", (project_id,))
+    
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    
+    return success
+
+
 def get_project(project_id: int, db_path: str = "data/cloud.db") -> Optional[Dict]:
     """Retrieve a project by ID."""
     conn = sqlite3.connect(db_path)

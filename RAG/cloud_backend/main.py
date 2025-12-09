@@ -126,6 +126,21 @@ def get_project(project_id: int):
     return project
 
 
+@app.delete("/projects/{project_id}")
+def delete_project(project_id: int):
+    """
+    Delete a project and its associated DPRs.
+    Called when project is deleted from online/offline versions.
+    """
+    success = db.delete_project(project_id, db_path=DB_PATH)
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    return {"message": "Project deleted successfully"}
+
+
+
 # ===== FILE ENDPOINTS =====
 
 @app.post("/projects/{project_id}/upload_pdf")
