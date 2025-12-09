@@ -268,6 +268,28 @@ def init_db(db_path: str = "data/dpr.db"):
         except Exception as e:
             print(f"⚠ Projects comparison migration failed: {e}")
     
+    # Migration: Add compliance_weights column to projects table
+    if 'compliance_weights' not in projects_columns:
+        print("⏳ Migrating database: adding compliance_weights column to projects table...")
+        try:
+            # Default compliance weights matching AI prompt
+            default_weights = json.dumps({
+                "northEasternFocus": 0.25,
+                "beneficiaryAlignment": 0.20,
+                "environmentalCompliance": 0.20,
+                "landAcquisition": 0.15,
+                "documentationQuality": 0.10,
+                "financialViability": 0.10
+            })
+            
+            cursor.execute("ALTER TABLE projects ADD COLUMN compliance_weights TEXT")
+            # Set default weights for existing projects
+            cursor.execute(f"UPDATE projects SET compliance_weights = ? WHERE compliance_weights IS NULL", (default_weights,))
+            conn.commit()
+            print("✓ Database migration complete (compliance_weights column added to projects)")
+        except Exception as e:
+            print(f"⚠ Compliance weights migration failed: {e}")
+    
     # Create client_dprs table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS client_dprs (

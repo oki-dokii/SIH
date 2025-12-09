@@ -3,8 +3,9 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import { ChevronLeft, ChevronRight, Loader2, ZoomIn, ZoomOut, FileX } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
-import 'react-pdf/dist/esm/Page/TextLayer.css'
+// CSS imports commented out - causing module resolution errors
+// import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
+// import 'react-pdf/dist/esm/Page/TextLayer.css'
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`

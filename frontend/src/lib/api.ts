@@ -7,6 +7,7 @@ export interface DPR {
   filepath: string
   upload_ts: string
   summary_json: any | null
+  project_id?: number
 }
 
 export interface Message {

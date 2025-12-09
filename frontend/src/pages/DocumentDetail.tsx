@@ -30,13 +30,14 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { api, type DPR, type Message } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function DocumentDetailPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { id } = useParams<{ id: string }>()
   const { t } = useLanguage()
   const [activeTab, setActiveTab] = useState('overview')
@@ -50,6 +51,9 @@ export default function DocumentDetailPage() {
   const [showClearChatConfirm, setShowClearChatConfirm] = useState(false)
   const [pdfPage, setPdfPage] = useState(1)
   const chatEndRef = useRef<HTMLDivElement>(null)
+
+  // Get project_id from navigation state or document
+  const projectId = (location.state as any)?.projectId || document?.project_id
 
   useEffect(() => {
     if (id) {
@@ -331,9 +335,11 @@ export default function DocumentDetailPage() {
                   <InconsistenciesTab data={data} onPageClick={handlePageClick} />
                 )}
 
-                {activeTab === 'compliance' && (
-                  <ComplianceTab data={data} onPageClick={handlePageClick} />
-                )}
+
+                {activeTab === 'compliance' && (() => {
+                  console.log('🔍 Rendering ComplianceTab with projectId:', projectId, 'from location:', (location.state as any)?.projectId, 'from document:', document?.project_id)
+                  return <ComplianceTab data={data} onPageClick={handlePageClick} projectId={projectId} />
+                })()}
 
                 {activeTab === 'recommendations' && (
                   <RecommendationsTab data={data} onPageClick={handlePageClick} />
@@ -753,8 +759,33 @@ function InconsistenciesTab({ data, onPageClick }: { data: any; onPageClick: (pa
   )
 }
 
-function ComplianceTab({ data, onPageClick }: { data: any; onPageClick: (page: number) => void }) {
+function ComplianceTab({ data, onPageClick, projectId }: { data: any; onPageClick: (page: number) => void; projectId?: number }) {
   const compliance = data?.mdonerComplianceScoring
+  const [projectWeights, setProjectWeights] = useState<any>(null)
+  const [weightsLoading, setWeightsLoading] = useState(true)
+
+  // Fetch project-specific weights
+  useEffect(() => {
+    async function loadWeights() {
+      if (!projectId) {
+        setWeightsLoading(false)
+        return
+      }
+
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/projects/${projectId}/compliance-weights`)
+        if (response.ok) {
+          const data = await response.json()
+          setProjectWeights(data.weights)
+        }
+      } catch (err) {
+        console.error('Failed to load project weights:', err)
+      } finally {
+        setWeightsLoading(false)
+      }
+    }
+    loadWeights()
+  }, [projectId])
 
   if (!compliance) {
     return (
@@ -771,13 +802,30 @@ function ComplianceTab({ data, onPageClick }: { data: any; onPageClick: (page: n
     return 'text-red-600'
   }
 
+  // Get weight percentage for display
+  const getWeightPercentage = (key: string) => {
+    if (projectWeights && projectWeights[key]) {
+      return `${Math.round(projectWeights[key] * 100)}%`
+    }
+    // Default weights if not loaded yet
+    const defaults: any = {
+      'northEasternFocus': '25%',
+      'beneficiaryAlignment': '20%',
+      'environmentalCompliance': '20%',
+      'landAcquisition': '15%',
+      'documentationQuality': '10%',
+      'financialViability': '10%',
+    }
+    return defaults[key] || '0%'
+  }
+
   const criteria = [
-    { key: 'northEasternFocus', label: 'North Eastern Focus', weight: '25%' },
-    { key: 'beneficiaryAlignment', label: 'Beneficiary Alignment', weight: '20%' },
-    { key: 'environmentalCompliance', label: 'Environmental Compliance', weight: '20%' },
-    { key: 'landAcquisition', label: 'Land Acquisition', weight: '15%' },
-    { key: 'documentationQuality', label: 'Documentation Quality', weight: '10%' },
-    { key: 'financialViability', label: 'Financial Viability', weight: '10%' },
+    { key: 'northEasternFocus', label: 'North Eastern Focus' },
+    { key: 'beneficiaryAlignment', label: 'Beneficiary Alignment' },
+    { key: 'environmentalCompliance', label: 'Environmental Compliance' },
+    { key: 'landAcquisition', label: 'Land Acquisition' },
+    { key: 'documentationQuality', label: 'Documentation Quality' },
+    { key: 'financialViability', label: 'Financial Viability' },
   ]
 
   return (
@@ -789,16 +837,34 @@ function ComplianceTab({ data, onPageClick }: { data: any; onPageClick: (page: n
         </div>
       </div>
 
+      {/* Weight Configuration Section */}
+      {!weightsLoading && projectWeights && (
+        <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Weight Configuration
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+            {criteria.map(({ key, label }) => (
+              <div key={key} className="flex items-center justify-between">
+                <span className="text-muted-foreground">{label}:</span>
+                <span className="font-semibold ml-2">{getWeightPercentage(key)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
         <h4 className="font-semibold">Scoring Breakdown</h4>
-        {criteria.map(({ key, label, weight }) => {
+        {criteria.map(({ key, label }) => {
           const item = compliance.scoringBreakdown?.[key]
           if (!item) return null
 
           return (
             <div key={key} className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{label} ({weight})</span>
+                <span className="text-sm font-medium">{label}</span>
                 <div className="flex items-center gap-2">
                   <span className={`text-sm font-semibold ${scoreColor(item.score || 0)}`}>
                     {item.score || 0}/100

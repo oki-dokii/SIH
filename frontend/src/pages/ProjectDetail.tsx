@@ -21,12 +21,14 @@ import {
     CheckCircle,
     AlertCircle,
     Download,
-    ExternalLink
+    ExternalLink,
+    Settings
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api, type DPR, type Project } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
+import ComplianceWeightsModal from '@/components/ComplianceWeightsModal'
 
 export default function ProjectDetailPage() {
     const navigate = useNavigate()
@@ -52,6 +54,9 @@ export default function ProjectDetailPage() {
     const [showComparisonModal, setShowComparisonModal] = useState(false)
     const [comparisonResult, setComparisonResult] = useState<any>(null)
     const [comparisonError, setComparisonError] = useState<string | null>(null)
+
+    // Compliance Weights Modal state
+    const [showComplianceWeights, setShowComplianceWeights] = useState(false)
 
     useEffect(() => {
         if (id) {
@@ -285,52 +290,64 @@ export default function ProjectDetailPage() {
                             </div>
                         </div>
 
-                        {/* Compare All Button */}
-                        {analyzedDprsCount >= 2 && (
+                        <div className="flex gap-2">
+                            {/* Compliance Weights Settings Button */}
                             <Button
-                                onClick={async () => {
-                                    // If comparison already exists, fetch and show it
-                                    if ((project as any).has_comparison) {
-                                        try {
-                                            const response = await fetch(`http://127.0.0.1:8000/projects/${id}/comparison`)
-                                            if (response.ok) {
-                                                const data = await response.json()
-                                                setComparisonResult(data.comparison)
-                                                setShowComparisonModal(true)
-                                            } else {
-                                                // If fetch fails, generate new comparison
+                                variant="outline"
+                                onClick={() => setShowComplianceWeights(true)}
+                                title="Configure Compliance Weights"
+                            >
+                                <Settings className="h-4 w-4 mr-2" />
+                                Compliance Weights
+                            </Button>
+
+                            {/* Compare All Button */}
+                            {analyzedDprsCount >= 2 && (
+                                <Button
+                                    onClick={async () => {
+                                        // If comparison already exists, fetch and show it
+                                        if ((project as any).has_comparison) {
+                                            try {
+                                                const response = await fetch(`http://127.0.0.1:8000/projects/${id}/comparison`)
+                                                if (response.ok) {
+                                                    const data = await response.json()
+                                                    setComparisonResult(data.comparison)
+                                                    setShowComparisonModal(true)
+                                                } else {
+                                                    // If fetch fails, generate new comparison
+                                                    handleCompareAll()
+                                                }
+                                            } catch (err) {
+                                                console.error('Error fetching comparison:', err)
                                                 handleCompareAll()
                                             }
-                                        } catch (err) {
-                                            console.error('Error fetching comparison:', err)
+                                        } else {
+                                            // Generate new comparison
                                             handleCompareAll()
                                         }
-                                    } else {
-                                        // Generate new comparison
-                                        handleCompareAll()
-                                    }
-                                }}
-                                disabled={comparing}
-                                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-                            >
-                                {comparing ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                        Comparing...
-                                    </>
-                                ) : (project as any).has_comparison ? (
-                                    <>
-                                        <Eye className="h-4 w-4 mr-2" />
-                                        View Comparison
-                                    </>
-                                ) : (
-                                    <>
-                                        <Scale className="h-4 w-4 mr-2" />
-                                        Compare All DPRs
-                                    </>
-                                )}
-                            </Button>
-                        )}
+                                    }}
+                                    disabled={comparing}
+                                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                                >
+                                    {comparing ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            Comparing...
+                                        </>
+                                    ) : (project as any).has_comparison ? (
+                                        <>
+                                            <Eye className="h-4 w-4 mr-2" />
+                                            View Comparison
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Scale className="h-4 w-4 mr-2" />
+                                            Compare All DPRs
+                                        </>
+                                    )}
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -636,6 +653,19 @@ export default function ProjectDetailPage() {
                         </div>
                     </Card>
                 </div>
+            )}
+
+            {/* Compliance Weights Modal */}
+            {id && (
+                <ComplianceWeightsModal
+                    projectId={parseInt(id)}
+                    isOpen={showComplianceWeights}
+                    onClose={() => setShowComplianceWeights(false)}
+                    onSuccess={() => {
+                        // Reload project data after weights are updated and scores recalculated
+                        loadProjectData(parseInt(id))
+                    }}
+                />
             )}
         </div>
     )
